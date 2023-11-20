@@ -1,0 +1,44 @@
+.Input {
+    .ant-input-affix-wrapper {
+        height: 40px;
+        border-radius: 2px;
+        padding-left: 12px;
+        line-height: 40px;
+        border: 1px solid #D9D9D9;
+    }
+
+    .ant-input {
+        font-size: 14px;
+    }
+
+
+    .confirmEditIcon {
+        font-size: 30px;
+    }
+
+    .Save-icon {
+        font-size: 24px;
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    .Edit-icon {
+        width: 23px;
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    .ant-input-affix-wrapper-disabled {
+        background: #FFFFFF;
+    }
+
+    .ant-input[disabled] {
+        color: #424242;;
+        cursor: not-allowed;
+    }
+
+}

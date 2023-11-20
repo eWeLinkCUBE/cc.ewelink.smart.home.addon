@@ -1,0 +1,20 @@
+{
+    "name": "coolkit-api",
+    "description": "Coolkit API",
+    "version": "0.5.24",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "test": "ts-node test/index.ts",
+        "build": "rm -rf dist && tsc"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "crypto-js": "^4.0.0"
+    },
+    "devDependencies": {
+        "@types/crypto-js": "^4.0.1",
+        "@types/node": "^14.14.32",
+        "ts-node": "^10.8.2"
+    }
+}

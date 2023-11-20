@@ -1,0 +1,61 @@
+# all node_modules
+node_modules
+**/node_modules
+
+# tmp log
+server/log/logFile/*.log
+.DS_Store
+
+# log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+output.log*
+
+# editor directories and files
+.history
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# local cache
+web/dist
+server/dist
+server/data
+server/src/public
+server/test/
+
+# secret file
+server/config/secret.ts
+
+# docs
+server/doc/api.md
+
+# dist code
+node-app/
+deploy/
+
+# zip files
+*.tgz
+*.tar.gz
+*.tar
+
+# package-lock.json
+server/package-lock.json
+web/package-lock.json
+
+# local env files
+web/.env.local
+web/.env.*.local
+web/.env
+
+# antd auto import
+web/src/auto-import.d.ts
+
+# all json files
+# *.json
