@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import logger from '../log';
+import config from '../config';
+
 enum EType {
     COME_TIME = 'comeTime',
     OUT_TIME = 'outTime',
@@ -13,7 +15,7 @@ export default function responseInterceptor(req: Request, res: Response, next: N
     const originalJson = res.json;
 
     res.json = function (this: Response, data: any) {
-        toLog(req.body, EType.OUT_TIME);
+        config.nodeApp.env === 'prod' && toLog(req.body, EType.OUT_TIME);
 
         originalJson.call(this, data); // 调用原始的 res.json 方法 (Call the original res.json method)
     } as any;
@@ -29,9 +31,9 @@ function toLog(reqBody: any, type: EType) {
         const nowTime = Date.now();
         if (type === EType.COME_TIME) {
             startTime = nowTime;
-            logger.info(`${type} -------------------------------------`, endpoint.third_serial_number, startTime, header.message_id);
+            logger.info(`${type} -------`, endpoint.third_serial_number, startTime);
         } else if (type === EType.OUT_TIME) {
-            logger.info(`${type} -------------------------------------`, endpoint.third_serial_number, nowTime, nowTime - startTime + 'ms', header.message_id);
+            logger.info(`${type} ------`, endpoint.third_serial_number, nowTime, nowTime - startTime + 'ms');
         }
     }
 }

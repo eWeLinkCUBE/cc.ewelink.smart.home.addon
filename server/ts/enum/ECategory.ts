@@ -32,6 +32,10 @@ enum ECategory {
     CAMERA = 'camera',
     /** 风扇灯 (fan light)*/
     FAN_LIGHT = 'fanLight',
+    /** 灯带 (light strip) */
+    LIGHT_STRIP = 'lightStrip',
+    /** 温控阀 (thermostatic valve) */
+    THERMOSTAT = 'thermostat',
 }
 
 export default ECategory;

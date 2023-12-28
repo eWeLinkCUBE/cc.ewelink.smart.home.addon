@@ -1,10 +1,8 @@
 <template>
-    <Header />
     <Content />
 </template>
 
 <script setup lang="ts">
-import Header from '@/views/Home/components/Header.vue';
 import Content from '@/views/Home/components/Content.vue';
 import { useEtcStore } from '@/store/etc';
 import { message } from 'ant-design-vue';

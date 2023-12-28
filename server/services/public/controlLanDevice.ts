@@ -1,16 +1,16 @@
 import { decode } from 'js-base64';
-import deviceDataUtil, { ZIGBEE_UIID_DEVICE_LIST } from '../../utils/deviceDataUtil';
+import deviceDataUtil from '../../utils/deviceDataUtil';
 import _ from 'lodash';
 import updateLanDeviceData from './updateLanDeviceData';
 import logger from '../../log';
 import { Request } from 'express';
 import { IReqData } from '../../ts/interface/IReqData';
-import { SINGLE_PROTOCOL_LIST } from '../../utils/deviceDataUtil';
 import { IHostStateInterface } from '../../ts/interface/IHostState';
 import EventEmitter from 'events';
 import EUiid from '../../ts/enum/EUiid';
 import ECapability from '../../ts/enum/ECapability';
 import getState126And165 from './getState126And165';
+import { SINGLE_PROTOCOL_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../../const';
 
 //遇到问题：多个多通道设备作为场景执行动作时，只会执行最后一个
 //原因：延时等待ihost请求一个一个来之后发送给设备，导致最后一个设备请求会覆盖前一个的请求。
@@ -31,7 +31,7 @@ const deviceObj: any = {};
 
 const deviceTimeoutObj: any = {};
 
-//控制开关设备通道 (Control switchgear channel)
+//控制设备 (Control device)
 export default async function controlLanDevice(req: Request) {
     const reqData = req.body as IReqData;
     const { header, endpoint, payload } = reqData.directive;
@@ -143,7 +143,7 @@ export default async function controlLanDevice(req: Request) {
             const resData = await request(deviceId, devicekey, selfApikey, lanState);
             deviceObj[deviceId] = {};
             if (resData && resData.error !== 0) {
-                logger.info('control device fail------------------------ ', deviceId, resData);
+                logger.info('control device fail------ ', deviceId, resData);
             }
             return resData;
         }
@@ -171,6 +171,7 @@ export default async function controlLanDevice(req: Request) {
                     if (resData && resData.error !== 0) {
                         throw new Error(JSON.stringify(resData));
                     }
+                    return createSuccessRes(message_id);
                 }
 
                 if (_.get(lanState, 'location', null)) {
@@ -179,8 +180,8 @@ export default async function controlLanDevice(req: Request) {
                     if (resData && resData.error !== 0) {
                         throw new Error(JSON.stringify(resData));
                     }
+                    return createSuccessRes(message_id);
                 }
-                return createSuccessRes(message_id);
             }
 
             const resData = await request(deviceId, devicekey, selfApikey, lanStateString);

@@ -4,10 +4,22 @@ import IEWeLinkDevice from '../../ts/interface/IEWeLinkDevice';
 import db from '../../utils/db';
 import logger from '../../log';
 import autoCancelSync from '../../utils/autoCancelSync';
+import toUpdateEWeLinkRfDeviceTags from '../rf/toUpdateEWelinkRfDeviceTags';
+import { sleep } from '../../utils/timeUtils';
+import EUiid from '../../ts/enum/EUiid';
+import { get102DeviceOnline } from '../../utils/deviceUtil';
+import syncAllWebSocketDeviceStateAndOnlineIHost from '../webSocket/syncAllWebSocketDeviceStateAndOnlineIHost';
+import { initCoolkitWs } from '../../utils/initApi';
 
 export default async function getEwelinkAllDeviceList() {
     try {
         logger.info('to get familyList');
+
+        const eWeLinkApiInfo = db.getDbValue('eWeLinkApiInfo');
+        if (!eWeLinkApiInfo) {
+            logger.info('no login-----');
+            return;
+        }
         //1、获取家庭列表，得到家庭id和家庭名字 (1. Get the family list, get the family ID and family name)
         const res = await CkApi.family.getFamilyList({});
 
@@ -45,7 +57,7 @@ export default async function getEwelinkAllDeviceList() {
             logger.error('get device by familyId error--------------', originDeviceResList);
             return null;
         }
-        const deviceList: IEWeLinkDevice[] = [];
+        let deviceList: IEWeLinkDevice[] = [];
 
         for (const res of originDeviceResList) {
             if (!res) {
@@ -64,15 +76,30 @@ export default async function getEwelinkAllDeviceList() {
                 }
             });
         }
+
+        deviceList = modifyDeviceOnlineStatus(deviceList);
+
         //存入数据库 (Save to database)
         db.setDbValue('eWeLinkDeviceList', deviceList);
 
         logger.info(
             'get all eWeLink deviceList--------------------------',
-            deviceList.map((item) => item.itemData.deviceid)
+            deviceList.map((item) => {
+                return { deviceId: item.itemData.deviceid, uiid: item.itemData.extra.uiid, online: item.itemData.online };
+            })
         );
 
+        syncAllWebSocketDeviceStateAndOnlineIHost();
+
+        //刷新列表时检查websocket是否连接
+        //Check if websocket is connected when refreshing list
+        initCoolkitWs();
+
         logger.info('judge cancel sync device ----------------------------');
+
+        //将每个rf网关的遥控器设置标识
+        //Set the identification of the remote control of each rf gateway
+        await toUpdateEWeLinkRfDeviceTags();
         autoCancelSync();
 
         return deviceList;
@@ -87,7 +114,7 @@ async function getThreeTimesDeviceList(familyId: string) {
     let resData;
     for (const i of [1, 2, 3]) {
         // 第二次和第三次重试退避等待i秒 (Wait i seconds for the second and third retries to back off)
-        if (i !== 1) await sleep(i);
+        if (i !== 1) await sleep(i * 1000);
         const res = await CkApi.device.getThingList({ familyid: familyId, num: 0 });
         logger.info('get family times-------------------------', i, familyId);
         if (res.error === 0 && res.data.thingList.length > 0) {
@@ -99,10 +126,13 @@ async function getThreeTimesDeviceList(familyId: string) {
     return resData;
 }
 
-function sleep(second: number) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(1);
-        }, second * 1000);
+function modifyDeviceOnlineStatus(eWeLinkDeviceList: IEWeLinkDevice[]) {
+    const deviceList = eWeLinkDeviceList.map((item) => {
+        const uiid = item.itemData.extra.uiid;
+        if (uiid === EUiid.uiid_102) {
+            item.itemData.online = get102DeviceOnline(item);
+        }
+        return item;
     });
+    return deviceList;
 }

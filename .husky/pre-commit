@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+cd web
+echo "Begin web type-chek"
+npm run type-check
+
+cd ../server
+
+echo "Begin server type-chek"
+tsc
+

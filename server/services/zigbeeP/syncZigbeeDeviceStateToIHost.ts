@@ -34,11 +34,11 @@ export default async function syncZigbeeDeviceStateToIHost(deviceid: string, par
 
         const res = await syncDeviceStateToIHost(syncDeviceStateToIHostParams);
 
-        if (res && res.header && res.header.name === 'Response') {
-            logger.info('sync zigbee device state to iHost success-----------------------------');
+        if (res && res.header && res.header.name !== 'Response') {
+            logger.info('sync zigbee device state to iHost error---', res);
         }
     } catch (error: any) {
-        logger.error('sync zigbee device state to iHost-----------------------------', error);
+        logger.error('sync zigbee device state to iHost code error----', error);
         return null;
     }
 }

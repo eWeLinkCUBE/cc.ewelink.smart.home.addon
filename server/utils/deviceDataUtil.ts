@@ -8,7 +8,7 @@ import { IHostStateInterface } from '../ts/interface/IHostState';
 import logger from '../log';
 import { decode } from 'js-base64';
 import {
-    lanStateToIHostState190And182,
+    lanStateToIHostStatePowerDevice,
     lanStateToIHostStateLight,
     iHostStateToLanStateLight,
     iHostStateToLanState44,
@@ -28,23 +28,35 @@ import {
     lanStateToIHostStateMotionSensor,
     iHostStateToLanStateCurtain,
     lanStateToIHostStatePersonExist,
+    lanStateToIHostState22,
+    lanStateToIHostState102,
+    lanStateToIHostState154,
+    lanStateToIHostState36,
+    lanStateToIHostState173And137,
+    lanStateToIHostState59,
+    iHostStateToLanStateWebSocket,
+    lanStateToIHostState5,
+    lanStateToIHostStateMonochromeLamp,
+    iHostStateToLanStateMonochromeLamp,
+    lanStateToIHostStateBicolorLamp,
+    iHostStateToLanStateBicolorLamp,
+    lanStateToIHostStateFiveColorLamp,
+    lanStateToIHostStateWaterSensor,
+    lanStateToIHostStateSmokeDetector,
+    lanStateToIHostStateContactSensorWithTamperAlert,
+    lanStateToIHostStateTRV,
+    iHostStateToLanStateTRV,
+    lanStateToIHostStateMotionSensor7002,
 } from './lanStateAndIHostStateChange';
 import EUiid from '../ts/enum/EUiid';
 import ECapability from '../ts/enum/ECapability';
-import { coolkitDeviceProfiles } from '../const';
+import { ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST, ZIGBEE_UIID_TRV_LIST, ZIGBEE_UIID_WATER_SENSOR, coolkitDeviceProfiles } from '../const';
 import IHostDevice from '../ts/interface/IHostDevice';
-
-//当前支持的全部uiid (All currently supported uiids)
-export const SUPPORT_UIID_LIST = Object.values(EUiid);
-//支持单通道协议的uiid (Support uiid for single channel protocol)
-export const SINGLE_PROTOCOL_LIST = [1, 6, 32, 44, 103, 104, 135, 136, 14, 181, 15, 1256, 7004, 7010, 1009, 7005];
-//支持多通道协议的uiid (Support uiid for multi-channel protocols)
-export const MULTI_PROTOCOL_LIST = [2, 3, 4, 7, 8, 9, 133, 161, 162, 141, 140, 139, 210, 211, 212, 126, 165, 34, 2256, 7011, 3256, 7012, 4256, 7013];
-//单通道使用多通道协议的uiid (Single channel uses the uiid of the multi-channel protocol)
-export const SINGLE_MULTI_PROTOCOL_LIST = [77, 138, 160, 190, 182, 209, 191];
-/** zigbee设备(zigbee设备) */
-export const ZIGBEE_UIID_DEVICE_LIST = [168, 1256, 7004, 7010, 2256, 7011, 3256, 7012, 4256, 7013, 1009, 7005, 7006, 7015, 1000, 7000, 1770, 7014, 2026, 7016, 3026];
-export const ZIGBEE_UIID_CURTAIN_LIST = [7006, 7015];
+import { SINGLE_MULTI_PROTOCOL_LIST, MULTI_PROTOCOL_LIST, SINGLE_PROTOCOL_LIST } from '../const';
+import getAllRemoteDeviceList from './getAllRemoteDeviceList';
+import IRemoteDevice from '../ts/interface/IRemoteDevice';
+import { get102DeviceOnline } from './deviceUtil';
+import syncDeviceOnlineIHost from '../services/public/syncDeviceOnlineToIHost';
 
 /** 根据设备id得到ewelink里的设备数据 (Get the device data in ewelink based on the device ID)*/
 function getEWeLinkDeviceDataByDeviceId(deviceId: string) {
@@ -128,8 +140,10 @@ function getIHostDeviceDataListByDeviceId(deviceId: string) {
     const iHostDeviceDataList: IHostDeviceData[] = [];
 
     iHostDeviceList.forEach((item) => {
-        if (!item.tags?.deviceInfo) return;
+        if (!item.tags?.deviceInfo || !item.tags._smartHomeConfig) return;
+
         const deviceInfo = JSON.parse(decode(item.tags?.deviceInfo));
+        const rfGatewayConfig = item.tags?._smartHomeConfig.rfGatewayConfig;
         if (deviceInfo.deviceId !== deviceId) return;
         const obj = _.merge(item, {
             serial_number: item.serial_number,
@@ -142,6 +156,7 @@ function getIHostDeviceDataListByDeviceId(deviceId: string) {
             capabilitiyList: item.capabilities.map((it) => it.capability),
             third_serial_number: deviceInfo?.third_serial_number ?? deviceId,
             capabilities: item.capabilities,
+            rfGatewayConfig,
         });
         iHostDeviceDataList.push(obj);
     });
@@ -163,10 +178,12 @@ function getIHostDeviceDataListByDeviceId(deviceId: string) {
  * actions For uiid 28 devices, the key array supported by actions
  */
 function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: string[]) {
-    let state = getLastLanState(deviceId);
+    let state;
 
     if (myLanState) {
         state = myLanState;
+    } else {
+        state = getLastLanState(deviceId);
     }
 
     const uiid = getUiidByDeviceId(deviceId);
@@ -177,19 +194,17 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
     let lanState = state;
     let iHostState: any = {};
 
-    if (uiid === EUiid.uiid_168) {
-        logger.info('zigbee-p----------mdns', state);
-    }
-
     if (SINGLE_PROTOCOL_LIST.includes(uiid)) {
         //单通道协议 (single channel protocol)
         lanState = state as ILanStateSingleSwitch;
-        const powerState = _.get(lanState, 'switch');
-        iHostState = {
-            power: {
-                powerState: powerState,
-            },
-        };
+        const powerState = _.get(lanState, 'switch', null);
+        if (powerState !== null) {
+            iHostState = {
+                power: {
+                    powerState: powerState,
+                },
+            };
+        }
     } else if (SINGLE_MULTI_PROTOCOL_LIST.includes(uiid)) {
         //单通道用多通道协议 (Single channel uses multi-channel protocol)
         lanState = state as ILanStateMultipleSwitch;
@@ -231,8 +246,8 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         });
     }
 
-    if ([EUiid.uiid_190, EUiid.uiid_182].includes(uiid)) {
-        _.assign(iHostState, lanStateToIHostState190And182(lanState as any, uiid));
+    if ([EUiid.uiid_190, EUiid.uiid_182, EUiid.uiid_5].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStatePowerDevice(lanState as any, uiid));
     }
 
     if ([EUiid.uiid_135, EUiid.uiid_136, EUiid.uiid_103, EUiid.uiid_104].includes(uiid)) {
@@ -273,9 +288,14 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         _.assign(iHostState, lanStateToIHostStateButton(lanState));
     }
 
-    // 门磁(Door magnet)
+    // 门磁-无拆下能力 (Door magnet, No ability to remove and detect)
     if ([EUiid.uiid_3026].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostStateContactSensor(lanState));
+    }
+
+    // 门磁-有拆下检测能力 (Door magnet with ability to remove and detect)
+    if ([EUiid.uiid_7003].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateContactSensorWithTamperAlert(lanState));
     }
 
     // 窗帘(curtain)
@@ -293,9 +313,72 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         _.assign(iHostState, lanStateToIHostStateMotionSensor(lanState));
     }
 
+    //运动传感器带明亮度能力7002 (motion sensor uiid 7002 with illumination capability)
+    if ([EUiid.uiid_7002].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateMotionSensor7002(lanState));
+    }
+
     //人体存在传感器带光照(Human presence sensor with light)
     if ([EUiid.uiid_7016].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostStatePersonExist(lanState));
+    }
+
+    if ([EUiid.uiid_22].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState22(lanState));
+    }
+
+    if ([EUiid.uiid_102].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState102(lanState));
+    }
+
+    if ([EUiid.uiid_154].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState154(lanState));
+    }
+
+    if ([EUiid.uiid_36].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState36(lanState));
+    }
+
+    if ([EUiid.uiid_173, EUiid.uiid_137].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState173And137(lanState));
+    }
+
+    if ([EUiid.uiid_59].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState59(lanState));
+    }
+
+    if ([EUiid.uiid_5].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostState5(lanState));
+    }
+
+    // 单色灯 (Monochrome lamp)
+    if ([EUiid.uiid_1257].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateMonochromeLamp(lanState));
+    }
+
+    // 双色灯 (bicolor lamp)
+    if ([EUiid.uiid_1258, EUiid.uiid_7008].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateBicolorLamp(lanState));
+    }
+
+    // 五色灯 (five color lamp)
+    if (ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST.includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateFiveColorLamp(lanState, deviceId));
+    }
+
+    // 水浸 (water sensor)
+    if (ZIGBEE_UIID_WATER_SENSOR.includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateWaterSensor(lanState));
+    }
+
+    // 烟感 (smoke detector)
+    if ([EUiid.uiid_5026].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateSmokeDetector(lanState));
+    }
+
+    // 温控阀 (TRV)
+    if (ZIGBEE_UIID_TRV_LIST.includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateTRV(lanState, deviceId));
     }
 
     return iHostState;
@@ -416,6 +499,22 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface)
         _.assign(lanState, iHostStateToLanStateCurtain(iHostState));
     }
 
+    // websocket 灯带 (websocket light strip)
+    if ([EUiid.uiid_59, EUiid.uiid_173, EUiid.uiid_137, EUiid.uiid_22, EUiid.uiid_36, ...ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST].includes(uiid)) {
+        _.assign(lanState, iHostStateToLanStateWebSocket(iHostState, deviceId, uiid));
+    }
+    if ([EUiid.uiid_1257].includes(uiid)) {
+        _.assign(lanState, iHostStateToLanStateMonochromeLamp(iHostState));
+    }
+
+    if ([EUiid.uiid_1258, EUiid.uiid_7008].includes(uiid)) {
+        _.assign(lanState, iHostStateToLanStateBicolorLamp(iHostState));
+    }
+
+    if (ZIGBEE_UIID_TRV_LIST.includes(uiid)) {
+        _.assign(lanState, iHostStateToLanStateTRV(iHostState));
+    }
+
     return JSON.stringify(lanState);
 }
 
@@ -478,8 +577,113 @@ function getEWelinkZigbeeSubDeviceList(zigbeePDeviceId: string) {
     return list.map((item) => item.deviceid);
 }
 
+function updateEWeLinkDeviceData(deviceId: string, type: 'device' | 'itemData' | 'params', data: any) {
+    let oldEWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(deviceId);
+    if (!oldEWeLinkDeviceData) {
+        return;
+    }
+    if (type === 'device') {
+        _.extend(oldEWeLinkDeviceData, data);
+    } else if (type === 'itemData') {
+        _.extend(oldEWeLinkDeviceData.itemData, data);
+    } else if (type === 'params') {
+        let newData = data;
+        const uiid = oldEWeLinkDeviceData.itemData.extra.uiid;
+        if (uiid === EUiid.uiid_102) {
+            oldEWeLinkDeviceData = generateDeviceOnline(oldEWeLinkDeviceData, data);
+        }
+
+        //uiid 22 修改彩色之后不改变亮度，防止亮度被设置为0
+        if (uiid === EUiid.uiid_22 && _.get(data, 'zyx_mode', null) === 2) {
+            newData = _.omit(newData, ['channel0', 'channel1']);
+        }
+        _.extend(oldEWeLinkDeviceData.itemData.params, newData);
+    }
+
+    const eWeLinkDeviceList = db.getDbValue('eWeLinkDeviceList');
+    _.remove(eWeLinkDeviceList, (item) => item.itemData.deviceid === deviceId);
+    eWeLinkDeviceList.push(oldEWeLinkDeviceData);
+
+    //存入数据库 (Save to database)
+    db.setDbValue('eWeLinkDeviceList', eWeLinkDeviceList);
+}
+
+function generateDeviceOnline(oldEWeLinkDeviceData: IEWeLinkDevice, params: any) {
+    const deviceData = oldEWeLinkDeviceData;
+    const oldOnline = get102DeviceOnline(deviceData);
+    const newOnline = get102DeviceOnline(deviceData, params);
+
+    if (oldOnline !== newOnline) {
+        logger.info('102----------------', params, newOnline);
+        syncDeviceOnlineIHost(deviceData.itemData.deviceid, newOnline);
+    }
+    deviceData.itemData.online = newOnline;
+    return deviceData;
+}
+
+/**
+ * 根据rf网关id和索引获取rf遥控器的serial_number
+ * Get the serial number of the rf remote control based on the rf gateway id and index
+ */
+function getRfSerialNumberByDeviceIdAndIndex(deviceId: string, remoteIndex: number) {
+    const remoteDeviceList = getAllRemoteDeviceList(deviceId);
+    const remoteId = remoteDeviceList[remoteIndex].smartHomeAddonRemoteId;
+
+    const iHostDeviceDataList = getIHostDeviceDataListByDeviceId(deviceId);
+    if (!iHostDeviceDataList) {
+        return null;
+    }
+    const thisItem = iHostDeviceDataList.find((item) => item.third_serial_number === remoteId);
+    if (!thisItem) {
+        return null;
+    }
+    return thisItem.serial_number;
+}
+
+function getThirdSerialNumberByRfRemote(deviceId: string, remote: IRemoteDevice) {
+    logger.info('getThirdSerialNumberByRfRemote--------------------', remote);
+    const eWeLinkRemoteId = remote.buttonInfoList.map((item) => item.rfChl).join('-') + 'type' + '-' + remote.type;
+
+    const iHostDeviceDataList = getIHostDeviceDataListByDeviceId(deviceId);
+    if (!iHostDeviceDataList) {
+        logger.info('getThirdSerialNumberByRfRemote--------------------1');
+
+        return null;
+    }
+    const thisItem = iHostDeviceDataList.find((item) => {
+        const rfGatewayConfig = _.get(item, 'rfGatewayConfig', null) as unknown as IRemoteDevice;
+        if (!rfGatewayConfig) {
+            logger.info('getThirdSerialNumberByRfRemote--------------------2');
+
+            return false;
+        }
+        const iHostRemoteId = rfGatewayConfig.buttonInfoList.map((item) => item.rfChl).join('-') + 'type' + '-' + remote.type;
+        logger.info('getThirdSerialNumberByRfRemote--------------------3', eWeLinkRemoteId, iHostRemoteId);
+
+        return eWeLinkRemoteId === iHostRemoteId;
+    });
+
+    if (!thisItem) {
+        return null;
+    }
+    return thisItem.third_serial_number;
+}
+/**
+ * 更新iHost中设备在线情况
+ * Update device online status in iHost
+ */
+function updateIHostDeviceDataOnline(serial_number: string, online: boolean) {
+    let iHostDeviceList = db.getDbValue('iHostDeviceList');
+    iHostDeviceList = iHostDeviceList.map((item) => {
+        if (item.serial_number === serial_number) {
+            item.online = online;
+        }
+        return item;
+    });
+    db.setDbValue('iHostDeviceList', iHostDeviceList);
+}
+
 export default {
-    MULTI_PROTOCOL_LIST,
     generateUpdateLanDeviceParams,
     iHostStateToLanState,
     getIHostDeviceDataByDeviceId,
@@ -490,4 +694,8 @@ export default {
     getLastLanState,
     getIHostDeviceDataListByDeviceId,
     getEWelinkZigbeeSubDeviceList,
+    updateEWeLinkDeviceData,
+    getRfSerialNumberByDeviceIdAndIndex,
+    getThirdSerialNumberByRfRemote,
+    updateIHostDeviceDataOnline,
 };

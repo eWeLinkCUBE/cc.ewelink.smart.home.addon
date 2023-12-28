@@ -77,6 +77,17 @@ enum ECapability {
      * (Brightness level, string type, required. Optional parameters, "brighter" (brighter), "darker" (darker))
      * */
     ILLUMINATION_LEVEL = 'illumination-level',
+    /**
+     * 状态检测保持
+     * Status detection keeps
+     * */
+    DETECT_HOLD = 'detect-hold',
+    /** 拆除告警， clear: 未被拆除，detected：被拆除 (Demolition alarm, clear: not demolished, detected: demolished) */
+    TAMPER_ALERT = 'tamper-alert',
+    /** 温控阀设置目标数值能力 (Thermostatic valve setting target value capability) */
+    THERMOSTAT_TARGET_SETPOINT = 'thermostat-target-setpoint',
+    /** 温控阀能力 (Thermostatic valve capability) */
+    THERMOSTAT = 'thermostat',
 }
 
 export default ECapability;

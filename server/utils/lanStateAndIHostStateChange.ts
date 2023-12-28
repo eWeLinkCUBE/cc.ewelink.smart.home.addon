@@ -1,5 +1,4 @@
 import {
-    ILanStateSwitch,
     ILanState190,
     ILanStateLight,
     ILanState44,
@@ -13,19 +12,44 @@ import {
     ILanStateTemAndHum,
     ILanStateMotionSensor,
     ILanStatePersonExist,
+    ILanState22,
+    ILanState154,
+    ILanState36,
+    ILanState173And137,
+    ILanState59,
+    ILanState5,
+    ILanStateMonochromeLamp,
+    ILanStateBicolorLamp,
+    ILanStateFiveColorLamp,
+    ILanStateWaterSensor,
+    ILanStateSmokeDetector,
+    ILanStateContactSensorWithTamperAlert,
+    ILanStateTrv,
+    TrvWorkMode,
+    TrvWorkState,
+    ILanStateMotionSensor7002,
 } from '../ts/interface/ILanState';
 import { IHostStateInterface } from '../ts/interface/IHostState';
-import _ from 'lodash';
 import deviceDataUtil from './deviceDataUtil';
 import logger from '../log';
 import EUiid from '../ts/enum/EUiid';
+import { initDeviceList, controlDevice } from '../lib/coolkit-device-protocol';
+import { fakeTempList, brightMap, ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST } from '../const';
+import { hsvToRgb, rgbToHsv } from '../utils/colorUtils';
+import _ from 'lodash';
+import { toIntNumber } from './tool';
 
 //对 uiid 190 特殊处理 (Special handling for uiid 190)
-function lanStateToIHostState190And182(lanState: ILanState190, uiid: number) {
+function lanStateToIHostStatePowerDevice(lanState: ILanState190, uiid: number) {
     const iHostState = {};
     const power = _.get(lanState, 'power', null); //功率 (power)
     //是否要乘以100，有些局域网参数会乘100再上报 (Do you want to multiply by 100? Some LAN parameters will be multiplied by 100 before reporting.)
-    const unitValue = uiid === EUiid.uiid_190 ? 1 : 100;
+    let unitValue = 1;
+
+    if ([EUiid.uiid_182].includes(uiid)) {
+        unitValue = 100;
+    }
+
     if (power !== null) {
         _.assign(iHostState, {
             'electric-power': {
@@ -58,14 +82,13 @@ function lanStateToIHostState190And182(lanState: ILanState190, uiid: number) {
 function lanStateToIHostStateLight(lanState: ILanStateLight, uiid: number) {
     const iHostState = {};
     const ltype = _.get(lanState, 'ltype', null); //情景模式 (Scenario)
-
     if (ltype !== null) {
         const brValue = _.get(lanState, [ltype, 'br'], null);
         let ctValue = _.get(lanState, [ltype, 'ct'], null);
         // 色温数值转换,[0,255]转换成[0，100]
         // Color temperature numerical conversion, [0,255] is converted into [0,100]
         if (ctValue !== null && [EUiid.uiid_103, EUiid.uiid_104].includes(uiid)) {
-            ctValue = ((ctValue / 255) * 100).toFixed(0);
+            ctValue = toIntNumber((ctValue / 255) * 100);
         }
 
         const redValue = _.get(lanState, [ltype, 'r'], null);
@@ -144,7 +167,7 @@ function iHostStateToLanStateLight(iHostState: IHostStateInterface, deviceId: st
         // 色温数值转换,[0，100]转换成[0,255]
         // Color temperature numerical conversion, [0, 100] is converted to [0, 255]
         if ([EUiid.uiid_103, EUiid.uiid_104].includes(uiid)) {
-            ct = Number(((ct / 100) * 255).toFixed(0));
+            ct = toIntNumber((ct / 100) * 255);
         }
 
         newLanState['white'] = {
@@ -259,11 +282,6 @@ function lanStateToIHostState181And15(lanState: ILanState181and15, uiid: EUiid) 
     }
 
     return iHostState;
-}
-// 将字符串变成整数类型,num代表小数点几位
-// Convert the string into an integer type, num represents the number of decimal points
-function toIntNumber(value: string | number, num = 0) {
-    return Number(Number(value).toFixed(num));
 }
 
 function iHostStateToLanState15(lanState: any) {
@@ -538,6 +556,22 @@ function lanStateToIHostStateContactSensor(lanState: ILanStateContactSensor) {
     return iHostState;
 }
 
+function lanStateToIHostStateContactSensorWithTamperAlert(lanState: ILanStateContactSensorWithTamperAlert) {
+    const iHostState = lanStateToIHostStateContactSensor(lanState);
+
+    // 检测到拆除，split 字段存在时值只能为1 (When demolition is detected, the value of split field can only be 1 when it exists.)
+    const split = _.get(lanState, 'split', null);
+    if (split !== null) {
+        _.merge(iHostState, {
+            'tamper-alert': {
+                tamper: split === 1 ? 'detected' : 'clear',
+            },
+        });
+    }
+
+    return iHostState;
+}
+
 function lanStateToIHostStateCurtain(lanState: ILanStateCurtain, uiid: EUiid.uiid_7006 | EUiid.uiid_7015) {
     const iHostState = {};
 
@@ -666,6 +700,22 @@ function lanStateToIHostStateMotionSensor(lanState: ILanStateMotionSensor) {
     return iHostState;
 }
 
+function lanStateToIHostStateMotionSensor7002(lanState: ILanStateMotionSensor7002) {
+    const iHostState = lanStateToIHostStateMotionSensor(lanState);
+
+    // uiid 7002 移动传感器需要同步光照等级数据 (uiid 7002 motion sensor need to sync illumination-level data)
+    const brState = _.get(lanState, 'brState', null);
+    if (brState !== null) {
+        _.merge(iHostState, {
+            'illumination-level': {
+                level: brState,
+            },
+        });
+    }
+
+    return iHostState;
+}
+
 function lanStateToIHostStatePersonExist(lanState: ILanStatePersonExist) {
     const HUMAN_MAP = {
         0: false,
@@ -697,8 +747,772 @@ function lanStateToIHostStatePersonExist(lanState: ILanStatePersonExist) {
     return iHostState;
 }
 
+function lanStateToIHostState22(lanState: ILanState22) {
+    const iHostState = {};
+
+    const powerState = _.get(lanState, 'state', null);
+
+    if (powerState !== null) {
+        _.merge(iHostState, {
+            power: {
+                powerState,
+            },
+        });
+    }
+
+    const channel0 = _.get(lanState, 'channel0', null);
+    const channel1 = _.get(lanState, 'channel1', null);
+
+    if (channel0 !== null && channel1 !== null) {
+        const originBright = Math.max(Number(channel0), Number(channel1));
+        let index = brightMap.findIndex((v) => Number(v) === originBright);
+        index = index > -1 ? index + 1 : 11;
+        const brightness = percentTranslateToHundred(index, [1, 21]);
+        if (brightness) {
+            _.assign(iHostState, {
+                brightness: {
+                    brightness,
+                },
+            });
+        }
+
+        let compare = Number(channel0) - Number(channel1);
+        if (compare > 0) {
+            compare = 100;
+        } else if (compare === 0) {
+            compare = 50;
+        } else {
+            compare = 0;
+        }
+
+        _.merge(iHostState, {
+            'color-temperature': {
+                colorTemperature: compare,
+            },
+        });
+    }
+
+    const redValue = _.get(lanState, 'channel2', null);
+    const greenValue = _.get(lanState, 'channel3', null);
+    const blueValue = _.get(lanState, 'channel4', null);
+
+    if (redValue !== null && greenValue !== null && blueValue !== null) {
+        _.merge(iHostState, {
+            'color-rgb': {
+                red: Number(redValue),
+                green: Number(greenValue),
+                blue: Number(blueValue),
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostState102(lanState: ILanState154) {
+    const iHostState = {};
+
+    const switchState = _.get(lanState, 'switch', null);
+
+    if (switchState !== null) {
+        _.merge(iHostState, {
+            detect: {
+                detected: switchState === 'on',
+            },
+        });
+    }
+    return iHostState;
+}
+
+function lanStateToIHostState154(lanState: ILanState154) {
+    const iHostState = {};
+
+    const switchState = _.get(lanState, 'switch', null);
+    const type = _.get(lanState, 'type', null);
+
+    if (switchState !== null) {
+        _.merge(iHostState, {
+            detect: {
+                detected: switchState === 'on',
+            },
+        });
+    }
+
+    if (switchState !== null && type !== null) {
+        //type string | number
+        //type 2 open
+        //type 3 close
+        //type 7 设备状态保持提醒 Device status reminder
+        if (switchState === 'on' && type == 2) {
+            _.merge(iHostState, {
+                detect: {
+                    detected: true,
+                },
+                'detect-hold': {
+                    detectHold: 'off',
+                },
+            });
+        }
+
+        if (switchState === 'off' && type == 3) {
+            _.merge(iHostState, {
+                detect: {
+                    detected: false,
+                },
+            });
+        }
+
+        if (type == 7) {
+            _.merge(iHostState, {
+                'detect-hold': {
+                    detectHold: switchState,
+                },
+            });
+        }
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostState36(lanState: ILanState36) {
+    const iHostState = {};
+
+    const brightness = _.get(lanState, 'bright', null);
+
+    if (brightness !== null) {
+        // 将10-100的值转换成1-100 Convert the value of 10 100 to 1 100
+        const brightValue = percentTranslateToHundred(brightness, [10, 100]);
+        _.merge(iHostState, {
+            brightness: {
+                brightness: brightValue,
+            },
+        });
+    }
+    return iHostState;
+}
+
+/**
+ * 范围转换 (range conversion)
+ * @param originValue 要转换的设备值 (device value to convert)
+ * @param source 设备范围 (Device value range)
+ * @returns 转换后的 1-100 (Converted  1-100)
+ */
+function percentTranslateToHundred(originValue: number, source: [number, number]) {
+    if (originValue === source[0]) return 1;
+    if (originValue === source[1]) return 100;
+    const sourceRange = source[1] - source[0] + 1;
+    let value = parseInt(((originValue - source[0] + 1) / sourceRange) * 100 + '');
+    value < 0 && (value = 1);
+    value > 100 && (value = 100);
+    return value;
+}
+
+/**
+ * 范围转换 (range conversion)
+ * @param originValue 要转换的设备值 (device value to convert)
+ * @param source 设备范围 (Device brightness range)
+ * @returns 转换后的 1-100 (Converted  1-100)
+ */
+function percentTranslateFromHundred(originValue: number, target: [number, number]) {
+    const value = (originValue / 100) * (target[1] - target[0]) + target[0];
+    if (originValue === 0) return target[0];
+    if (originValue === 100) return target[1];
+    return Math.round(value);
+}
+
+function lanStateToIHostState173And137(lanState: ILanState173And137) {
+    const iHostState = {};
+    // logger.info('1------------------------lanState', lanState);
+
+    const brightness = _.get(lanState, 'bright', null);
+
+    if (brightness !== null) {
+        _.merge(iHostState, {
+            brightness: {
+                brightness,
+            },
+        });
+    }
+    // logger.info('2------------------------', iHostState);
+
+    const colorTemp = _.get(lanState, 'colorTemp', null);
+
+    if (colorTemp !== null) {
+        _.merge(iHostState, {
+            'color-temperature': {
+                colorTemperature: 100 - colorTemp,
+            },
+        });
+    }
+
+    const redValue = _.get(lanState, 'colorR', null);
+    const greenValue = _.get(lanState, 'colorG', null);
+    const blueValue = _.get(lanState, 'colorB', null);
+
+    if (redValue !== null && greenValue !== null && blueValue !== null) {
+        _.merge(iHostState, {
+            'color-rgb': {
+                red: redValue,
+                green: greenValue,
+                blue: blueValue,
+            },
+        });
+    }
+
+    // logger.info('3------------------------', iHostState);
+
+    const mode = _.get(lanState, 'mode', null);
+    if (mode !== null) {
+        let modeValue = 'whiteLight';
+        if (mode === 0 || mode === 1) {
+            modeValue = 'color';
+        } else if (mode === 2) {
+            modeValue = 'colorTemperature';
+        } else if (mode === 3) {
+            modeValue = 'whiteLight';
+        }
+        _.merge(iHostState, {
+            mode: {
+                lightMode: {
+                    modeValue,
+                },
+            },
+        });
+    }
+
+    // logger.info('4------------------------', iHostState);
+
+    return iHostState;
+}
+
+function lanStateToIHostState59(lanState: ILanState59) {
+    const iHostState = {};
+
+    const brightness = _.get(lanState, 'bright', null);
+
+    if (brightness !== null) {
+        _.merge(iHostState, {
+            brightness: {
+                brightness,
+            },
+        });
+    }
+
+    const redValue = _.get(lanState, 'colorR', null);
+    const greenValue = _.get(lanState, 'colorG', null);
+    const blueValue = _.get(lanState, 'colorB', null);
+
+    if (redValue !== null && greenValue !== null && blueValue !== null) {
+        _.merge(iHostState, {
+            'color-rgb': {
+                red: redValue,
+                green: greenValue,
+                blue: blueValue,
+            },
+        });
+
+        let index = fakeTempList.findIndex((v) => v === `${redValue},${greenValue},${blueValue}`);
+        index = index > -1 ? index : 0;
+        _.merge(iHostState, {
+            'color-temperature': {
+                colorTemperature: 100 - percentTranslateToHundred(index, [0, 143]),
+            },
+        });
+    }
+    return iHostState;
+}
+
+function iHostStateToLanStateWebSocket(iHostState: IHostStateInterface, deviceId: string, uiid: number) {
+    let lanState = {};
+
+    logger.info('iHostStateToLanStateWebSocket----1', iHostState);
+
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    const { devices } = initDeviceList([eWeLinkDeviceData] as any);
+    const device = devices[0];
+
+    if (!device) {
+        return {};
+    }
+
+    if (_.isEmpty(iHostState)) {
+        return {};
+    }
+
+    const powerStateObj = _.get(iHostState, 'power');
+    const brightnessObj = _.get(iHostState, 'brightness');
+    const colorTempObj = _.get(iHostState, 'color-temperature');
+    const colorRgbObj = _.get(iHostState, 'color-rgb');
+    const modeObj = _.get(iHostState, 'mode');
+    let powerState;
+    let brightness;
+    let colorTemp;
+    let hue;
+    let colorMode;
+    let saturation;
+
+    if (powerStateObj) {
+        powerState = powerStateObj.powerState;
+        const proxy = controlDevice(device, 'toggle', { switch: powerState });
+        _.assign(lanState, proxy);
+    }
+
+    if (brightnessObj) {
+        brightness = brightnessObj.brightness;
+        if ([EUiid.uiid_22].includes(uiid)) {
+            brightness = percentTranslateFromHundred(brightness, [1, 21]);
+        }
+        const proxy = controlDevice(device, 'setBrightness', { brightness });
+
+        _.assign(lanState, proxy);
+    }
+
+    if (colorTempObj) {
+        colorTemp = colorTempObj.colorTemperature;
+
+        if ([EUiid.uiid_22].includes(uiid)) {
+            //群组可能传非0、50、100的数值，做兼容（群The group may pass value other than 0, 50, and 100 for compatibility.）
+            if (colorTemp >= 0 && colorTemp <= 33) {
+                colorTemp = 0;
+            } else if (colorTemp > 33 && colorTemp <= 66) {
+                colorTemp = 50;
+            } else {
+                colorTemp = 100;
+            }
+        }
+
+        if ([EUiid.uiid_59].includes(uiid)) {
+            colorTemp = percentTranslateFromHundred(colorTemp, [0, 142]);
+            colorTemp = 142 - colorTemp;
+        }
+
+        if ([EUiid.uiid_173, EUiid.uiid_137].includes(uiid)) {
+            colorTemp = 100 - colorTemp;
+        }
+
+        //解决zigbee五色灯设置色温时没有亮度字段问题
+        //Solve the problem that there is no brightness field when setting the color temperature of the zigbee five-color lamp
+        let modeProxy = {};
+        if (ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST.includes(uiid)) {
+            modeProxy = controlDevice(device, 'setLightMode', { colorMode: 'cct' });
+        }
+
+        const proxy = controlDevice(device, 'setColorTemperature', { colorTemp });
+
+        _.assign(lanState, modeProxy, proxy);
+    }
+
+    if (colorRgbObj) {
+        const arr = rgbToHsv(colorRgbObj.red, colorRgbObj.green, colorRgbObj.blue);
+        hue = arr[0];
+        saturation = arr[1];
+        //解决zigbee五色灯设置颜色时没有亮度字段问题
+        //Solve the problem that there is no brightness field when setting the color of zigbee five-color lamp
+        let modeProxy = {};
+        if (ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST.includes(uiid)) {
+            modeProxy = controlDevice(device, 'setLightMode', { colorMode: 'rgb' });
+        }
+
+        const proxy = controlDevice(device, 'setColor', { hue, saturation });
+
+        _.assign(lanState, modeProxy, proxy);
+    }
+
+    if (modeObj) {
+        const modeMapObj: any = {
+            colorTemperature: 'cct',
+            color: 'rgb',
+            whiteLight: 'white',
+        };
+        const modeValue = _.get(modeObj, ['lightMode', 'modeValue']);
+        colorMode = modeMapObj[modeValue];
+        const proxy = controlDevice(device, 'setLightMode', { colorMode });
+        _.assign(lanState, proxy);
+    }
+
+    if (Object.keys(iHostState).length === 2 && brightnessObj && modeObj) {
+        const proxy = controlDevice(device, 'setBrightness', { brightness: brightnessObj.brightness, mode: colorMode });
+
+        _.assign(lanState, proxy);
+        return lanState;
+    }
+
+    if (Object.keys(iHostState).length >= 2) {
+        const proxy = controlDevice(device, 'setMultiLightControl', { brightness, colorTemp, hue, mode: colorMode, saturation });
+        lanState = proxy;
+    }
+
+    logger.info('iHostStateToLanStateWebSocket----2', lanState);
+
+    return lanState;
+}
+
+function lanStateToIHostState5(lanState: ILanState5) {
+    const iHostState = {};
+
+    const startTime = _.get(lanState, 'startTime', null);
+
+    const endTime = _.get(lanState, 'endTime', '');
+
+    const oneKwh = _.get(lanState, 'oneKwh', null);
+
+    if (startTime !== null && oneKwh !== null) {
+        _.merge(iHostState, {
+            'power-consumption': {
+                powerConsumption: {
+                    rlSummarize: ['start', 'get'].includes(oneKwh),
+                    timeRange: {
+                        start: startTime,
+                        end: endTime,
+                    },
+                },
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostStateMonochromeLamp(lanState: ILanStateMonochromeLamp) {
+    const iHostState = {};
+
+    const switchState = _.get(lanState, 'switch', null);
+    if (switchState !== null) {
+        _.merge(iHostState, {
+            power: {
+                powerState: switchState,
+            },
+        });
+    }
+
+    // 同双色灯?（待定）
+    const brightness = _.get(lanState, 'brightness', null);
+    if (brightness !== null) {
+        _.merge(iHostState, {
+            brightness: {
+                brightness,
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function iHostStateToLanStateMonochromeLamp(iHostState: IHostStateInterface) {
+    const lanState = {};
+
+    const powerState = _.get(iHostState, ['power', 'powerState'], null);
+    if (powerState !== null) {
+        _.merge(lanState, { switch: powerState });
+    }
+
+    // 控制亮度需要将 switch: 'on' 参数同时下发 (To control the brightness, you need to send the switch: 'on' parameter at the same time.)
+    const brightness = _.get(iHostState, ['brightness', 'brightness'], null);
+    if (brightness !== null) {
+        _.merge(lanState, {
+            brightness,
+            switch: 'on',
+        });
+    }
+
+    return lanState;
+}
+
+function lanStateToIHostStateBicolorLamp(lanState: ILanStateBicolorLamp) {
+    const iHostState = {};
+
+    const switchState = _.get(lanState, 'switch', null);
+    if (switchState !== null) {
+        _.merge(iHostState, {
+            power: {
+                powerState: switchState,
+            },
+        });
+    }
+
+    /**
+     * uiid 7008 同步时获取到的亮度字段为：cctBrightness (uiid 7008 The brightness field obtained during synchronization is: cctBrightness)
+     * sse 同步亮度消息时字段为：brightness (When sse synchronizes brightness messages, the field is: brightness)
+     */
+    const brightness = _.get(lanState, 'brightness', null) ?? _.get(lanState, 'cctBrightness', null);
+    if (brightness !== null) {
+        _.merge(iHostState, {
+            brightness: {
+                brightness,
+            },
+        });
+    }
+
+    const colorTemp = _.get(lanState, 'colorTemp', null);
+    if (colorTemp !== null && colorTemp >= 1 && colorTemp <= 100) {
+        _.merge(iHostState, {
+            'color-temperature': {
+                colorTemperature: colorTemp,
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function iHostStateToLanStateBicolorLamp(iHostState: IHostStateInterface) {
+    const lanState = {};
+
+    const powerState = _.get(iHostState, ['power', 'powerState'], null);
+    if (powerState !== null) {
+        _.merge(lanState, { switch: powerState });
+    }
+
+    // 控制亮度需要将 switch: 'on' 参数同时下发 (To control the brightness, you need to send the switch: 'on' parameter at the same time.)
+    const brightness = _.get(iHostState, ['brightness', 'brightness'], null);
+    if (brightness !== null) {
+        _.merge(lanState, {
+            brightness,
+            switch: 'on',
+        });
+    }
+
+    // 控制色温需要将 switch: 'on' 参数同时下发 (To control color temperature, you need to send the switch: 'on' parameter at the same time.)
+    const colorTemp = _.get(iHostState, ['color-temperature', 'colorTemperature'], null);
+    if (colorTemp !== null) {
+        _.merge(lanState, {
+            colorTemp,
+            switch: 'on',
+        });
+    }
+
+    return lanState;
+}
+
+function lanStateToIHostStateFiveColorLamp(lanState: ILanStateFiveColorLamp, deviceId: string) {
+    /**
+     * zigbee-p 网关固件版本：1.7.1
+     * 五色灯切换彩光模式时，需要将 hue 和 saturation 转换成 rgb，
+     * zigbee-p gateway firmware version: 1.7.1
+     * When the five-color lamp switches modes, no colorMode field sse is reported.
+     * Obtain the current colorMode from cloud data when controlling the brightness of five-color lights,
+     */
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    const iHostState = {};
+
+    const switchState = _.get(lanState, 'switch', null);
+    if (switchState !== null) {
+        _.merge(iHostState, {
+            power: {
+                powerState: switchState,
+            },
+        });
+    }
+
+    const setBrightness = (brightness: number | null) => {
+        !!brightness && _.merge(iHostState, { brightness: { brightness } });
+    };
+
+    // 如果五色灯在 zigbee-p 网关中无色温数据时会获取到 colorTemp: 65535 (If the five-color lamp has no color temperature data in the zigbee-p gateway, colorTemp: 65535 will be obtained.)
+    const colorTemp = _.get(lanState, 'colorTemp', null);
+    if (colorTemp !== null && colorTemp >= 1 && colorTemp <= 100) {
+        _.merge(iHostState, {
+            'color-temperature': {
+                colorTemperature: colorTemp,
+            },
+        });
+    }
+
+    // 五色灯同步 saturation 取值范围 [0, 100] (Five-color light synchronization saturation value range [0, 100])
+    const saturation = _.get(lanState, 'saturation', null);
+    if (saturation !== null && saturation >= 0 && saturation <= 100) {
+        const hue = _.get(eWeLinkDeviceData, ['itemData', 'params', 'hue'], null);
+        if (hue !== null && hue >= 0 && hue <= 359) {
+            const [red, green, blue] = hsvToRgb(hue, saturation);
+            _.merge(iHostState, {
+                'color-rgb': { red, green, blue },
+            });
+        }
+    }
+
+    // 五色灯同步 hue 取值范围 [0, 359] (Five-color lamp hue value range [0, 359])
+    const hue = _.get(lanState, 'hue', null);
+    if (hue !== null && hue >= 0 && hue <= 359) {
+        const saturation = _.get(eWeLinkDeviceData, ['itemData', 'params', 'saturation'], null);
+        const [red, green, blue] = hsvToRgb(hue, saturation ?? 100);
+        _.merge(iHostState, {
+            'color-rgb': { red, green, blue },
+        });
+    }
+
+    const cctBrightness = _.get(lanState, 'cctBrightness', null);
+    if (cctBrightness !== null) {
+        setBrightness(cctBrightness);
+    }
+
+    const rgbBrightness = _.get(lanState, 'rgbBrightness', null);
+    if (rgbBrightness !== null) {
+        setBrightness(rgbBrightness);
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostStateWaterSensor(lanState: ILanStateWaterSensor) {
+    const iHostState = {};
+
+    const water = _.get(lanState, 'water', null);
+    if (water !== null) {
+        _.merge(iHostState, {
+            detect: {
+                detected: water === 1,
+            },
+        });
+    }
+
+    const battery = _.get(lanState, 'battery', null);
+    if (battery !== null) {
+        _.merge(iHostState, {
+            battery: {
+                battery,
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostStateSmokeDetector(lanState: ILanStateSmokeDetector) {
+    const iHostState = {};
+
+    const smoke = _.get(lanState, 'smoke', null);
+    if (smoke !== null) {
+        _.merge(iHostState, {
+            detect: {
+                detected: smoke === 1,
+            },
+        });
+    }
+
+    const battery = _.get(lanState, 'battery', null);
+    if (battery !== null) {
+        _.merge(iHostState, {
+            battery: {
+                battery,
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostStateTRV(lanState: ILanStateTrv, deviceId: string) {
+    const iHostState = {};
+    const eWelinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    const workModeMap: Record<ILanStateTrv['workMode'], TrvWorkMode> = {
+        '0': TrvWorkMode.MANUAL,
+        '1': TrvWorkMode.ECO,
+        '2': TrvWorkMode.AUTO,
+    };
+    const workStateMap: Record<ILanStateTrv['workState'], TrvWorkState> = {
+        '0': TrvWorkState.INACTIVE,
+        '1': TrvWorkState.HEATING,
+    };
+
+    const workMode = _.get(lanState, 'workMode', null);
+    if (workMode !== null && ['0', '1', '2'].includes(workMode)) {
+        _.merge(iHostState, {
+            thermostat: {
+                'thermostat-mode': {
+                    thermostatMode: workModeMap[workMode],
+                },
+            },
+        });
+    }
+
+    const workState = _.get(lanState, 'workState', null);
+    if (workState !== null && ['0', '1'].includes(workState)) {
+        _.merge(iHostState, {
+            thermostat: {
+                'adaptive-recovery-status': {
+                    adaptiveRecoveryStatus: workStateMap[workState],
+                },
+            },
+        });
+    }
+
+    const curTargetTemp = _.get(lanState, 'curTargetTemp', null);
+    const realWorkMode = workMode ?? _.get(eWelinkDeviceData, 'itemData.params.workMode', null);
+    if (curTargetTemp !== null && realWorkMode !== null) {
+        switch (realWorkMode) {
+            case '0':
+                _.merge(iHostState, { 'thermostat-target-setpoint': { 'manual-mode': { targetSetpoint: curTargetTemp / 10 } } });
+                break;
+            case '1':
+                _.merge(iHostState, { 'thermostat-target-setpoint': { 'eco-mode': { targetSetpoint: curTargetTemp / 10 } } });
+                break;
+            case '2':
+                _.merge(iHostState, { 'thermostat-target-setpoint': { 'auto-mode': { targetSetpoint: curTargetTemp / 10 } } });
+                break;
+        }
+    }
+
+    const manTargetTemp = _.get(lanState, 'manTargetTemp', null);
+    if (manTargetTemp !== null) {
+        _.merge(iHostState, { 'thermostat-target-setpoint': { 'manual-mode': { targetSetpoint: manTargetTemp / 10 } } });
+    }
+
+    const ecoTargetTemp = _.get(lanState, 'ecoTargetTemp', null);
+    if (ecoTargetTemp !== null) {
+        _.merge(iHostState, { 'thermostat-target-setpoint': { 'eco-mode': { targetSetpoint: ecoTargetTemp / 10 } } });
+    }
+
+    const autoTargetTemp = _.get(lanState, 'autoTargetTemp', null);
+    if (autoTargetTemp !== null) {
+        _.merge(iHostState, { 'thermostat-target-setpoint': { 'auto-mode': { targetSetpoint: autoTargetTemp / 10 } } });
+    }
+
+    const temperature = _.get(lanState, 'temperature', null);
+    if (temperature !== null) {
+        _.merge(iHostState, {
+            temperature: { temperature: temperature / 10 },
+        });
+    }
+
+    const battery = _.get(lanState, 'battery', null);
+    if (battery !== null) {
+        _.merge(iHostState, {
+            battery: {
+                battery,
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function iHostStateToLanStateTRV(iHostState: IHostStateInterface) {
+    const lanState = {};
+
+    const targetSetpoint = _.get(iHostState, ['thermostat-target-setpoint', 'manual-mode', 'targetSetpoint'], null);
+    if (targetSetpoint !== null) {
+        _.merge(lanState, {
+            manTargetTemp: targetSetpoint * 10,
+        });
+    }
+
+    const workModeMap: Record<TrvWorkMode, ILanStateTrv['workMode']> = {
+        [TrvWorkMode.MANUAL]: '0',
+        [TrvWorkMode.ECO]: '1',
+        [TrvWorkMode.AUTO]: '2',
+    };
+    const workMode: null | TrvWorkMode = _.get(iHostState, ['thermostat', 'thermostat-mode', 'thermostatMode'], null);
+    if (workMode !== null && [TrvWorkMode.MANUAL, TrvWorkMode.ECO, TrvWorkMode.AUTO].includes(workMode)) {
+        _.merge(lanState, {
+            workMode: workModeMap[workMode],
+        });
+    }
+
+    return lanState;
+}
+
 export {
-    lanStateToIHostState190And182,
+    lanStateToIHostStatePowerDevice,
     lanStateToIHostStateLight,
     iHostStateToLanStateLight,
     iHostStateToLanState44,
@@ -713,9 +1527,28 @@ export {
     lanStateToIHostState28,
     lanStateToIHostStateButton,
     lanStateToIHostStateContactSensor,
+    lanStateToIHostStateContactSensorWithTamperAlert,
     lanStateToIHostStateCurtain,
     iHostStateToLanStateCurtain,
     lanStateToIHostStateTemAndHum,
     lanStateToIHostStateMotionSensor,
+    lanStateToIHostStateMotionSensor7002,
     lanStateToIHostStatePersonExist,
+    lanStateToIHostState22,
+    lanStateToIHostState102,
+    lanStateToIHostState154,
+    lanStateToIHostState36,
+    lanStateToIHostState173And137,
+    lanStateToIHostState59,
+    iHostStateToLanStateWebSocket,
+    lanStateToIHostState5,
+    lanStateToIHostStateMonochromeLamp,
+    iHostStateToLanStateMonochromeLamp,
+    lanStateToIHostStateBicolorLamp,
+    iHostStateToLanStateBicolorLamp,
+    lanStateToIHostStateFiveColorLamp,
+    lanStateToIHostStateWaterSensor,
+    lanStateToIHostStateSmokeDetector,
+    lanStateToIHostStateTRV,
+    iHostStateToLanStateTRV,
 };

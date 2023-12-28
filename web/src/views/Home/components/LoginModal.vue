@@ -1,5 +1,5 @@
 <template>
-    <div ref="eWeLinkLoginRef">
+    <div ref="eWeLinkLoginRef" class="login-modal">
         <a-modal
             :visible="loginVisible"
             :maskClosable="isMaskClosable"
@@ -9,9 +9,9 @@
             :getContainer="() => eWeLinkLoginRef"
             centered
             :closable="false"
-            width="510px"
+            width="375px"
         >
-            <div v-if="!isDownLoad">
+            <div>
                 <!-- <a-tabs :class="etcStore.language === 'en-us' ? 'en-tab' : ''" v-model:activeKey="activeKey">
                     <a-tab-pane key="1" :tab="$t('LOGIN_WITH_QRCODE')">
                         <div v-if="isOverdue" @click="refreshQrcode" class="overdue-tip">
@@ -34,14 +34,16 @@
                     <div class="title">{{ $t('LOGIN_WITH_PASSWORD') }}</div>
                     <a-form class="form" :label-col="etcStore.language === 'zh-cn' ? labelColCN : labelColEN" :model="accountInfo">
                         <span>{{ $t('REGION') }}</span>
-                        <a-form-item class="Select">
-                            <img class="icon" src="@/assets/img/country.png" />
-                            <a-select v-model:value="accountInfo.region" show-search dropdownClassName="Select">
-                                <a-select-option v-for="item in regionMap" :value="item.label">{{ item.label }} </a-select-option>
-                            </a-select>
+                        <a-form-item>
+                            <div class="region-selector">
+                                <img class="icon" src="@/assets/img/country.png" />
+                                <a-select v-model:value="accountInfo.region" show-search dropdownClassName="Select">
+                                    <a-select-option v-for="item in regionMap" :value="item.label">{{ item.label }} </a-select-option>
+                                </a-select>
+                            </div>
                         </a-form-item>
                         <span>{{ $t('ACCOUNT') }}</span>
-                        <a-form-item class="Input">
+                        <a-form-item>
                             <a-input :placeholder="$t('ENTER_ACCOUNT')" v-model:value="accountInfo.account">
                                 <template #prefix>
                                     <img src="@/assets/img/account.png" />
@@ -49,27 +51,21 @@
                             </a-input>
                         </a-form-item>
                         <span>{{ $t('PASSWORD') }}</span>
-                        <a-form-item class="Input">
+                        <a-form-item>
                             <a-input-password @keyup.enter.native="loginWithAccount" :placeholder="$t('ENTER_PASSWORD')" v-model:value="accountInfo.passWord">
                                 <template #prefix>
                                     <img src="@/assets/img/password.png" />
                                 </template>
                             </a-input-password>
                         </a-form-item>
-                        <a-form-item>
+                        <div class="btn-container">
                             <a-button :loading="loading" @click="loginWithAccount" type="primary">{{ $t('LOGIN') }}</a-button>
-                        </a-form-item>
+                        </div>
                     </a-form>
                 </div>
                 <!-- </a-tab-pane>
                 </a-tabs> -->
             </div>
-            <div class="download-app" v-else>
-                <left-outlined class="back" @click="() => (isDownLoad = false)" />
-                <div class="download">{{ $t('DOWNLOAD_QRCODE') }}</div>
-                <img src="@/assets/img/Qr-code.png" class="eWeLink-img" />
-            </div>
-            <a v-if="!isDownLoad" style="margin: 0 auto" @click="downloadApp">{{ $t('DOWNLODA_APP') }} ></a>
         </a-modal>
     </div>
 </template>
@@ -88,7 +84,6 @@ const activeKey = ref('1');
 const qrcoderStatusTimer = ref<any>();
 const qrcodeKey = ref('');
 const loading = ref(false);
-const isDownLoad = ref(false);
 const isOverdue = ref(false);
 const isGetStatus = ref(true);
 // 声明点击蒙层是否允许关闭
@@ -164,10 +159,6 @@ const props = defineProps({
     },
 });
 
-const downloadApp = () => {
-    isDownLoad.value = true;
-};
-
 watch(
     () => props.loginVisible,
     async (newValue, oldValue) => {
@@ -185,14 +176,13 @@ watch(
     }
 );
 
-const emits = defineEmits(['cancelLoginVisible', 'refreshLinkStatus', 'update:loginVisible']);
+const emits = defineEmits(['update:login-visible', 'refreshLinkStatus', 'update:loginVisible']);
 
 const cancelLoginVisible = () => {
-    isDownLoad.value = false;
     accountInfo.region = '';
     accountInfo.account = '';
     accountInfo.passWord = '';
-    emits('cancelLoginVisible');
+    emits('update:login-visible');
     emits('refreshLinkStatus');
 };
 
@@ -294,23 +284,9 @@ const loginWithAccount = async () => {
         margin-bottom: 2px;
     }
 }
-.form {
-    height: 325px;
-    padding: 0 80px;
-    span {
-        font-weight: 600;
-        font-size: 16px;
-        margin-bottom: 8px;
-    }
-}
+
 .pointer {
     cursor: pointer;
-}
-.icon {
-    position: absolute;
-    left: 12px;
-    top: 10px;
-    z-index: 1;
 }
 .overdue-tip {
     position: absolute;
@@ -324,39 +300,6 @@ const loginWithAccount = async () => {
     p {
         font-size: 24px !important;
         margin-bottom: 14px;
-    }
-}
-.title {
-    text-align: center;
-    font-weight: 600;
-    font-size: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #ececec;
-    margin-bottom: 34px;
-}
-.download-app {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin: auto 0;
-    .download {
-        width: 450px;
-        text-align: center;
-        font-size: 20px;
-        font-weight: 500;
-    }
-
-    .back {
-        cursor: pointer;
-        font-size: 20px;
-        position: absolute;
-        left: 20px;
-        top: 20px;
-    }
-    .eWeLink-img {
-        height: 300px;
-        width: 300px;
     }
 }
 
@@ -374,8 +317,47 @@ const loginWithAccount = async () => {
 :deep(.ant-modal-body) {
     display: flex;
     flex-direction: column;
-    height: 516px !important;
-    padding: 24px 12px !important;
+}
+
+.login-modal {
+    &:deep(.ant-modal-body) {
+        padding: 16px 30px;
+        .ant-form {
+            margin-top: 12px;
+            .ant-form-item {
+                margin-top: 4px;
+                margin-bottom: 12px;
+            }
+        }
+    }
+    .title {
+        text-align: center;
+        font-weight: 600;
+        font-size: 18px;
+        color: #424242;
+    }
+    .form {
+        span {
+            font-weight: 600;
+            font-size: 14px;
+            color: #424242;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .region-selector {
+            position: relative;
+            width: 100%;
+            .icon {
+                position: absolute;
+                left: 12px;
+                top: 6px;
+                z-index: 1;
+            }
+        }
+    }
 }
 
 :deep(.ant-form-item-label > label) {
@@ -389,18 +371,8 @@ const loginWithAccount = async () => {
     flex-direction: column;
     justify-content: space-evenly;
 }
-:deep(.ant-form-item) {
-    margin-bottom: 18px;
-}
 :deep(.ant-select-single:not(.ant-select-customize-input) .ant-select-selector) {
     border-radius: 2px;
-}
-
-.Input {
-    .ant-input {
-        height: 40px;
-        border-radius: 2px;
-    }
 }
 
 .en-tab {
@@ -427,9 +399,6 @@ const loginWithAccount = async () => {
     width: 208px;
     font-size: 16px;
     border-radius: 4px;
-}
-:deep(.ant-select) {
-    line-height: 40px;
 }
 :deep(.ant-select-single.ant-select-show-arrow .ant-select-selection-item) {
     padding-left: 24px;

@@ -9,7 +9,9 @@ import syncDeviceOnlineToIHost from '../services/public/syncDeviceOnlineToIHost'
 import zigbeePOnlineMap from '../ts/class/zigbeePOnlineMap';
 import _ from 'lodash';
 import deviceMapUtil from './deviceMapUtil';
+import deviceDataUtil from './deviceDataUtil';
 import addZigbeeSubDevice from '../services/zigbeeP/addZigbeeSubDevice';
+import { ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST } from '../const';
 
 //zigbee-p 的子设备离线由sse维护，sse断了，全部子设备离线，sse连接到了，请求-p网关获取所有子设备接口，拿到子设备状态
 // The offline sub-devices of /zigbee-p are maintained by sse. When sse is disconnected, all sub-devices are offline. When sse is connected, request the -p gateway to obtain all sub-device interfaces and obtain the sub-device status.
@@ -75,7 +77,6 @@ class SSEClient {
         };
 
         this.eventSource.onmessage = (event) => {
-            logger.info('zigbee message----------------------');
             this.heartbeatListen();
 
             //sse心跳 (Sse heartbeat)
@@ -92,21 +93,38 @@ class SSEClient {
                 // async device status to iHost
                 const { deviceid, params } = sseData;
                 //保存在线状态，用于smart-home的前端页面 (Save online status for the front-end page of smart home)
+                deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'params', params);
                 zigbeePOnlineMap.zigbeePSubDevicesMap.set(deviceid, true);
                 syncZigbeeDeviceStateToIHost(deviceid, params);
                 addZigbeeSubDevice(this.deviceId, deviceid);
+
+                /**
+                 * zigbee-p 网关固件版本：1.7.1
+                 * 五色灯在切换模式时无 colorMode 字段 sse 上报则不会更新本地保存的云端数据，导致控制五色灯灯光亮度时从云端数据中获取当前 colorMode 不变。
+                 * 上报模式对应亮度时，自动切换云端数据中的 colorMode 为该模式
+                 *
+                 * *zigbee-p gateway firmware version: 1.7.1
+                 * When the five-color lamp switches modes, there is no colorMode field. If the sse report is reported, the locally saved cloud data will not be updated. As a result, when controlling the brightness of the five-color lamp, the current colorMode obtained from the cloud data remains unchanged.
+                 * When the reporting mode corresponds to brightness, the colorMode in the cloud data is automatically switched to this mode.
+                 */
+                const uiid = deviceDataUtil.getUiidByDeviceId(deviceid);
+                if (ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST.includes(uiid)) {
+                    const cctBrightness = _.get(params, 'cctBrightness', null);
+                    const rgbBrightness = _.get(params, 'rgbBrightness', null);
+                    cctBrightness && deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'params', { colorMode: 'cct' });
+                    rgbBrightness && deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'params', { colorMode: 'rgb' });
+                }
             } else if (action === ESseActionType.ONLINE) {
                 logger.info('zigbee-p -------------------', ESseActionType.ONLINE, sseData);
                 const { deviceid, params } = sseData;
                 //保存在线状态，用于smart-home的前端页面 (Save online status for the front-end page of smart home)
+                deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'itemData', params);
                 zigbeePOnlineMap.zigbeePSubDevicesMap.set(deviceid, params.online);
                 syncDeviceOnlineToIHost(deviceid, params.online);
                 addZigbeeSubDevice(this.deviceId, deviceid);
             } else if (action === ESseActionType.DELETE) {
                 logger.info('zigbee-p -------------------', ESseActionType.DELETE, JSON.stringify(sseData, null, 2));
-
                 const { deviceid } = sseData;
-
                 cancelSyncZigbeeDeviceToIHostBySse(deviceid);
                 zigbeePOnlineMap.zigbeePSubDevicesMap.delete(deviceid);
             }
@@ -132,7 +150,6 @@ class SSEClient {
     }
 
     private heartbeatListen(): void {
-        logger.info('SSE heartbeat------------------');
         // 重置超时计时器 (Reset timeout timer)
         clearTimeout(this.timeout);
         this.timeout = setTimeout(() => {
@@ -146,7 +163,7 @@ class SSEClient {
     private reconnectWithBackOff(): void {
         logger.info(`Reconnecting in ${this.currentRetryInterval / 1000} seconds...`);
         const mDnsDeviceData = deviceMapUtil.getMDnsDeviceDataByDeviceId(this.deviceId);
-        logger.info('zigbee---reconnect---------mDnsDeviceData--------------------', mDnsDeviceData?.deviceData.isOnline);
+        logger.info('zigbee---reconnect-mdns--', mDnsDeviceData?.deviceData.isOnline);
         //zigbee-p离线不重新连接sse (Zigbee p offline does not reconnect sse)
         if (mDnsDeviceData?.deviceData.isOnline === false) {
             return;

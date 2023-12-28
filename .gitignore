@@ -57,5 +57,5 @@ web/.env
 # antd auto import
 web/src/auto-import.d.ts
 
-# all json files
-# *.json
+# build project for test
+bin-test

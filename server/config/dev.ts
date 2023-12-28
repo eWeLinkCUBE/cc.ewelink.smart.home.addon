@@ -2,7 +2,7 @@ import { COOLKIT_SECRET } from './secret';
 
 export const devConf = {
     nodeApp: {
-        env: 'env',
+        env: 'dev',
         port: 8321,
         dataPath: '',
         dbPath: '',
@@ -15,7 +15,7 @@ export const devConf = {
         appSecret: 'KCLh*HfIik$CWf1M@^%TFit45eq9Ha@w',
     },
     iHost: {
-        api: 'http://192.168.31.214/open-api/v1/rest',
+        api: 'http://192.168.31.228/open-api/v1/rest',
     },
     log: {
         path: 'log/logFile/total_dev.log',

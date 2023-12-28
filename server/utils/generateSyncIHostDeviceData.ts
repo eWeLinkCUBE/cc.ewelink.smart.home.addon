@@ -9,7 +9,18 @@ import getZigbeePAllDeviceList from '../services/zigbeeP/getZigbeePAllDeviceList
 import _ from 'lodash';
 import getState126And165 from '../services/public/getState126And165';
 import ECapability from '../ts/enum/ECapability';
-import { coolkitDeviceProfiles, capabilityAndCategory126And165List, sensorTypeObj, capabilityAndCategory7016 } from '../const';
+import {
+    coolkitDeviceProfiles,
+    capabilityAndCategory126And165List,
+    sensorTypeObj,
+    capabilityAndCategory7016,
+    ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST,
+    ZIGBEE_UIID_TRV_LIST,
+    WEB_SOCKET_UIID_DEVICE_LIST,
+    ZIGBEE_UIID_CURTAIN_LIST,
+    ZIGBEE_UIID_DEVICE_LIST,
+    MULTI_PROTOCOL_LIST,
+} from '../const';
 import EProductMode7016 from '../ts/enum/EProductMode7016';
 import ISmartHomeConfig from '../ts/interface/ISmartHomeConfig';
 import EPermission from '../ts/enum/EPermission';
@@ -18,11 +29,10 @@ import IRemoteDevice from '../ts/interface/IRemoteDevice';
 import { encode } from 'js-base64';
 import { v4 as uuidv4 } from 'uuid';
 import ECategory from '../ts/enum/ECategory';
+import { ILanStateFiveColorLamp } from '../ts/interface/ILanState';
+import { toIntNumber } from './tool';
 
-export const ZIGBEE_UIID_DEVICE_LIST = [168, 1256, 7004, 7010, 2256, 7011, 3256, 7012, 4256, 7013, 1009, 7005, 7006, 7015, 1000, 7000, 1770, 7014, 2026, 7016, 3026];
-export const ZIGBEE_UIID_CURTAIN_LIST = [7006, 7015];
-
-const { getEWeLinkDeviceDataByDeviceId, lanStateToIHostState, MULTI_PROTOCOL_LIST } = deviceDataUtil;
+const { getEWeLinkDeviceDataByDeviceId, lanStateToIHostState } = deviceDataUtil;
 
 /** 生成要同步的iHost端的设备数据 (Generate device data on the ihost side to be synchronized)*/
 async function generateSyncIHostDeviceData(deviceId: string) {
@@ -69,6 +79,9 @@ async function generateSyncIHostDeviceData(deviceId: string) {
         myLanState = await getState126And165(deviceId);
         iHostState = lanStateToIHostState(deviceId, myLanState);
     }
+    if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+        iHostState = lanStateToIHostState(deviceId, eWeLinkDeviceData.itemData.params);
+    }
 
     // 同步zigbee-p子设备为通道设备时，获取设备的通道state (When the synchronized zigbee p sub-device is a channel device, obtain the channel state of the device)
     if (ZIGBEE_UIID_DEVICE_LIST.includes(uiid)) {
@@ -89,14 +102,8 @@ async function generateSyncIHostDeviceData(deviceId: string) {
 
         const deviceState = allZigbeeDevices && allZigbeeDevices.find((item) => item.deviceid === deviceId);
         if (deviceState) {
-            myLanState = deviceState?.params;
+            myLanState = deviceState.params;
             iHostState = lanStateToIHostState(deviceId, myLanState);
-        }
-
-        // zigbee 子设备需要同步电量数据 (Zigbee sub-devices need to synchronize power data)
-        if (_.get(myLanState, 'battery', null) === null) {
-            const battery = _.get(eWeLinkDeviceData, 'itemData.params.battery', null);
-            battery !== null && _.set(iHostState, 'battery.battery', battery);
         }
 
         // zigbee 子设备并且是窗帘，需要同步校准的状态(motorClb)，当前的百分比(curPercent) (The zigbee sub-device is a curtain and needs to be synchronized and calibrated (motorClb), the current percentage (curPercent))
@@ -127,6 +134,33 @@ async function generateSyncIHostDeviceData(deviceId: string) {
                 curPercent === 255 && _.set(iHostState, 'motor-clb.motorClb', 'calibration');
             }
         }
+
+        /**
+         * zigbee-p 网关固件版本：1.7.1
+         * zigbee 五色灯同步时，从 zigbee-p 网关中获取到的亮度值只有彩光模式下的值 (rgbBrightness)
+         * 白光/彩光模式下需要同步对应的亮度数值 (cctBrightness/rgbBrightness)
+         * 需从 eWeLinkDeviceData 变量中获取当前五色灯的灯光状态 (colorMode) 和白光亮度值 (cctBrightness)
+         * cctBrightness/rgbBrightness 取值范围 [1 ~ 100]
+         *
+         * zigbee-p gateway firmware version: 1.7.1
+         * When synchronizing zigbee five-color lights, the brightness value obtained from the zigbee-p gateway is only the value in color light mode (rgbBrightness)
+         * The corresponding brightness value (cctBrightness/rgbBrightness) needs to be synchronized in white light/color light mode
+         * Need to obtain the current lighting status (colorMode) and white light brightness value (cctBrightness) of the five-color lamp from the eWeLinkDeviceData variable
+         * cctBrightness/rgbBrightness value range [1 ~ 100]
+         */
+        if (ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST.includes(uiid)) {
+            /** cct: 白光模式 (white light mode)，rgb: rgb模式 (color light mode) */
+            const colorMode: ILanStateFiveColorLamp['colorMode'] | null = _.get(eWeLinkDeviceData, ['itemData', 'params', 'colorMode'], null);
+            const rgbBrightness = _.get(myLanState, 'rgbBrightness', null) ?? _.get(eWeLinkDeviceData, ['itemData', 'params', 'rgbBrightness'], null);
+            const cctBrightness = _.get(eWeLinkDeviceData, ['itemData', 'params', 'cctBrightness'], null);
+            if ('cct' === colorMode && cctBrightness) {
+                _.set(iHostState, 'brightness.brightness', cctBrightness);
+            }
+            if ('rgb' === colorMode && rgbBrightness) {
+                _.set(iHostState, 'brightness.brightness', rgbBrightness);
+            }
+        }
+
         if ([EUiid.uiid_1770].includes(uiid)) {
             //拿云端数据 (Get cloud data)
             if (_.get(myLanState, 'temperature', null) === null || _.get(myLanState, 'humidity', null) === null) {
@@ -148,6 +182,11 @@ async function generateSyncIHostDeviceData(deviceId: string) {
         return null;
     }
 
+    if (_.get(myLanState, 'battery', null) === null) {
+        const battery = _.get(eWeLinkDeviceData, 'itemData.params.battery', null);
+        battery !== null && _.set(iHostState, 'battery.battery', toIntNumber(battery));
+    }
+
     const { display_category, capabilities } = await getDisplayCategoryAndCapabilitiesByUiid(uiid, iHostState, myLanState, eWeLinkDeviceData);
 
     if (display_category === '' || capabilities.length === 0) {
@@ -157,10 +196,27 @@ async function generateSyncIHostDeviceData(deviceId: string) {
     let capabilitiyList = capabilities;
 
     //同步190设备到iHost需要设置时区 (Synchronizing 190 devices to iHost requires setting the time zone)
-    if ([EUiid.uiid_190, EUiid.uiid_182].includes(uiid)) {
+    if ([EUiid.uiid_190, EUiid.uiid_182, EUiid.uiid_5].includes(uiid)) {
         capabilitiyList = capabilities.map((item: any) => {
             if (item.capability === ECapability.POWER_CONSUMPTION) {
                 item.configuration.timeZoneOffset = eWeLinkDeviceData && eWeLinkDeviceData.itemData.params?.timeZone;
+            }
+            return item;
+        });
+    }
+    //将设备的超时未关是否开启状态同步到iHost
+    if ([EUiid.uiid_154].includes(uiid)) {
+        capabilitiyList = capabilities.map((item: any) => {
+            if (item.capability === ECapability.DETECT_HOLD) {
+                const holdReminder = _.get(eWeLinkDeviceData, 'itemData.params.holdReminder', null) as unknown as {
+                    enabled: 0 | 1 | boolean;
+                    switch: 'on' | 'off';
+                    time: number;
+                };
+                if (holdReminder) {
+                    holdReminder.enabled = holdReminder.enabled ? true : false;
+                    item.configuration = holdReminder;
+                }
             }
             return item;
         });
@@ -186,11 +242,24 @@ async function generateSyncIHostDeviceData(deviceId: string) {
             return item;
         });
     }
+    // 补全温控阀能力 (Complement the thermostatic valve capabilities)
+    if (ZIGBEE_UIID_TRV_LIST.includes(uiid)) {
+        // 温度校准值，该值为 *10 之后的结果 (Temperature calibration value, this value is the result after *10)
+        const tempCorrection = _.get(eWeLinkDeviceData, 'itemData.params.tempCorrection', null);
+        const temperatureCapability = capabilitiyList.find((item) => item.capability === ECapability.TEMPERATURE);
+        if (EUiid.uiid_7017 === uiid && tempCorrection && temperatureCapability) {
+            _.set(temperatureCapability, 'configuration.calibration.value', tempCorrection / 10);
+        }
+    }
 
     //给iHost用的配置 (Configuration for iHost)
     const _smartHomeConfig: ISmartHomeConfig = {};
     if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
         _smartHomeConfig.isShowModeTip = true;
+    }
+
+    if ([EUiid.uiid_22].includes(uiid)) {
+        _smartHomeConfig.colorTempUiType = 'button';
     }
 
     capabilitiyList = _.uniqWith(capabilitiyList, _.isEqual);
@@ -228,6 +297,7 @@ async function generateSyncIHostDeviceData(deviceId: string) {
     }
 
     const deviceInfo = encode(JSON.stringify(deviceInfoObj));
+    const firmwareVersion = eWeLinkDeviceData.itemData?.params?.fwVersion;
 
     return {
         third_serial_number: deviceId,
@@ -244,7 +314,7 @@ async function generateSyncIHostDeviceData(deviceId: string) {
             toggle,
             temperature_unit,
         },
-        firmware_version: eWeLinkDeviceData.itemData?.params?.fwVersion ?? '0.0',
+        firmware_version: firmwareVersion ? firmwareVersion : '0.0',
         service_address,
     };
 }
@@ -374,6 +444,7 @@ function generateSyncIHostDeviceDataList28(deviceId: string, remoteDeviceList: I
 
         //rf网关bug，同步时要去掉state,防止ihost产生操作日志，只针对按键设备
         //Rf gateway bug, state needs to be removed during synchronization to prevent ihost from generating operation logs, only for key devices
+        const firmwareVersion = eWeLinkDeviceData.itemData?.params?.fwVersion;
         const syncIHostDeviceData = {
             third_serial_number,
             name: item.name,
@@ -393,7 +464,7 @@ function generateSyncIHostDeviceDataList28(deviceId: string, remoteDeviceList: I
                     },
                 },
             },
-            firmware_version: eWeLinkDeviceData.itemData?.params?.fwVersion ?? '0.0',
+            firmware_version: firmwareVersion ? firmwareVersion : '0.0',
             service_address,
         };
         syncIHostDeviceDataList.push(syncIHostDeviceData);
@@ -402,4 +473,87 @@ function generateSyncIHostDeviceDataList28(deviceId: string, remoteDeviceList: I
     return syncIHostDeviceDataList;
 }
 
-export { generateSyncIHostDeviceData, generateSyncIHostDeviceDataList28 };
+function generateSyncIHostDeviceData28(rfDeviceId: string, remoteDevice: IRemoteDevice) {
+    const eWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(rfDeviceId);
+    if (!eWeLinkDeviceData) {
+        return null;
+    }
+
+    const eWeLinkApiInfo = db.getDbValue('eWeLinkApiInfo');
+    if (!eWeLinkApiInfo) {
+        return null;
+    }
+
+    const { uiid, model } = eWeLinkDeviceData.itemData.extra;
+    const { brandName = '', devicekey, apikey } = eWeLinkDeviceData.itemData;
+
+    const service_address = `${config.localIp}/api/v1/device/${rfDeviceId}`;
+
+    if (!remoteDevice) {
+        return null;
+    }
+
+    const display_category = ECategory.BUTTON;
+
+    const buttonInfoList = remoteDevice.buttonInfoList;
+
+    const actions = buttonInfoList.map((aItem) => aItem.rfChl);
+
+    const capabilitiyList = [
+        {
+            capability: ECapability.PRESS,
+            permission: EPermission.READ_WRITE,
+            configuration: {
+                // 能力配置，可选。(Capability configuration, optional.)
+                // 按键动作，可选，默认“singlePress”、“doublePress”、“longPress”、"0"；如果配置则全部覆盖
+                // Key action, optional, defaults to "single press", "double press", "long press", "0"; if configured, all will be covered
+                actions,
+            },
+        },
+    ];
+
+    logger.info('remoteDevice-------------------', remoteDevice);
+
+    const third_serial_number = remoteDevice.smartHomeAddonRemoteId;
+
+    const deviceInfo = encode(
+        JSON.stringify({
+            deviceId: rfDeviceId,
+            devicekey,
+            selfApikey: apikey,
+            uiid,
+            account: eWeLinkApiInfo.userInfo.account,
+            service_address,
+            third_serial_number,
+        })
+    );
+    const firmwareVersion = eWeLinkDeviceData.itemData?.params?.fwVersion;
+    //rf网关bug，同步时要去掉state,防止ihost产生操作日志，只针对按键设备
+    //Rf gateway bug, state needs to be removed during synchronization to prevent ihost from generating operation logs, only for key devices
+    const syncIHostDeviceData = {
+        third_serial_number,
+        name: remoteDevice.name,
+        display_category,
+        capabilities: capabilitiyList,
+        manufacturer: brandName,
+        model,
+        state: {},
+        tags: {
+            deviceInfo,
+            version: config.nodeApp.version,
+            _smartHomeConfig: {
+                rfGatewayConfig: {
+                    deviceName: remoteDevice.name,
+                    buttonInfoList,
+                    type: remoteDevice.type,
+                },
+            },
+        },
+        firmware_version: firmwareVersion ? firmwareVersion : '0.0',
+        service_address,
+    };
+
+    return syncIHostDeviceData;
+}
+
+export { generateSyncIHostDeviceData, generateSyncIHostDeviceDataList28, generateSyncIHostDeviceData28 };

@@ -1,0 +1,18 @@
+{
+    "devDependencies": {
+        "@commitlint/cli": "^18.4.3",
+        "@commitlint/config-conventional": "^18.4.3",
+        "commitizen": "^4.3.0",
+        "cz-git": "^1.8.0",
+        "husky": "^8.0.0"
+    },
+    "scripts": {
+        "cz": "git-cz",
+        "prepare": "husky install"
+    },
+    "config": {
+        "commitizen": {
+            "path": "node_modules/cz-git"
+        }
+    }
+}

@@ -1,22 +1,35 @@
-import {
-    configure,
-    getLogger
-} from 'log4js';
-// import config from '../config/index';
+import config from '../config';
+import { configure, getLogger } from 'log4js';
 
-
-configure({
+const logConfig = {
     appenders: {
-        out: { type: "stdout" },
+        out: { type: 'stdout', layout: {} },
     },
     categories: {
         default: {
             appenders: ['out'],
-            level: 'info'
-        }
-    }
-});
+            level: 'info',
+        },
+    },
+};
 
+let layout = {};
+
+if (config.nodeApp.env === 'dev') {
+    layout = {
+        type: 'pattern',
+        pattern: '%d{yyyy-MM-dd hh:mm:ss.SSS} [%p] %m',
+        // Disable colorization
+        colorize: false,
+    };
+} else {
+    layout = {
+        type: 'colored',
+    };
+}
+
+logConfig.appenders.out.layout = layout;
+configure(logConfig);
 
 /*
  * Instructions:

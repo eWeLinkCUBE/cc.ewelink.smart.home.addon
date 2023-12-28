@@ -44,7 +44,7 @@ export default async function getDayKwsData(req: Request) {
         const hoursKwhDataObj = mDnsDataParse.decryptionData({ iv: mDnsDataParse.decryptionBase64(kwhRes.iv), key: devicekey, data: kwhRes.data });
 
         const { h186DaysKwhData } = hoursKwhDataObj.config;
-        logger.info('get electric data origin------------------------', h186DaysKwhData);
+        // logger.info('get electric data origin------------------------', h186DaysKwhData);
 
         let electricityIntervals = changeKwhDataFormat(h186DaysKwhData, start, end);
 
@@ -67,7 +67,7 @@ export default async function getDayKwsData(req: Request) {
             },
         };
     } catch (error: any) {
-        logger.info('get dayKws eror---------------------', error);
+        logger.info('get dayKws error---------------------', error);
         return null;
     }
 }
@@ -110,16 +110,13 @@ function changeKwhDataFormat(h186DaysKwhDataString: string, startTime: string, e
         strArr.push(intNum + decimal);
     }
 
-    logger.info('nowTime--------------------------------------------------------', endTime, dayjs().format('HH:mm:ss'));
-
     const h186DaysKwhDataArr = strArr.map((item, index) => {
         const end = dayjs(endTime).subtract(index, 'day').toISOString();
 
-        logger.info('endTime--------------------------------------------------------', end);
         const start = dayjs(end).subtract(1, 'day').toISOString();
 
         return {
-            usage: item,
+            usage: Number((item * 100).toFixed()),
             start,
             end,
         };

@@ -9,6 +9,8 @@ export enum EDisplayCategory {
     LIGHT = 'light',
     /** rf网关 (RF gateway) */
     RF_GATEWAY = 'rfGateway',
+    /** rf遥控器 (Rf remote control) */
+    RF_REMOTE = 'rfRemote',
     /** 窗帘 (curtain)*/
     CURTAIN = 'curtain',
     /* 温湿度传感器 (Temperature and humidity sensor)**/
@@ -20,5 +22,13 @@ export enum EDisplayCategory {
     /** 门磁 (Door magnet) */
     CONTACT_SENSOR = 'contactSensor',
     /** zigbee-p gateway */
-    ZIGBEE_P = 'zigbeeP'
+    ZIGBEE_P = 'zigbeeP',
+    /** 灯带 (light strip) */
+    LIGHT_STRIP = 'lightStrip',
+    /** 温控阀 (thermostatic valve) */
+    THERMOSTAT = 'thermostat',
+    /** 烟雾传感器 (smoke sensor) */
+    SMOKE_DETECTOR = 'smokeDetector',
+    /** 水浸传感器 (water immersion sensor) */
+    WATER_LEAK_DETECTOR = 'waterLeakDetector'
 }

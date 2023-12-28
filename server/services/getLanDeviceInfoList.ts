@@ -8,10 +8,11 @@ import db from '../utils/db';
 import { decode } from 'js-base64';
 import getIHostSyncDeviceList from './public/getIHostSyncDeviceList';
 import getEwelinkAllDeviceList from './public/getEwelinkAllDeviceList';
-import syncDeviceInfoToIHostAfterRefresh from './public/syncDeviceInfoToIHostAfterRefresh';
+import syncTagsRfChlToIHostAfterRefresh from './rf/syncTagsRfChlToIHostAfterRefresh';
 import dayjs from 'dayjs';
 import config from '../config';
 import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
+import EUiid from '../ts/enum/EUiid';
 const { disappearTime } = config.timeConfig;
 
 interface DeviceInfo {
@@ -32,10 +33,10 @@ export default async function getLanDeviceInfoList(req: Request, res: Response) 
         //1、查询mDns设备 (Query mdns device)
         let mDnsDeviceList = deviceMapUtil.getMDnsDeviceList();
 
-        if (mDnsDeviceList.length === 0) {
-            logger.error('search lan device api (after login)-----no lan device------', mDnsDeviceList);
-            return res.json(toResponse(0, 'not lan device', { deviceList: [] }));
-        }
+        // if (mDnsDeviceList.length === 0) {
+        //     logger.error('search lan device api (after login)-----no lan device------', mDnsDeviceList);
+        //     return res.json(toResponse(0, 'not lan device', { deviceList: [] }));
+        // }
 
         //2、查询eWeLink设备列表 (Query eWelink equipment column表)
         let eWeLinkDeviceList: any;
@@ -75,6 +76,9 @@ export default async function getLanDeviceInfoList(req: Request, res: Response) 
             if (!item.tags?.deviceInfo) return '';
             const deviceInfo = JSON.parse(decode(item.tags?.deviceInfo));
             if (deviceInfo) {
+                if (deviceInfo.uiid === EUiid.uiid_28) {
+                    return deviceInfo.third_serial_number;
+                }
                 return deviceInfo.deviceId;
             }
             return '';
@@ -100,7 +104,7 @@ export default async function getLanDeviceInfoList(req: Request, res: Response) 
 function judgeToSyncDeviceInfo(deviceList: DeviceInfo[]) {
     deviceList.forEach((item) => {
         if (item.isSynced) {
-            syncDeviceInfoToIHostAfterRefresh(item.deviceId);
+            syncTagsRfChlToIHostAfterRefresh(item.deviceId);
         }
     });
 }

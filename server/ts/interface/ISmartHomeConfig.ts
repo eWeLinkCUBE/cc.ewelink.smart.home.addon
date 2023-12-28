@@ -11,5 +11,8 @@ interface ISmartHomeConfig {
             name: string;
         }[];
     };
+    //uiid 22 色温是按钮还是滑动条
+    //uiid 22 Is the color temperature a button or a slider?
+    colorTempUiType?: 'button' | 'percentage';
 }
 export default ISmartHomeConfig;

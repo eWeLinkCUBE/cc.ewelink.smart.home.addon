@@ -10,6 +10,7 @@ function getAllRemoteDeviceList(deviceId: string) {
         buttonName: { [rfChl: number]: string }[];
         name: string;
         remote_type: '1' | '2' | '3' | '4' | '5' | '6';
+        smartHomeAddonRemoteId?: string;
     }[];
 
     const remoteDeviceList: any = [];
@@ -39,6 +40,7 @@ function getAllRemoteDeviceList(deviceId: string) {
             name: item.name,
             type: item.remote_type,
             buttonInfoList,
+            smartHomeAddonRemoteId: item?.smartHomeAddonRemoteId,
         };
         remoteDeviceList.push(remoteDeviceObj);
     });
