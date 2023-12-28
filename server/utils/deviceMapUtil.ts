@@ -8,8 +8,10 @@ import db from './db';
 import _ from 'lodash';
 import mdns from './initMdns';
 import { decode } from 'js-base64';
-import deviceDataUtil, { ZIGBEE_UIID_DEVICE_LIST } from './deviceDataUtil';
+import deviceDataUtil from './deviceDataUtil';
 import ping from 'ping';
+import { WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../const';
+import { sleep } from './timeUtils';
 
 const { disappearTime } = config.timeConfig;
 
@@ -63,28 +65,32 @@ async function setOffline() {
 
         _.remove(deviceIdList, (item) => item === null);
 
-        deviceIdList.forEach((item) => {
+        for (const item of deviceIdList) {
             if (!item) {
                 return;
             }
 
             const uiid = deviceDataUtil.getUiidByDeviceId(item.deviceId);
-            //zigbee-p 离线，把子设备离线掉 (zigbee-p offline, take the sub-device offline)
+            //排除只支持websocket的设备（Exclude devices that only support websocket）
+            if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+                continue;
+            }
+            //zigbee-p 子设备，只判断网关离线的情况，把子设备离线掉 (The zigbee-p sub-device only determines the offline status of the gateway and takes the sub-device offline.)
             if (ZIGBEE_UIID_DEVICE_LIST.includes(uiid)) {
                 if (item?.parentId) {
                     if (!DeviceMapClass.deviceMap.has(item.parentId)) {
+                        await sleep(50);
                         syncDeviceOnlineToIHost(item.deviceId, false);
                     }
                 }
-                return;
+                continue;
             }
-            //wifi设备离线 (Wifi device offline)
+            //局域网设备离线 (lan device offline)
             if (!DeviceMapClass.deviceMap.has(item.deviceId)) {
-                setTimeout(() => {
-                    syncDeviceOnlineToIHost(item.deviceId, false);
-                }, 50);
+                await sleep(50);
+                syncDeviceOnlineToIHost(item.deviceId, false);
             }
-        });
+        }
     }
 
     //正常流程判断 (Normal process judgment)
@@ -121,16 +127,18 @@ async function setOffline() {
                     discoveryTime: Date.now(),
                     deviceData: item.deviceData,
                 });
+                logger.info('ping and sync online status-----true', item.deviceId);
+                syncDeviceOnlineToIHost(item.deviceId, true);
             } else {
                 item.deviceData.isOnline = false;
                 DeviceMapClass.deviceMap.set(item.deviceId, {
                     discoveryTime: item.discoveryTime,
                     deviceData: item.deviceData,
                 });
-                logger.info('ping and sync online status--------------------', item.deviceId);
-                setTimeout(() => {
-                    syncDeviceOnlineToIHost(item.deviceId, false);
-                }, 50);
+                logger.info('ping and sync online status-----false', item.deviceId);
+                //防止多次并发请求，服务端没有响应（Prevent multiple concurrent requests and no response from the server）
+                await sleep(50);
+                syncDeviceOnlineToIHost(item.deviceId, false);
             }
         }
     }

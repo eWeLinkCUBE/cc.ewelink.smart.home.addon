@@ -115,7 +115,7 @@ function syncDeviceState28(deviceId: string) {
         // 按键触发时间和当前时间的间隔，时间太长不同步,单位秒
         // The interval between the key trigger time and the current time. If the time is too long, it will be out of sync. The unit is seconds.
         const gapTime = (Date.now() - new Date(_updateTime).getTime()) / 1000;
-        logger.info('rf_updateTime----------------------', _updateTime, gapTime);
+        _updateTime && logger.info('rf_updateTime----------------------', _updateTime, gapTime);
         if (gapTime > 5 || _updateTime === null) {
             return;
         }

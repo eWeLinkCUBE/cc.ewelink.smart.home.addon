@@ -75,7 +75,7 @@ interface SyncDeviceOnlineToIHostReq {
 
 interface SyncDeviceOnlineToIHostRes {
     header: {
-        name: 'Response';
+        name: 'Response' | 'ErrorResponse';
         message_id: string;
         version: string;
     };
@@ -110,7 +110,7 @@ interface SyncDeviceStateToIHostReq {
 
 interface SyncDeviceStateToIHostRes {
     header: {
-        name: 'Response';
+        name: 'Response' | 'ErrorResponse';
         message_id: string;
         version: string;
     };
@@ -137,4 +137,41 @@ interface UpdateDeviceInfoParams {
 /** 更新指定设备信息或状态  (Update specified device information or status)*/
 export const updateDeviceInfo = (serialNumber: string, params: UpdateDeviceInfoParams) => {
     return request(`/devices/${serialNumber}`, EMethod.PUT, params);
+};
+
+interface SyncDeviceInformationToIHostReq {
+    event: {
+        header: {
+            name: string;
+            message_id: string;
+            version: string;
+        };
+        endpoint: {
+            serial_number: string;
+            third_serial_number: string;
+        };
+        payload: {
+            tags?: any;
+            capabilities?: {
+                capability: string;
+                permission: string;
+                configuration?: any;
+                name?: string;
+            }[];
+        };
+    };
+}
+
+interface SyncDeviceInformationToIHostRes {
+    header: {
+        name: 'Response' | 'ErrorResponse';
+        message_id: string;
+        version: string;
+    };
+    payload: object;
+}
+
+/** 同步设备能力和tags设置到iHost (Synchronize device capabilities and tags settings to iHost) */
+export const syncDeviceInformationToIHost = (params: SyncDeviceInformationToIHostReq) => {
+    return requestNoError<SyncDeviceInformationToIHostRes>('/thirdparty/event', EMethod.POST, params);
 };

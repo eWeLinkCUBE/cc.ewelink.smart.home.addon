@@ -1,11 +1,10 @@
 import IDeviceMap from '../ts/interface/IDeviceMap';
 import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
-import { SUPPORT_UIID_LIST } from '../utils/deviceDataUtil';
-import logger from '../log';
 import _ from 'lodash';
 import EUiid from '../ts/enum/EUiid';
 import zigbeePOnlineMap from '../ts/class/zigbeePOnlineMap';
-import EProductMode7016 from '../ts/enum/EProductMode7016';
+import { SUPPORT_UIID_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import getAllRemoteDeviceList from './getAllRemoteDeviceList';
 
 interface DeviceInfo {
     isOnline: boolean;
@@ -25,6 +24,8 @@ enum EType {
     SWITCH = 'switch',
     /** rf网关  (RF gateway)*/
     RF_GATEWAY = 'rfGateway',
+    /** rf网关遥控器  (RF gateway remote)*/
+    RF_REMOTE = 'rfRemote',
     /** 风扇灯  (fan light)*/
     FAN_LIGHT = 'fanLight',
     /** 灯  (lamp)*/
@@ -43,11 +44,19 @@ enum EType {
     PERSON_MOTION_SENSOR = 'personMotionSensor',
     /** 门磁  (Door magnet)*/
     CONTACT_SENSOR = 'contactSensor',
+    /** 灯带 (light strip)*/
+    LIGHT_STRIP = 'lightStrip',
+    /** 烟感 (Smoke)*/
+    SMOKE_DETECTOR = 'smokeDetector',
+    /** 水浸 (flooding)*/
+    WATER_LEAK_DETECTOR = 'waterLeakDetector',
+    /** 温控阀 (thermostatic valve) */
+    THERMOSTAT = 'thermostat',
 }
 
 enum ENetworkProtocolType {
     LAN = 'lan',
-    ZIGBEE = 'zigbee',
+    WIFI = 'wifi',
 }
 
 /** uiid对应的图标类型 (The icon type corresponding to Uiid) */
@@ -56,7 +65,7 @@ const UIID_TYPE_LIST = [
         type: EType.SWITCH, //开关插座(switch socket)
         uiidList: [
             1, 2, 3, 4, 6, 7, 8, 9, 14, 15, 32, 77, 78, 126, 128, 133, 138, 139, 140, 141, 160, 161, 162, 163, 165, 165, 182, 191, 209, 210, 211, 212, 1256, 7004, 7010, 2256, 7011,
-            3256, 7012, 4256, 7013, 1009, 7005,
+            3256, 7012, 4256, 7013, 1009, 7005, 5,
         ],
     },
     {
@@ -69,7 +78,7 @@ const UIID_TYPE_LIST = [
     },
     {
         type: EType.LIGHT, //灯(light)
-        uiidList: [44, 103, 104, 135, 136, 157],
+        uiidList: [44, 103, 104, 135, 136, 157, 22, 36, 1257, 1258, 7008, 3258, 7009],
     },
     {
         type: EType.ZIGBEE_P,
@@ -89,20 +98,36 @@ const UIID_TYPE_LIST = [
     },
     {
         type: EType.MOTION_SENSOR,
-        uiidList: [2026],
+        uiidList: [2026, 7002],
     },
     {
         type: EType.CONTACT_SENSOR,
-        uiidList: [3026],
+        uiidList: [3026, 102, 154, 7003],
     },
     {
         type: EType.PERSON_MOTION_SENSOR,
         uiidList: [7016],
     },
+    {
+        type: EType.LIGHT_STRIP,
+        uiidList: [59, 137, 173],
+    },
+    {
+        type: EType.SMOKE_DETECTOR,
+        uiidList: [5026],
+    },
+    {
+        type: EType.WATER_LEAK_DETECTOR,
+        uiidList: [4026, 7019],
+    },
+    {
+        type: EType.THERMOSTAT,
+        uiidList: [7017, 1772],
+    },
 ];
 
 /** 生成设备信息，是否已同步，在线离线，是否支持  (Generate device information, whether it has been synchronized, online and offline, whether it is supported) */
-export default function (syncedHostDeviceList: string[], mDnsDeviceList: IDeviceMap[], eWeLinkDeviceList: IEWeLinkDevice[]) {
+export default function generateDeviceInfoList(syncedHostDeviceList: string[], mDnsDeviceList: IDeviceMap[], eWeLinkDeviceList: IEWeLinkDevice[]) {
     const deviceList: DeviceInfo[] = [];
 
     mDnsDeviceList.forEach((mItem) => {
@@ -139,7 +164,7 @@ export default function (syncedHostDeviceList: string[], mDnsDeviceList: IDevice
         }
 
         deviceList.push(device);
-        //TODO:
+
         if (!eWeLinkDeviceData) return;
         const { uiid } = eWeLinkDeviceData.itemData.extra;
 
@@ -161,10 +186,48 @@ export default function (syncedHostDeviceList: string[], mDnsDeviceList: IDevice
                     deviceName: eWeLinkSubDeviceData ? eWeLinkSubDeviceData.itemData.name : '',
                     isSynced: syncedHostDeviceList.includes(item.deviceId),
                     subDeviceNum: 0,
-                    networkProtocol: ENetworkProtocolType.ZIGBEE,
+                    networkProtocol: ENetworkProtocolType.LAN,
                 };
                 deviceList.push(subDevice);
             });
+        }
+
+        if ([EUiid.uiid_28].includes(uiid)) {
+            const remoteDeviceList = getAllRemoteDeviceList(mItem.deviceId);
+
+            remoteDeviceList.forEach((item, index) => {
+                const subDevice = {
+                    isOnline: !!mItem.deviceData.isOnline,
+                    isMyAccount: true,
+                    isSupported: true,
+                    displayCategory: EType.RF_REMOTE,
+                    familyName: eWeLinkDeviceData.familyName,
+                    deviceId: `${mItem.deviceId}_${index}`,
+                    deviceName: item.name,
+                    isSynced: typeof item?.smartHomeAddonRemoteId === 'string' && syncedHostDeviceList.includes(item?.smartHomeAddonRemoteId),
+                    subDeviceNum: 0,
+                    networkProtocol: ENetworkProtocolType.LAN,
+                };
+                deviceList.push(subDevice);
+            });
+        }
+    });
+    eWeLinkDeviceList.forEach((item) => {
+        const uiid = item.itemData.extra.uiid;
+        if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+            const device = {
+                isOnline: item.itemData.online,
+                isMyAccount: true,
+                isSupported: true,
+                displayCategory: getDeviceTypeByUiid(item),
+                familyName: item.familyName,
+                deviceId: item.itemData.deviceid,
+                deviceName: item.itemData.name,
+                isSynced: syncedHostDeviceList.includes(item.itemData.deviceid),
+                subDeviceNum: 0,
+                networkProtocol: ENetworkProtocolType.WIFI,
+            };
+            deviceList.push(device);
         }
     });
 
@@ -185,7 +248,7 @@ function generateSubDeviceNum(eWeLinkDeviceData: IEWeLinkDevice) {
 
     if ([EUiid.uiid_28].includes(uiid)) {
         const { zyx_info } = eWeLinkDeviceData.itemData.tags;
-        return zyx_info?.length;
+        return zyx_info?.length ?? 0;
     }
 
     if ([EUiid.uiid_168].includes(uiid)) {
@@ -210,10 +273,6 @@ function getDeviceTypeByUiid(eWeLinkDeviceData: IEWeLinkDevice) {
 /** 判断固件版本是否支持局域网功能 (Determine whether the firmware version supports the LAN function)*/
 function judgeIsSupported(eWeLinkDeviceData: IEWeLinkDevice) {
     const { uiid } = eWeLinkDeviceData.itemData.extra;
-    //TODO:zigbee-p
-    // if (EUiid.uiid_168 === uiid) {
-    //     return false;
-    // }
 
     if (!SUPPORT_UIID_LIST.includes(uiid)) {
         return false;

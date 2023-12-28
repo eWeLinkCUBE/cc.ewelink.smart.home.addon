@@ -6,34 +6,33 @@ import EUiid from '../../ts/enum/EUiid';
 /** 取消同步eWeLink设备到iHost (Unsynchronize eWelink device to iHost)*/
 export default async function cancelSyncDeviceToIHost(deviceId: string) {
     try {
-        const uiid = deviceDataUtil.getUiidByDeviceId(deviceId);
-        if ([EUiid.uiid_28].includes(uiid)) {
-            const iHostDeviceDataList = deviceDataUtil.getIHostDeviceDataListByDeviceId(deviceId);
-            if (!iHostDeviceDataList) {
-                logger.error('to cancel sync device can not find this deviceList-----------------', iHostDeviceDataList);
-                return null;
-            }
+        let realDeviceId;
 
-            const requestList = iHostDeviceDataList.map((item) => {
-                return deleteDevice(item.serial_number);
-            });
-
-            const resList = await Promise.all(requestList);
-            logger.info('resList--------------------------------', resList);
-            const allSuccess = resList.every((item) => item.error === 0);
-            if (!allSuccess) {
-                return null;
-            }
-            return resList[0];
+        if (deviceId.indexOf('_') > -1) {
+            realDeviceId = deviceId.split('_')[0];
+        } else {
+            realDeviceId = deviceId;
         }
 
-        const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);
+        const uiid = deviceDataUtil.getUiidByDeviceId(realDeviceId);
+        if ([EUiid.uiid_28].includes(uiid)) {
+            const remoteIndex = Number(deviceId.split('_')[1]);
+            const serial_number = deviceDataUtil.getRfSerialNumberByDeviceIdAndIndex(realDeviceId, remoteIndex);
+
+            logger.info('cancel to sync rf device------------------------------------------------realDeviceId', serial_number);
+            if (!serial_number) {
+                return null;
+            }
+            return await deleteDevice(serial_number);
+        }
+
+        const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(realDeviceId);
         if (!iHostDeviceData) {
             logger.error('to cancel sync device can not find this device-----------------', iHostDeviceData);
             return null;
         }
 
-        logger.info('cancel to sync device------------------------------------------------deviceId', iHostDeviceData.serial_number);
+        logger.info('cancel to sync device------------------------------------------------realDeviceId', iHostDeviceData.serial_number);
         const res = await deleteDevice(iHostDeviceData.serial_number);
 
         return res;

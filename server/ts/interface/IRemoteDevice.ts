@@ -14,6 +14,7 @@ interface IRemoteDevice {
         rfVal: string;
         name: string;
     }[];
+    smartHomeAddonRemoteId?: string; //设置的在tags里的遥控器id(remote device id)
 }
 
 export default IRemoteDevice;

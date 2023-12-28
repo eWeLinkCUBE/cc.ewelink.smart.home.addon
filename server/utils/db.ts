@@ -7,18 +7,10 @@ import IHostDevice from '../ts/interface/IHostDevice';
 import logger from '../log';
 import IElectricityData from '../ts/interface/IElectricityData';
 import dbDataClass from '../ts/class/dbData';
+import IEWeLinkApiInfo from '../ts/interface/IEWeLinkApiInfo';
 
 type DbKey = keyof IDbData;
 
-interface IEWeLinkApiInfo {
-    at: string;
-    rt: string;
-    region: string;
-    userInfo: {
-        account: string;
-        autoSyncStatus: boolean;
-    };
-}
 interface IDbData {
     /** api v2 at相关信息  (api v2 at related information)*/
     eWeLinkApiInfo: null | IEWeLinkApiInfo;
@@ -67,7 +59,7 @@ function getDb() {
         return data as IDbData;
     } catch (error) {
         logger.error('get db file---------------', 'error-----', error, 'data--------');
-        // 断电导致文件异常，重新初始化文件 (File abnormality caused by power outage, re-initialize the file)
+        //断电导致文件异常，重新初始化文件 (File abnormality caused by power outage, re-initialize the file)
         fs.writeFileSync(getDbPath(), encode(JSON.stringify(dbDataTmp)), 'utf-8');
         logger.info('init db file------success');
         return null as unknown as IDbData;

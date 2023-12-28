@@ -1,5 +1,5 @@
 export default interface IEWeLinkDevice {
-    itemType: 1;
+    itemType: 1 | 2;
     itemData: DeviceListItem;
     index: number;
     familyName: string;

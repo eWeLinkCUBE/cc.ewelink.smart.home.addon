@@ -9,11 +9,10 @@ import config from './config';
 import { encode } from 'js-base64';
 import { dbDataTmp } from './utils/db';
 import oauth from './middleware/oauth';
-import CkApi from './lib/coolkit-api';
-import db from './utils/db';
 import _ from 'lodash';
 import gapTimeRun from './utils/gapTimeRun';
 import responseInterceptor from './middleware/responseInterceptor';
+import { initCoolkitApi, initCoolkitWs } from './utils/initApi';
 
 const app = express();
 const port = config.nodeApp.port;
@@ -61,22 +60,7 @@ app.use(internalError);
 
 app.listen(port, '0.0.0.0', () => {
     logger.info(`Server is running at http://localhost:${port}----env: ${config.nodeApp.env}----version: v${config.nodeApp.version}`);
-
-    // 初始化 coolkit api (Initialize coolkit api)
-    //记住登录状态，防止重启后端服务后得重新登录 (Remember the login status to prevent having to log in again after restarting the backend service)
-    const eWeLinkApiInfo = db.getDbValue('eWeLinkApiInfo');
-
-    const initParams = {
-        appId: config.coolKit.appId,
-        appSecret: config.coolKit.appSecret,
-        useTestEnv: config.nodeApp.env === 'dev',
-        timeout: 30000,
-    };
-
-    if (eWeLinkApiInfo) {
-        _.merge(initParams, eWeLinkApiInfo);
-    }
-
-    CkApi.init(initParams);
+    initCoolkitApi();
+    initCoolkitWs();
     gapTimeRun();
 });

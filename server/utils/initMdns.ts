@@ -5,7 +5,7 @@ import _ from 'lodash';
 import deviceMapUtil from './deviceMapUtil';
 import syncDeviceStateToIHost from '../services/public/syncDeviceStateToIHost';
 import logger from '../log';
-import syncDeviceInfoToIHost from '../services/public/syncDeviceInfoToIHost';
+import syncTagsRfChlToIHost from '../services/rf/syncTagsRfChlToIHost';
 import deviceDataUtil from './deviceDataUtil';
 import checkToInitSse from './checkToInitSse';
 
@@ -102,9 +102,8 @@ mdns.on('response', (response: any) => {
     syncDeviceStateToIHost(params.deviceId);
 
     //同步局域网的设备信息到iHost里 (Synchronize LAN device information to iHost)
-    syncDeviceInfoToIHost(params.deviceId);
+    syncTagsRfChlToIHost(params.deviceId);
 
-    //TODO:
     //检查zigbee-p 的sse连接情况 (Check the sse connection status of zigbee-p)
     checkToInitSse(params.deviceId, params.ip);
 

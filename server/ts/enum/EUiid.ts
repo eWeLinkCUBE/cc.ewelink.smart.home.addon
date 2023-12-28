@@ -118,8 +118,48 @@ enum EUiid {
     uiid_7014 = 7014,
     /** 运动传感器 (motion sensor)*/
     uiid_2026 = 2026,
+    /** 运动传感器 (motion sensor) */
+    uiid_7002 = 7002,
     /** 门磁 (Door magnet)*/
     uiid_3026 = 3026,
+    /** 功率检测单通道插座 (Power detection single channel socket) */
+    uiid_5 = 5,
+    /** RGB五色球泡灯 (RGB five-color bulb) */
+    uiid_22 = 22,
+    /** 单路调光开关(single dimmer switch) */
+    uiid_36 = 36,
+    /** 律动灯带(Rhythm light strip) */
+    uiid_59 = 59,
+    /** WiFi门磁(Wi fi gate) */
+    uiid_102 = 102,
+    /** 律动灯带-蓝牙版(rhythm Light strip Bluetooth version) */
+    uiid_137 = 137,
+    /** 新版WIFI门磁（New version of wifi door sensor） */
+    uiid_154 = 154,
+    /** 幻彩灯带-Sonoff */
+    uiid_173 = 173,
+    /** 门磁 (Door magnet)*/
+    uiid_7003 = 7003,
+    /** 烟感 (smoke sensor) */
+    uiid_5026 = 5026,
+    /** 水浸 (water immersion sensor) */
+    uiid_4026 = 4026,
+    /** 水浸 (water immersion sensor) */
+    uiid_7019 = 7019,
+    /** 单色灯 (Monochrome lamp) */
+    uiid_1257 = 1257,
+    /** 双色灯 (bicolor lamp) */
+    uiid_1258 = 1258,
+    /** 双色灯 (bicolor lamp) */
+    uiid_7008 = 7008,
+    /** 五色灯 (five color lamp) */
+    uiid_3258 = 3258,
+    /** 五色灯 (five color lamp) */
+    uiid_7009 = 7009,
+    /** 温控阀 (thermostat) */
+    uiid_1772 = 1772,
+    /** 温控阀 (thermostat) */
+    uiid_7017 = 7017,
 }
 
 export default EUiid;

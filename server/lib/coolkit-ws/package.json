@@ -1,0 +1,22 @@
+{
+    "name": "coolkit-ws",
+    "version": "0.7.41",
+    "description": "",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "0.21.1",
+        "eventemitter3": "4.0.7",
+        "isomorphic-ws": "4.0.1",
+        "ws": "7.4.4"
+    },
+    "devDependencies": {
+        "@types/axios": "0.14.0",
+        "@types/ws": "7.4.0"
+    }
+}

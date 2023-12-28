@@ -28,6 +28,7 @@ export function getDeviceImg(deviceInfo: IAfterLoginDevice) {
             return getAssetsFile('img/light.png');
         /** RF */
         case EDisplayCategory.RF_GATEWAY:
+        case EDisplayCategory.RF_REMOTE:
             return getAssetsFile('img/rf.png');
         /** curtains (curtains)*/
         case EDisplayCategory.CURTAIN:
@@ -47,6 +48,18 @@ export function getDeviceImg(deviceInfo: IAfterLoginDevice) {
         /** Zigbee-P gateway */
         case EDisplayCategory.ZIGBEE_P:
             return getAssetsFile('img/zigbee-gateway.png');
+        /** 灯带 (light strip) */
+        case EDisplayCategory.LIGHT_STRIP:
+            return getAssetsFile('img/light-strip.png');
+        /** 温控阀 (thermostatic valve) */
+        case EDisplayCategory.THERMOSTAT:
+            return getAssetsFile('img/trv.png');
+        /** 烟雾传感器 (smoke sensor) */
+        case EDisplayCategory.SMOKE_DETECTOR:
+            return getAssetsFile('img/smoke-sensor.png');
+        /** 水浸传感器 (water immersion sensor) */
+        case EDisplayCategory.WATER_LEAK_DETECTOR:
+            return getAssetsFile('img/water-sensor.png');
         default:
             return getAssetsFile('img/switch.png');
     }

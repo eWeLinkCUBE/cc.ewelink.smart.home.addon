@@ -31,7 +31,7 @@ export default async function getZigbeePAllDeviceList(deviceId: string) {
 
         const allZigbeeDevices = mDnsDataParse.decryptionData({ iv: mDnsDataParse.decryptionBase64(allZigbeePDevicesRes.iv), key: devicekey, data: allZigbeePDevicesRes.data });
 
-        logger.info('allZigbeeDevices----------------------', JSON.stringify(allZigbeeDevices, null, 2));
+        // logger.info('allZigbeeDevices----------------------', JSON.stringify(allZigbeeDevices, null, 2));
         return allZigbeeDevices as { deviceid: string; online: boolean; params: any }[];
     } catch (error: any) {
         logger.error('get zigbee-p all devices error---------------------------', error);

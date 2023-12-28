@@ -1,3 +1,5 @@
+import type ENetworkProtocol from "../enum/ENetworkProtocol";
+
 export interface IBeforeLoginDevice {
     deviceId: string;
     category: string;
@@ -13,5 +15,5 @@ export interface IAfterLoginDevice {
     isSupported: boolean;
     isSynced: boolean;
     subDeviceNum: number;
-    networkProtocol: 'lan' | 'zigbee';
+    networkProtocol: ENetworkProtocol;
 }

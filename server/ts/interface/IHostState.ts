@@ -25,4 +25,7 @@ export interface IHostStateInterface {
     press?: {
         press: string;
     };
+    mode?: {
+        [key: string]: { modeValue: string };
+    };
 }

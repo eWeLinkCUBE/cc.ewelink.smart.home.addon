@@ -51,7 +51,7 @@ async function requestDevice(deviceId: string, devicekey: string, selfApikey: st
         const endTime = Date.now();
         const elapsedTime = endTime - startTime;
 
-        logger.info('request device res time -----------------------', deviceId, elapsedTime + 'ms', ip, state, res.data);
+        logger.info('request device res time ------', deviceId, elapsedTime + 'ms', ip, state, res.data);
 
         return res.data as {
             error: number;

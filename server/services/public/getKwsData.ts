@@ -138,7 +138,6 @@ function generateFinalData(usageData: string, timeRange: ITimeRange): IElectrici
     const { startTime, endTime } = timeRange;
     const finalData: IElectricityData[] = [];
     const data = chunkString(usageData, 3).map((str) => getPowerConsumptionByStr(str));
-    console.log('切割后的电量数据(Power data after cutting) => ', data.length);
     const hoursBetween = dayjs(endTime).diff(dayjs(startTime), 'hour') + 1;
 
     console.log('hours between => ', hoursBetween);
@@ -150,9 +149,8 @@ function generateFinalData(usageData: string, timeRange: ITimeRange): IElectrici
         if (usage === undefined) {
             continue;
         }
-        finalData.push({ usage, start, end });
+        finalData.push({ usage: Number((usage * 100).toFixed()), start, end });
     }
 
-    console.log('finalData => ', JSON.stringify(finalData, null, 4));
     return finalData;
 }

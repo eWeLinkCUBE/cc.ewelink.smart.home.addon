@@ -3,8 +3,8 @@ import { toResponse } from '../utils/error';
 import CkApi from '../lib/coolkit-api';
 import logger from '../log';
 import db from '../utils/db';
-import config from '../config';
 import getEwelinkAllDeviceList from './public/getEwelinkAllDeviceList';
+import { initCoolkitApi } from '../utils/initApi';
 
 export default async function login(req: Request, res: Response) {
     const { account } = req.params;
@@ -57,22 +57,14 @@ export default async function login(req: Request, res: Response) {
             rt: data.rt,
             region: data.region,
             userInfo,
+            user: data.user,
         });
 
         db.setDbValue('atUpdateTime', Date.now());
 
         // 重新初始化(Reinitialize) coolkit api
-        CkApi.init({
-            at: data?.at,
-            rt: data?.rt,
-            region: data?.region,
-            appId: config.coolKit.appId,
-            appSecret: config.coolKit.appSecret,
-            useTestEnv: config.nodeApp.env === 'dev',
-            timeout: 30000,
-        });
+        initCoolkitApi();
         await getEwelinkAllDeviceList();
-        logger.info('login request res------------------------------------------------', 'userInfo', userInfo, 'at', data.at);
 
         const response = {
             userInfo,
