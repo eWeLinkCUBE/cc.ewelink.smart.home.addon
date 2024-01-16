@@ -74,12 +74,6 @@ export default async function syncZigbeeDeviceOnlineToIHost(deviceId: string, is
 }
 
 function toOfflineAllZigbeePDevices(parentId: string) {
-    // 网关局域网扫描不到，sse连接着，不离线子设备
-    // The gateway LAN cannot be scanned. SSE is connected and the sub-device is not offline.
-    if (zigbeePSseMap.zigbeePSsePoolMap.has(parentId)) {
-        return;
-    }
-
     const iHostDeviceList = db.getDbValue('iHostDeviceList');
 
     if (!iHostDeviceList) {
