@@ -3,6 +3,7 @@
 
 interface ZigbeePSsePoolMap {
     updateTime: number;
+    ip: string;
 }
 
 class zigbeePSseMapClass {

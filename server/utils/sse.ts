@@ -29,7 +29,7 @@ const INITIAL_RETRY_INTERVAL = 5 * 1000;
 /** 重连最大间隔时间,两个小时 ms (Maximum reconnection interval, two hours ms)*/
 const MAX_RETRY_INTERVAL = 120 * 60 * 1000;
 /** 断开连接多久就离线子设备 (How long does it take to disconnect a child device before it goes offline?)*/
-const MAX_OFFLINE_TIME = 60 * 1000;
+const MAX_OFFLINE_TIME = 80 * 1000;
 /** 心跳停止多久就离线子设备，启动重连  (How long after the heartbeat stops, the sub-device will be offline and reconnected.)*/
 const TIME_OUT = 40 * 1000;
 
@@ -55,19 +55,20 @@ class SSEClient {
     }
 
     connect(): void {
-        logger.info('connect--------------------', this.deviceId, zigbeePSseMap.zigbeePSsePoolMap, zigbeePSseMap.zigbeePSsePoolMap.has(this.deviceId));
-        if (zigbeePSseMap.zigbeePSsePoolMap.has(this.deviceId)) {
-            logger.info('has zigbee sse------------------------');
-            return;
+        const mDnsDeviceData = deviceMapUtil.getMDnsDeviceDataByDeviceId(this.deviceId);
+        if (mDnsDeviceData) {
+            this.ip = mDnsDeviceData?.deviceData.ip;
         }
-        zigbeePSseMap.zigbeePSsePoolMap.set(this.deviceId, { updateTime: Date.now() });
+
+        logger.info('connect--------------------', this.deviceId, this.ip, zigbeePSseMap.zigbeePSsePoolMap, zigbeePSseMap.zigbeePSsePoolMap.has(this.deviceId));
+
+        zigbeePSseMap.zigbeePSsePoolMap.set(this.deviceId, { updateTime: Date.now(), ip: this.ip });
 
         this.eventSource = new EventSource(`http://${this.ip}:8081/zeroconf/sse`);
         logger.info('SSE connect ip ------------------------ ', this.ip);
 
         this.eventSource.onopen = () => {
             logger.info('SSE connection opened--------------------------------');
-            zigbeePSseMap.zigbeePSsePoolMap.set(this.deviceId, { updateTime: Date.now() });
             this.heartbeatListen();
 
             this.currentRetryInterval = INITIAL_RETRY_INTERVAL; // Reset backOff interval on successful connection
@@ -131,21 +132,18 @@ class SSEClient {
         };
 
         this.eventSource.onerror = (error) => {
-            logger.error('SSE connection error:', error);
-
-            this.reconnectWithBackOff();
+            logger.error('SSE connection error:', this.ip, this.deviceId, error);
+            if (this.currentRetryInterval <= MAX_OFFLINE_TIME) {
+                this.reconnectWithBackOff();
+            }
         };
     }
 
     close(): void {
-        logger.info('SSE connection closed');
+        logger.info('SSE connection closed', this.ip, this.deviceId);
         if (this.eventSource) {
             this.eventSource.close();
             zigbeePSseMap.zigbeePSsePoolMap.delete(this.deviceId);
-            if (this.currentRetryInterval > MAX_OFFLINE_TIME) {
-                deviceMapUtil.setOfflineDevice(this.deviceId);
-                syncZigbeeDeviceOnlineToIHost(this.deviceId, false);
-            }
         }
     }
 
@@ -154,23 +152,25 @@ class SSEClient {
         clearTimeout(this.timeout);
         this.timeout = setTimeout(() => {
             // 在超时时触发自定义的错误处理 (Trigger custom error handling on timeout)
-            logger.info('Connection timed out.');
-            this.close();
+            logger.info('Connection timed out.', this.ip, this.deviceId);
             this.reconnectWithBackOff();
         }, TIME_OUT);
     }
 
     private reconnectWithBackOff(): void {
-        logger.info(`Reconnecting in ${this.currentRetryInterval / 1000} seconds...`);
-        const mDnsDeviceData = deviceMapUtil.getMDnsDeviceDataByDeviceId(this.deviceId);
-        logger.info('zigbee---reconnect-mdns--', mDnsDeviceData?.deviceData.isOnline);
-        //zigbee-p离线不重新连接sse (Zigbee p offline does not reconnect sse)
-        if (mDnsDeviceData?.deviceData.isOnline === false) {
+        this.currentRetryInterval = this.currentRetryInterval * 2;
+        logger.info(`Reconnecting in ${this.currentRetryInterval / 1000} seconds...`, this.ip, this.deviceId);
+        if (this.currentRetryInterval === MAX_OFFLINE_TIME) {
+            logger.info('reconnecting end -----');
+            deviceMapUtil.setOfflineDevice(this.deviceId);
+            syncZigbeeDeviceOnlineToIHost(this.deviceId, false);
+            this.close();
             return;
         }
+
         setTimeout(() => {
             this.connect();
-            this.currentRetryInterval = Math.min(this.currentRetryInterval * 2, MAX_RETRY_INTERVAL); // Exponential backOff
+            this.currentRetryInterval = Math.min(this.currentRetryInterval, MAX_RETRY_INTERVAL); // Exponential backOff
         }, this.currentRetryInterval);
     }
 }
