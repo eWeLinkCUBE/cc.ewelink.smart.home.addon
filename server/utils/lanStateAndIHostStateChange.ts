@@ -28,6 +28,9 @@ import {
     TrvWorkMode,
     TrvWorkState,
     ILanStateMotionSensor7002,
+    ILanState57,
+    ILanState52,
+    ILanState11,
 } from '../ts/interface/ILanState';
 import { IHostStateInterface } from '../ts/interface/IHostState';
 import deviceDataUtil from './deviceDataUtil';
@@ -897,8 +900,11 @@ function lanStateToIHostState36(lanState: ILanState36) {
  * @param source 设备范围 (Device value range)
  * @returns 转换后的 1-100 (Converted  1-100)
  */
-function percentTranslateToHundred(originValue: number, source: [number, number]) {
-    if (originValue === source[0]) return 1;
+function percentTranslateToHundred(originValue: number, source: [number, number], isBrightness = true) {
+    //亮度条最小是1，色温条最小是0（The minimum brightness bar is 1, and the minimum color temperature bar is 0）
+    if (originValue === source[0]) {
+        return isBrightness ? 1 : 0;
+    }
     if (originValue === source[1]) return 100;
     const sourceRange = source[1] - source[0] + 1;
     let value = parseInt(((originValue - source[0] + 1) / sourceRange) * 100 + '');
@@ -1015,7 +1021,7 @@ function lanStateToIHostState59(lanState: ILanState59) {
         index = index > -1 ? index : 0;
         _.merge(iHostState, {
             'color-temperature': {
-                colorTemperature: 100 - percentTranslateToHundred(index, [0, 143]),
+                colorTemperature: 100 - percentTranslateToHundred(index, [0, 143], false),
             },
         });
     }
@@ -1044,6 +1050,9 @@ function iHostStateToLanStateWebSocket(iHostState: IHostStateInterface, deviceId
     const colorTempObj = _.get(iHostState, 'color-temperature');
     const colorRgbObj = _.get(iHostState, 'color-rgb');
     const modeObj = _.get(iHostState, 'mode');
+    const motorControlObj = _.get(iHostState, 'motor-control');
+    const percentageObj = _.get(iHostState, ['percentage']);
+
     let powerState;
     let brightness;
     let colorTemp;
@@ -1057,10 +1066,28 @@ function iHostStateToLanStateWebSocket(iHostState: IHostStateInterface, deviceId
         _.assign(lanState, proxy);
     }
 
+    if (motorControlObj) {
+        const motorControlMapObj = {
+            open: 'on',
+            stop: 'pause',
+            close: 'off',
+        };
+        const proxy = controlDevice(device, 'controlCurtain', { switch: motorControlMapObj[motorControlObj.motorControl] as 'on' | 'pause' | 'off' });
+        _.assign(lanState, proxy);
+    }
+
+    if (percentageObj) {
+        const proxy = controlDevice(device, 'controlCurtain', { setclose: percentageObj.percentage });
+        _.assign(lanState, proxy);
+    }
+
     if (brightnessObj) {
         brightness = brightnessObj.brightness;
         if ([EUiid.uiid_22].includes(uiid)) {
             brightness = percentTranslateFromHundred(brightness, [1, 21]);
+        }
+        if ([EUiid.uiid_52].includes(uiid)) {
+            brightness = percentTranslateFromHundred(brightness, [25, 255]);
         }
         const proxy = controlDevice(device, 'setBrightness', { brightness });
 
@@ -1088,6 +1115,10 @@ function iHostStateToLanStateWebSocket(iHostState: IHostStateInterface, deviceId
 
         if ([EUiid.uiid_173, EUiid.uiid_137].includes(uiid)) {
             colorTemp = 100 - colorTemp;
+        }
+
+        if ([EUiid.uiid_52].includes(uiid)) {
+            colorTemp = percentTranslateFromHundred(100 - colorTemp, [25, 255]);
         }
 
         //解决zigbee五色灯设置色温时没有亮度字段问题
@@ -1511,6 +1542,106 @@ function iHostStateToLanStateTRV(iHostState: IHostStateInterface) {
     return lanState;
 }
 
+function lanStateToIHostState57(lanState: ILanState57) {
+    const iHostState = {};
+
+    const powerState = _.get(lanState, 'state', null);
+
+    if (powerState !== null) {
+        _.merge(iHostState, {
+            power: {
+                powerState,
+            },
+        });
+    }
+
+    const channel0 = _.get(lanState, 'channel0', null);
+
+    if (channel0 !== null) {
+        _.merge(iHostState, {
+            brightness: {
+                brightness: percentTranslateToHundred(Number(channel0), [25, 255]),
+            },
+        });
+    }
+
+    return iHostState;
+}
+
+function lanStateToIHostState52(lanState: ILanState52) {
+    const iHostState = {};
+
+    const powerState = _.get(lanState, 'state', null);
+
+    if (powerState !== null) {
+        _.merge(iHostState, {
+            power: {
+                powerState,
+            },
+        });
+    }
+
+    const channel0 = _.get(lanState, 'channel0', null);
+
+    if (channel0 !== null) {
+        _.merge(iHostState, {
+            brightness: {
+                brightness: percentTranslateToHundred(Number(channel0), [25, 255]),
+            },
+        });
+    }
+
+    const channel1 = _.get(lanState, 'channel1', null);
+
+    if (channel1 !== null) {
+        _.merge(iHostState, {
+            'color-temperature': {
+                colorTemperature: 100 - percentTranslateToHundred(Number(channel1), [25, 255], false),
+            },
+        });
+    }
+
+    return iHostState;
+}
+function lanStateToIHostState11(lanState: ILanState11) {
+    const iHostState = {};
+
+    const percentage = _.get(lanState, 'setclose', null);
+
+    if (percentage !== null) {
+        _.merge(iHostState, {
+            percentage: {
+                percentage,
+            },
+        });
+    }
+
+    const motorTurn = _.get(lanState, 'switch', null); //0-电机停止；1-电机正传；2-电机反转 (0:Motor stops; 1:Motor forwards; 2:Motor reverses)
+    const motorTurnObj = {
+        pause: 'stop',
+        on: 'open',
+        off: 'close',
+    };
+
+    if (motorTurn !== null) {
+        _.assign(iHostState, {
+            'motor-control': {
+                motorControl: motorTurnObj[motorTurn],
+            },
+        });
+    }
+
+    _.assign(iHostState, {
+        //normal 表示正常模式（已校准），calibration 表示正在校准。默认校准
+        //normal Indicates normal mode (calibrated），calibration Indicates calibration is in progress。Default calibration
+        'motor-clb': {
+            motorClb: 'normal',
+        },
+    });
+
+    return iHostState;
+}
+
 export {
     lanStateToIHostStatePowerDevice,
     lanStateToIHostStateLight,
@@ -1551,4 +1682,7 @@ export {
     lanStateToIHostStateSmokeDetector,
     lanStateToIHostStateTRV,
     iHostStateToLanStateTRV,
+    lanStateToIHostState57,
+    lanStateToIHostState52,
+    lanStateToIHostState11,
 };

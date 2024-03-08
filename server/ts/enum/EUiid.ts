@@ -122,22 +122,6 @@ enum EUiid {
     uiid_7002 = 7002,
     /** 门磁 (Door magnet)*/
     uiid_3026 = 3026,
-    /** 功率检测单通道插座 (Power detection single channel socket) */
-    uiid_5 = 5,
-    /** RGB五色球泡灯 (RGB five-color bulb) */
-    uiid_22 = 22,
-    /** 单路调光开关(single dimmer switch) */
-    uiid_36 = 36,
-    /** 律动灯带(Rhythm light strip) */
-    uiid_59 = 59,
-    /** WiFi门磁(Wi fi gate) */
-    uiid_102 = 102,
-    /** 律动灯带-蓝牙版(rhythm Light strip Bluetooth version) */
-    uiid_137 = 137,
-    /** 新版WIFI门磁（New version of wifi door sensor） */
-    uiid_154 = 154,
-    /** 幻彩灯带-Sonoff */
-    uiid_173 = 173,
     /** 门磁 (Door magnet)*/
     uiid_7003 = 7003,
     /** 烟感 (smoke sensor) */
@@ -160,6 +144,31 @@ enum EUiid {
     uiid_1772 = 1772,
     /** 温控阀 (thermostat) */
     uiid_7017 = 7017,
+
+    /** 功率检测单通道插座 (Power detection single channel socket) */
+    uiid_5 = 5,
+    /** RGB五色球泡灯 (RGB five-color bulb) */
+    uiid_22 = 22,
+    /** 单路调光开关(single dimmer switch) */
+    uiid_36 = 36,
+    /** 律动灯带(Rhythm light strip) */
+    uiid_59 = 59,
+    /** WiFi门磁(Wi fi gate) */
+    uiid_102 = 102,
+    /** 律动灯带-蓝牙版(rhythm Light strip Bluetooth version) */
+    uiid_137 = 137,
+    /** 新版WIFI门磁（New version of wifi door sensor） */
+    uiid_154 = 154,
+    /** 幻彩灯带-Sonoff */
+    uiid_173 = 173,
+    /** 调光调色温吸顶灯 */
+    uiid_52 = 52,
+    /** 单色球泡灯 */
+    uiid_57 = 57,
+    /** 堆叠式电表四通道开关子设备 */
+    uiid_130 = 130,
+    /** 电动窗帘 */
+    uiid_11 = 11,
 }
 
 export default EUiid;

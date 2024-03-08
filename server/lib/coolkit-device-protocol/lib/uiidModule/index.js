@@ -27,6 +27,7 @@ const UIID32_1 = require("./UIID32");
 const UIID34_1 = require("./UIID34");
 const UIID36_1 = require("./UIID36");
 const UIID44_1 = require("./UIID44");
+const UIID52_1 = require("./UIID52");
 const UIID57_1 = require("./UIID57");
 const UIID59_1 = require("./UIID59");
 const UIID65_1 = require("./UIID65");
@@ -103,6 +104,8 @@ const UIID7012_1 = require("./UIID7012");
 const UIID7013_1 = require("./UIID7013");
 const UIID7014_1 = require("./UIID7014");
 const UIID7016_1 = require("./UIID7016");
+const UIID7017_1 = require("./UIID7017");
+const UIID7019_1 = require("./UIID7019");
 const UIID20001_1 = require("./UIID20001");
 const UIID20005_1 = require("./UIID20005");
 const UIID20006_1 = require("./UIID20006");
@@ -133,6 +136,7 @@ const uiidMap = new Map([
     [34, UIID34_1.UIID34_PROTOCOL],
     [36, UIID36_1.UIID36_PROTOCOL],
     [44, UIID44_1.UIID44_PROTOCOL],
+    [52, UIID52_1.UIID52_PROTOCOL],
     [57, UIID57_1.UIID57_PROTOCOL],
     [59, UIID59_1.UIID59_PROTOCOL],
     [65, UIID65_1.UIID65_PROTOCOL],
@@ -209,6 +213,8 @@ const uiidMap = new Map([
     [7013, UIID7013_1.UIID7013_PROTOCOL],
     [7014, UIID7014_1.UIID7014_PROTOCOL],
     [7016, UIID7016_1.UIID7016_PROTOCOL],
+    [7017, UIID7017_1.UIID7017_PROTOCOL],
+    [7019, UIID7019_1.UIID7019_PROTOCOL],
     [20001, UIID20001_1.UIID20001_PROTOCOL],
     [20005, UIID20005_1.UIID20005_PROTOCOL],
     [20006, UIID20006_1.UIID20006_PROTOCOL],

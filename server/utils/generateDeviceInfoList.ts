@@ -78,7 +78,7 @@ const UIID_TYPE_LIST = [
     },
     {
         type: EType.LIGHT, //灯(light)
-        uiidList: [44, 103, 104, 135, 136, 157, 22, 36, 1257, 1258, 7008, 3258, 7009],
+        uiidList: [44, 103, 104, 135, 136, 157, 22, 36, 1257, 1258, 7008, 3258, 7009, 52, 57],
     },
     {
         type: EType.ZIGBEE_P,
@@ -86,7 +86,7 @@ const UIID_TYPE_LIST = [
     },
     {
         type: EType.CURTAIN,
-        uiidList: [7006, 7015],
+        uiidList: [7006, 7015, 11],
     },
     {
         type: EType.BUTTON,
@@ -212,6 +212,7 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
             });
         }
     });
+
     eWeLinkDeviceList.forEach((item) => {
         const uiid = item.itemData.extra.uiid;
         if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
@@ -227,6 +228,8 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 subDeviceNum: 0,
                 networkProtocol: ENetworkProtocolType.WIFI,
             };
+            //去掉局域网中的长连接设备(Remove long-connection devices in the LAN)
+            _.remove(deviceList, (t) => t.deviceId === item.itemData.deviceid);
             deviceList.push(device);
         }
     });

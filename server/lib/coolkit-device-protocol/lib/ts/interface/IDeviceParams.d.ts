@@ -148,7 +148,7 @@ interface IDeviceParams {
     quickSwitch: number;
     dimming: number;
     normal: Record<string, any>;
-    workMode: number;
+    workMode: number | string;
     swMode_00: number;
     swMode_01: number;
     swReverse_00: number;
@@ -216,10 +216,10 @@ interface IDeviceParams {
     rfChl: number;
     targetTemp: number;
     volatility: number;
-    childLock: string;
+    childLock: string | boolean;
     tempScale: string;
     fault: number;
-    workState: number;
+    workState: number | string;
     sysVersion: string;
     zigbeeVersion: string;
     rfList: {
@@ -295,6 +295,18 @@ interface IDeviceParams {
         command: string;
         arguments: any[];
     }[];
+    curTargetTemp: number;
+    windowSwitch: boolean;
+    ecoTargetTemp: number;
+    autoTargetTemp: number;
+    manTargetTemp: number;
+    mon: string;
+    tues: string;
+    wed: string;
+    thur: string;
+    fri: string;
+    sat: string;
+    sun: string;
 }
 export interface IWifiLightBrCt {
     br: number;
