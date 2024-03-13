@@ -113,7 +113,19 @@ export const ZIGBEE_UIID_DEVICE_LIST = [
 /** zigbee 窗帘子设备 (zigbee curtain sub-device) */
 export const ZIGBEE_UIID_CURTAIN_LIST = [EUiid.uiid_7006, EUiid.uiid_7015];
 
-export const WEB_SOCKET_UIID_DEVICE_LIST = [EUiid.uiid_5, EUiid.uiid_22, EUiid.uiid_36, EUiid.uiid_59, EUiid.uiid_102, EUiid.uiid_137, EUiid.uiid_154, EUiid.uiid_173];
+export const WEB_SOCKET_UIID_DEVICE_LIST = [
+    EUiid.uiid_5,
+    EUiid.uiid_22,
+    EUiid.uiid_36,
+    EUiid.uiid_59,
+    EUiid.uiid_102,
+    EUiid.uiid_137,
+    EUiid.uiid_154,
+    EUiid.uiid_173,
+    EUiid.uiid_52,
+    EUiid.uiid_57,
+    EUiid.uiid_11
+];
 /** zigbee 五色灯设备 (zigbee five color lamp sub-device) */
 export const ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST = [EUiid.uiid_3258, EUiid.uiid_7009];
 
@@ -241,7 +253,7 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
         ],
     },
     {
-        uiidList: [EUiid.uiid_44],
+        uiidList: [EUiid.uiid_44, EUiid.uiid_57],
         category: ECategory.LIGHT,
         capabilities: [
             { capability: ECapability.POWER, permission: EPermission.READ_WRITE },
@@ -249,7 +261,7 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
         ],
     },
     {
-        uiidList: [EUiid.uiid_103, EUiid.uiid_135],
+        uiidList: [EUiid.uiid_103, EUiid.uiid_135, EUiid.uiid_52],
         category: ECategory.LIGHT,
         capabilities: [
             { capability: ECapability.POWER, permission: EPermission.READ_WRITE },
@@ -287,7 +299,7 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
         ],
     },
     {
-        uiidList: [EUiid.uiid_7006, EUiid.uiid_7015],
+        uiidList: [EUiid.uiid_7006, EUiid.uiid_7015, EUiid.uiid_11],
         category: ECategory.CURTAIN,
         capabilities: [
             {

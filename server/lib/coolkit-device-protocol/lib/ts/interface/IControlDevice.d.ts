@@ -18,7 +18,7 @@ export interface IControlDeviceParams {
         switch?: string;
     }>;
     targetTemp: number;
-    workMode: number;
+    workMode: number | string;
     childLock: 'on' | 'off';
     stopMode: number;
     securityType: number;
@@ -55,4 +55,8 @@ export interface IControlDeviceParams {
     fileName: string;
     volume: number;
     test: boolean;
+    windowSwitch: boolean;
+    tempCorrection: number;
+    scheduleParams: Partial<Record<TSchedule, string>>;
 }
+export type TSchedule = 'sun' | 'mon' | 'tues' | 'wed' | 'thur' | 'fri' | 'sat';

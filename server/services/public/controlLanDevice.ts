@@ -62,30 +62,7 @@ export default async function controlLanDevice(req: Request) {
         if ([EUiid.uiid_28].includes(uiid)) {
             request = updateLanDeviceData.setRfButton;
         }
-        //模式不对时不给控制，防止损害设备 (No control is provided when the mode is incorrect to prevent damage to the equipment.)
-        if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
-            const lanState126And165 = await getState126And165(deviceId);
 
-            const workMode = _.get(lanState126And165, 'workMode', null);
-
-            if ([null, 3].includes(workMode)) {
-                return createFailResModeError(message_id);
-            }
-
-            if (_.get(iHostState, ECapability.TOGGLE)) {
-                if (workMode === 2) {
-                    logger.info('no right mode', workMode);
-                    return createFailResModeError(message_id);
-                }
-            }
-
-            if (_.get(iHostState, ECapability.MOTOR_CONTROL) || _.get(iHostState, ECapability.PERCENTAGE)) {
-                if (workMode === 1) {
-                    logger.info('no right mode', workMode);
-                    return createFailResModeError(message_id);
-                }
-            }
-        }
         //zigbee-p子设备控制 (Zigbee p sub-device control)
         if (ZIGBEE_UIID_DEVICE_LIST.includes(uiid)) {
             request = updateLanDeviceData.subDeviceControl;
@@ -137,6 +114,31 @@ export default async function controlLanDevice(req: Request) {
                     }
                     deviceObj[deviceId] = {};
                     return resData;
+                }
+            }
+
+            //模式不对时不给控制，防止损害设备 (No control is provided when the mode is incorrect to prevent damage to the equipment.)
+            if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
+                const lanState126And165 = await getState126And165(deviceId);
+
+                const workMode = _.get(lanState126And165, 'workMode', null);
+
+                if ([null, 3].includes(workMode)) {
+                    return createFailResModeError(message_id);
+                }
+
+                if (_.get(iHostState, ECapability.TOGGLE)) {
+                    if (workMode === 2) {
+                        logger.info('no right mode', workMode);
+                        return createFailResModeError(message_id);
+                    }
+                }
+
+                if (_.get(iHostState, ECapability.MOTOR_CONTROL) || _.get(iHostState, ECapability.PERCENTAGE)) {
+                    if (workMode === 1) {
+                        logger.info('no right mode', workMode);
+                        return createFailResModeError(message_id);
+                    }
                 }
             }
 

@@ -9,7 +9,10 @@ exports.UIID57_PROTOCOL = {
     },
     controlItem: {
         toggle(controlItem) {
-            const { params } = controlItem.device;
+            const { device: { params }, switch: state } = controlItem;
+            if (state) {
+                return { state };
+            }
             return params.state === 'on' ? { state: 'off' } : { state: 'on' };
         },
         setBrightness(controlItem) {
@@ -18,6 +21,15 @@ exports.UIID57_PROTOCOL = {
             bright > 255 && (bright = 255);
             return {
                 channel0: `${bright}`
+            };
+        },
+        setMultiLightControl(controlItem) {
+            const { brightness = 1 } = controlItem;
+            let bright = parseInt((brightness / 100) * 231 + '') + 25;
+            bright > 255 && (bright = 255);
+            return {
+                channel0: `${bright}`,
+                state: 'on'
             };
         }
     }

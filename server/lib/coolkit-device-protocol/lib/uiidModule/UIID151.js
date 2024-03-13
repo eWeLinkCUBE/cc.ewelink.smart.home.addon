@@ -44,6 +44,9 @@ exports.UIID151_PROTOCOL = {
             else {
                 return { mode: mediaMode };
             }
+        },
+        refreshPowerInfo() {
+            return { uiActive: 60 };
         }
     }
 };

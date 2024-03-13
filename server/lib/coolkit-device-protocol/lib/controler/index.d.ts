@@ -1,6 +1,6 @@
 import { IControlDeviceParams } from '../ts/interface/IControlDevice';
 import { IDevice } from '../ts/interface/IDevice';
-import { TSingleCapability, TMultiCapability, TWifiLight, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TBackLight, TLightSceneMode, THistoryPower, TCurtain, TRfGateway, TActivePower, TTempUnit, TTargetTemp, TWorkMode, TChildLock, TStopMode, TZled, TSecurityType, TMediaTotal, TSlowly, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TStatisticsPower } from '../ts/type/TControlType';
+import { TSingleCapability, TMultiCapability, TWifiLight, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TBackLight, TLightSceneMode, THistoryPower, TCurtain, TRfGateway, TActivePower, TTempUnit, TTargetTemp, TWorkMode, TChildLock, TStopMode, TZled, TSecurityType, TMediaTotal, TSlowly, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TStatisticsPower, TWindowSwitch, TempCorrection, TEcoTargetTemp } from '../ts/type/TControlType';
 import { IGroup } from '../ts/interface/IGroup';
 export type TInvokeData = IDevice | IGroup;
 declare function controlDevice(device: TInvokeData, type: 'toggle', params?: Partial<Pick<IControlDeviceParams, 'outlet' | 'switch'>>): TSingleCapability;
@@ -53,5 +53,9 @@ declare function controlDevice(device: TInvokeData, type: 'autoControl'): TAutoC
 declare function controlDevice(device: TInvokeData, type: 'getOperateHistory', params?: Pick<IControlDeviceParams, 'rangeStart' | 'rangeEnd'>): TOperateHistory;
 declare function controlDevice(device: TInvokeData, type: 'setSensitivity', params?: Pick<IControlDeviceParams, 'sensitivity'>): TSensitivity;
 declare function controlDevice(device: TInvokeData, type: 'setDetectedDuration', params?: Pick<IControlDeviceParams, 'duration'>): TDetectedDuration;
+declare function controlDevice(device: TInvokeData, type: 'setWindowSwitch', params: Pick<IControlDeviceParams, 'windowSwitch'>): TWindowSwitch;
+declare function controlDevice(device: TInvokeData, type: 'setTempCorrection', params: Pick<IControlDeviceParams, 'tempCorrection'>): TempCorrection;
+declare function controlDevice(device: TInvokeData, type: 'setEcoTargetTemperature', params: Pick<IControlDeviceParams, 'targetTemp'>): TEcoTargetTemp;
+declare function controlDevice(device: TInvokeData, type: 'setSchedule', params: Pick<IControlDeviceParams, 'scheduleParams'>): any;
 declare function controlDevice(device: TInvokeData, type: 'setMultiLightControl', params: Partial<Pick<IControlDeviceParams, 'brightness' | 'colorTemp' | 'hue' | 'mode' | 'saturation'>>): any;
 export { controlDevice };

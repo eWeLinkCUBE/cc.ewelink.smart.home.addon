@@ -1,4 +1,4 @@
-type Switch = 'off' | 'on'
+type Switch = 'off' | 'on';
 /** "brighter" - 较亮(brighter) "darker" - 较暗(darker) */
 type BrState = 'darker' | 'brighter';
 /** 温控阀工作模式 (TRV working mode) */
@@ -8,14 +8,14 @@ export enum TrvWorkMode {
     /** 关闭-防霜冻模式 (eco mode) */
     ECO = 'ECO',
     /** 自动模式 (auto mode) */
-    AUTO = 'AUTO'
+    AUTO = 'AUTO',
 }
 /** 温控阀状态 (TRV work state) */
 export enum TrvWorkState {
     /** 保温中 (inactive) */
     INACTIVE = 'INACTIVE',
     /** 加热中 (heating) */
-    HEATING = 'HEATING'
+    HEATING = 'HEATING',
 }
 
 /** 单通道开关或插座的局域网state数据 (LAN state data for a single channel switch or socket) */
@@ -187,7 +187,7 @@ export interface ILanStateContactSensor {
 /** 7003门磁-带防拆能力 (7003 door magnet with anti-tamper capability) */
 export interface ILanStateContactSensorWithTamperAlert extends ILanStateContactSensor {
     /** 0: 未被拆除，1：被拆除 */
-    split: 0 | 1
+    split: 0 | 1;
 }
 /** 窗帘 (curtain)*/
 export interface ILanStateCurtain {
@@ -226,79 +226,79 @@ export interface ILanStatePersonExist {
 
 /** 单色灯 (monochrome lamp) */
 export interface ILanStateMonochromeLamp {
-    switch: Switch,
+    switch: Switch;
     /** 亮度百分比，取值范围[1 ~ 100] (brightness value range [1 ~ 100]) */
-    brightness: number
+    brightness: number;
 }
 
 /** 双色灯 (bicolor lamp) */
 export interface ILanStateBicolorLamp {
-    switch: Switch,
+    switch: Switch;
     /** 亮度百分比，取值范围[1 ~ 100] (brightness value range [1 ~ 100]) */
-    brightness: number,
+    brightness: number;
     /** 色温百分比，取值范围[1 ~ 100] (colorTemp value range [1 ~ 100]) */
-    colorTemp: number
+    colorTemp: number;
 }
 
 /** 五色灯 (five color lamp) */
 export interface ILanStateFiveColorLamp {
-    switch: Switch,
+    switch: Switch;
     /** cct: 白光模式，rgb: 彩光模式 */
-    colorMode: 'cct' | 'rgb',
+    colorMode: 'cct' | 'rgb';
     /** 白光模式下的亮度百分比，取值范围[1 ~ 100] */
-    cctBrightness: number,
+    cctBrightness: number;
     /** 彩光模式下的亮度百分比，取值范围[1 ~ 100] */
-    rgbBrightness: number
+    rgbBrightness: number;
     /** 色温百分比，取值范围[0 ~ 100] (colorTemp value range [1 ~ 100]) */
-    colorTemp: number,
+    colorTemp: number;
     /** 色相，取值范围[0 ~ 359] */
-    hue: number,
+    hue: number;
     /** 饱和度，取值范围[0 ~ 100] */
-    saturation: number,
+    saturation: number;
 }
 
 /** 水浸传感器 (水浸传感器) */
 export interface ILanStateWaterSensor {
     /** 电池电量百分⽐，Number型。取值范围[0,100] (Battery power percentage, number type. Value range[0,100]) */
-    battery: number,
+    battery: number;
     /** 0: 无水，1：水浸 (0: No water, 1: Flooded) */
-    water: 0 | 1,
+    water: 0 | 1;
 }
 
 /** 烟雾传感器 (smoke sensor) */
 export interface ILanStateSmokeDetector {
     /** 电池电量百分⽐，Number型。取值范围[0,100] (Battery power percentage, number type. Value range[0,100]) */
-    battery: number,
+    battery: number;
     /** 0：无烟，1：有烟 (0: No smoke, 1: Smoke) */
-    smoke: 0 | 1,
+    smoke: 0 | 1;
     /** 触发时间 (Trigger time) */
-    trigTime: string
+    trigTime: string;
 }
 
 /** 温控阀 (thermostatic valve) */
 export interface ILanStateTrv {
     /** 电量 (battery) */
-    battery: number,
+    battery: number;
     /** 当前的目标温度 (target temperature) */
-    curTargetTemp: number,
+    curTargetTemp: number;
     /** 手动模式下目标温度 (Target temperature in manual mode) */
-    manTargetTemp: number,
+    manTargetTemp: number;
     /** 自动模式下目标温度 (Target temperature in auto mode) */
-    autoTargetTemp: number,
+    autoTargetTemp: number;
     /** 节能模式下目标温度 (Target temperature in eco mode) */
-    ecoTargetTemp: number,
+    ecoTargetTemp: number;
     /** 当前温度 (temperature) */
-    temperature: number,
+    temperature: number;
     /** 温度校准值 (Temperature calibration value) */
-    tempCorrection: number,
+    tempCorrection: number;
     /** 当前的工作模式，0: 手动(MANUAL), 1: 关闭（ECO）, 2: 自动(AUTO) (Current working mode) */
-    workMode: '0' | '1' | '2',
+    workMode: '0' | '1' | '2';
     /** 加热状态，0: 保温，1: 加热中 (thermal state, 0: Keeping, 1: Heating) */
-    workState: '0' | '1',
+    workState: '0' | '1';
     /** 开窗检测 (Window detection) */
-    windowSwitch: boolean,
+    windowSwitch: boolean;
     /** 童锁 (child lock) */
-    childLock: boolean
+    childLock: boolean;
 }
 
 export interface ILanState22 {
@@ -401,4 +401,30 @@ export interface ILanState5 {
      * The start time of counting this electricity consumption, zero time zone
      */
     startTime: string;
+}
+
+export interface ILanState57 {
+    /** 单色球泡灯灯光的开关，on 打开，off 关闭 (The switch of the monochrome bulb light, on turns on, off turns off) */
+    state: 'on' | 'off';
+    /** 单色球泡灯灯光亮度值的调整，取值范围25-255，值越大越亮 (Adjustment of the light brightness value of single-color bulbs, the value range is 25-255, the larger the value, the brighter it is) */
+    channel0: string;
+}
+
+export interface ILanState52 {
+    /** 吸顶灯灯光的开关，on 打开，off 关闭 (The switch of the ceiling light, on means to turn it on, off means to turn it off) */
+    state: 'on' | 'off';
+    /** 吸顶灯灯光亮度值的调整，取值范围25-255 (Adjustment of ceiling light brightness value, value range 25-255) */
+    channel0: string;
+    /** 吸顶灯灯光色温值的调整，取值范围25-255，值越大越暖 (Adjustment of the color temperature value of the ceiling light. The value range is 25-255. The larger the value, the warmer it is.) */
+    channel1: string;
+}
+
+
+export interface ILanState11 {
+    /** 电动窗帘开关，on 打开，off 关闭，pause 暂停 (Electric curtain switch, on opens, off closes, pause pauses) */
+    switch:'on'|'pause'|'off',
+    /** 窗帘开启比例，0 全开，100 全关 (Curtain opening ratio, 0 is fully open, 100 is fully closed) */
+    setclose:number;
+    /** [-50,-100]	信号强度，单位dbm (Signal strength, unit dbm) */
+    rssi:number;
 }

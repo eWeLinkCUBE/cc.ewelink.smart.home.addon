@@ -47,6 +47,9 @@ import {
     lanStateToIHostStateTRV,
     iHostStateToLanStateTRV,
     lanStateToIHostStateMotionSensor7002,
+    lanStateToIHostState57,
+    lanStateToIHostState52,
+    lanStateToIHostState11
 } from './lanStateAndIHostStateChange';
 import EUiid from '../ts/enum/EUiid';
 import ECapability from '../ts/enum/ECapability';
@@ -381,6 +384,24 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         _.assign(iHostState, lanStateToIHostStateTRV(lanState, deviceId));
     }
 
+    if([EUiid.uiid_57].includes(uiid)){
+        _.assign(iHostState, lanStateToIHostState57(lanState));
+    }
+
+    if([EUiid.uiid_52].includes(uiid)){
+        _.assign(iHostState, lanStateToIHostState52(lanState));
+    }
+
+    if([EUiid.uiid_11].includes(uiid)){
+        _.assign(iHostState, lanStateToIHostState11(lanState));
+    }
+    //去掉对象中不合法的值(Remove illegal value)
+    Object.keys(iHostState).forEach((key) => {
+        if (typeof iHostState[key] === 'object' && Object.keys(iHostState[key]).length === 0) {
+            delete iHostState[key];
+        }
+    });
+
     return iHostState;
 }
 
@@ -500,7 +521,7 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface)
     }
 
     // websocket 灯带 (websocket light strip)
-    if ([EUiid.uiid_59, EUiid.uiid_173, EUiid.uiid_137, EUiid.uiid_22, EUiid.uiid_36, ...ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST].includes(uiid)) {
+    if ([EUiid.uiid_59, EUiid.uiid_173, EUiid.uiid_137, EUiid.uiid_22, EUiid.uiid_36, EUiid.uiid_57, EUiid.uiid_52,EUiid.uiid_11, ...ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST].includes(uiid)) {
         _.assign(lanState, iHostStateToLanStateWebSocket(iHostState, deviceId, uiid));
     }
     if ([EUiid.uiid_1257].includes(uiid)) {

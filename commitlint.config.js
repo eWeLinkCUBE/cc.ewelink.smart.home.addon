@@ -52,7 +52,7 @@ module.exports = {
      */
     rules: {
         /** 自定义规则——不允许存在中文及中文标点符号 */
-        'can-not-be-chinese': [2, 'always'],
+        // 'can-not-be-chinese': [2, 'never'],
         'body-leading-blank': [2, 'always'],
         'footer-leading-blank': [1, 'always'],
         'header-max-length': [2, 'always', 50],
