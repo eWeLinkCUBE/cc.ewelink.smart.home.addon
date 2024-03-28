@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { decode } from 'js-base64';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import wsService from './wsService';
+import syncWebSocketDeviceStateToIHost from './syncWebSocketDeviceStateToIHost';
 
 //控制websocket设备 (Control device)
 export default async function controlWebSocketDevice(req: Request) {
@@ -22,7 +23,7 @@ export default async function controlWebSocketDevice(req: Request) {
             return;
         }
 
-        const lanStateString = deviceDataUtil.iHostStateToLanState(deviceId, iHostState);
+        const lanStateString = deviceDataUtil.iHostStateToLanState(deviceId, iHostState, true);
 
         if (!lanStateString) {
             throw new Error('null');
@@ -32,12 +33,14 @@ export default async function controlWebSocketDevice(req: Request) {
 
         const params = { deviceid: deviceId, ownerApikey: selfApikey, params: lanState };
 
-        logger.info('params----------------', params);
+        logger.info('params----------------', JSON.stringify(params,null,2));
 
         const res = await wsService.updateByWs(params);
         logger.info('ws----------------res', res);
         if (res.error === 0) {
             deviceDataUtil.updateEWeLinkDeviceData(deviceId, 'params', lanState);
+            //控制成功后推送给iHost，维护操作日志（After the control is successful, push it to iHost and maintain the operation log.）
+            syncWebSocketDeviceStateToIHost(deviceId,lanState,uiid)
             return createSuccessRes(message_id);
         }
         return createFailRes(message_id);

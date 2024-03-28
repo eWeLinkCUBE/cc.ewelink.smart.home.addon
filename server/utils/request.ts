@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import EMethod from '../ts/enum/EMethod';
-import db from '../utils/db';
+import db from './db';
 import config from '../config';
 import logger from '../log';
 import _ from 'lodash';
@@ -58,7 +58,7 @@ export async function request<RespData>(url: string, method: EMethod, params?: a
         const res = await iHostAxiosInstance(axiosConfig);
         return res ? (res.data as ApiResponse<RespData>) : ({} as ApiResponse<RespData>);
     } catch (error) {
-        logger.error('get iHost res error----', error);
+        logger.error('request iHost api error-----', error);
 
         return {} as ApiResponse<RespData>;
     }
@@ -86,7 +86,7 @@ export async function requestNoError<RespData>(url: string, method: EMethod, par
         const res = await iHostAxiosInstance(axiosConfig);
         return res ? (res.data as RespData) : ({} as RespData);
     } catch (error) {
-        logger.error('get iHost device error ----', error);
+        logger.error('request iHost api error-----', error);
 
         return {} as RespData;
     }

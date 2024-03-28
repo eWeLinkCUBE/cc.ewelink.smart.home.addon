@@ -14,7 +14,7 @@ export default interface IHostDevice {
             };
         }
     ];
-    state: any;
+    state: object;
     tags: {
         deviceInfo: string;
         _smartHomeConfig?: any;

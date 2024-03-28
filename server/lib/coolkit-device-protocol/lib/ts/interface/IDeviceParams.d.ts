@@ -32,6 +32,8 @@ interface IDeviceParams {
     configure: Array<{
         startup: string;
         outlet: number;
+        width?: number;
+        enableDelay?: number;
     }>;
     pulseConfig: {
         pulse: string;
@@ -157,7 +159,7 @@ interface IDeviceParams {
     motorSwReverse: number;
     outputReverse: number;
     motorTurn: number;
-    calibState: number;
+    calibState: number | boolean;
     currLocation: number;
     location: number;
     overload_00: Record<string, any>;
@@ -307,6 +309,13 @@ interface IDeviceParams {
     fri: string;
     sat: string;
     sun: string;
+    detectInterval: number;
+    wallPenetration: boolean;
+    lightSwitch: string;
+    lightMode: number;
+    motorReversal: boolean;
+    electromotor: number;
+    percentageControl: number;
 }
 export interface IWifiLightBrCt {
     br: number;

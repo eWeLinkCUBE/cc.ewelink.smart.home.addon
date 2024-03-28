@@ -5,6 +5,8 @@ import logger from '../../log';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import EUiid from '../../ts/enum/EUiid';
 import syncRfDeviceOnlineToIHost from '../rf/syncRfDeviceOnlineToIHost';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import wsService from '../webSocket/wsService';
 
 /** 设备上下线状态上报 (Report device online and offline status)*/
 export default async function syncDeviceOnlineIHost(deviceId: string, isOnline: boolean) {
@@ -28,10 +30,32 @@ export default async function syncDeviceOnlineIHost(deviceId: string, isOnline: 
             logger.info('this device not sync ---------', uiid, deviceId);
             return;
         }
+
+        if (isOnline === false && LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+            const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+
+            if (!eWeLinkDeviceData) {
+                return;
+            }
+
+            logger.info('wsService.isWsConnected()---------------------------', wsService.isWsConnected(), eWeLinkDeviceData.itemData.online);
+
+            //websocket连接着且设备云端在线，不同步离线状态（The websocket is connected and the device cloud is online, but the offline state is not synchronized.）
+            if (wsService.isWsConnected() && eWeLinkDeviceData.itemData.online == true) {
+                return;
+            }
+
+            if (!wsService.isWsConnected()) {
+                deviceDataUtil.updateEWeLinkDeviceData(deviceId, 'itemData', { online: false });
+            }
+        }
+
         //在线状态相同不更新状态 (If the online status is the same, the status will not be updated.)
         if (iHostDeviceData.isOnline === isOnline) {
             return;
         }
+
+        logger.info('uiid--------------', uiid, deviceId);
 
         const params = {
             event: {

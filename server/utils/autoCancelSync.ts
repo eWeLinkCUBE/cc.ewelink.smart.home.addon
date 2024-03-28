@@ -50,9 +50,8 @@ export default async function () {
                 // 当前账号下不存在该设备（该设备已被删除）
                 // Does not exist under the current account（The device has been deleted）
                 if (deviceInfo.account === account && !eWeLinkDeviceIdList.includes(deviceInfo.deviceId)) {
-                    logger.info('account has this device ================================', eWeLinkDeviceIdList.includes(deviceInfo.deviceId), account);
-                    logger.info('auto cancel sync device to iHost--------------------------------------------------------', deviceInfo.deviceId);
-                    logger.info('data db--------------------------------------------------------', db.getDb());
+                    logger.info('account has this device ========', eWeLinkDeviceIdList.includes(deviceInfo.deviceId), account);
+                    logger.info('auto cancel sync device to iHost------------', deviceInfo.deviceId);
                     await cancelSyncDeviceToIHost(deviceInfo.deviceId);
                 }
             }

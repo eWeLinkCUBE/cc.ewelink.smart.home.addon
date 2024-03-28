@@ -88,6 +88,16 @@ enum ECapability {
     THERMOSTAT_TARGET_SETPOINT = 'thermostat-target-setpoint',
     /** 温控阀能力 (Thermostatic valve capability) */
     THERMOSTAT = 'thermostat',
+    /** 子组件电压检测 (sub component voltage detection) */
+    TOGGLE_VOLTAGE = 'toggle-voltage',
+    /** 子组件电流检测 (sub component current sensing)*/
+    TOGGLE_ELECTRIC_CURRENT = 'toggle-electric-current',
+    /** 子组件功率检测 (sub component power detection)*/
+    TOGGLE_ELECTRIC_POWER = 'toggle-electric-power',
+    /** 子组件电量统计 (sub component power statistics)*/
+    TOGGLE_POWER_CONSUMPTION = 'toggle-power-consumption',
+    /** 子组件识别/激活(Sub component identification/activation) */
+    TOGGLE_IDENTIFY= 'toggle-identify'
 }
 
 export default ECapability;

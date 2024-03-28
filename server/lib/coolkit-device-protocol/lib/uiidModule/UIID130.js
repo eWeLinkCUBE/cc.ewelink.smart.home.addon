@@ -50,6 +50,33 @@ exports.UIID130_PROTOCOL = {
         getOperateHistory(controlItem) {
             const { rangeStart = 0, rangeEnd = 29 } = controlItem;
             return { rangeStart, rangeEnd };
+        },
+        statisticsPower(controlItem) {
+            const { startTime, endTime, outlet } = controlItem;
+            if (typeof outlet !== 'number') {
+                return {
+                    startTime: '',
+                    endTime: ''
+                };
+            }
+            const startKey = `startTime_0${outlet}`;
+            const endKey = `endTime_0${outlet}`;
+            if (startTime && endTime) {
+                return {
+                    [`${startKey}`]: startTime,
+                    [`${endKey}`]: endTime
+                };
+            }
+            return {
+                [`${startKey}`]: startTime,
+                [`${endKey}`]: ''
+            };
+        },
+        getOncePower(controlItem) {
+            const { outlet = 0 } = controlItem;
+            return {
+                [`getKwh_0${outlet}`]: 1
+            };
         }
     }
 };

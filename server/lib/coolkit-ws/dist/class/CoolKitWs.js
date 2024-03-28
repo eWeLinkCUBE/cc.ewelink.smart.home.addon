@@ -41,12 +41,22 @@ class CoolKitWs {
     }
     isWsExist() {
         if (CoolKitWs.ws) {
-            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: 长连接已存在，状态为${CoolKitWs.ws.wsState === 'CLOSED' ? '已关闭' : '开启中'}`);
+            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: 长连接已存在，状态为${CoolKitWs.ws.wsState}`);
             if (CoolKitWs.ws.wsState === 'CLOSED') {
                 CoolKitWs.ws = null;
                 return false;
             }
             return true;
+        }
+        return false;
+    }
+    isWsConnected() {
+        if (CoolKitWs.ws) {
+            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: 长连接状态为${CoolKitWs.ws.wsState}`);
+            if (CoolKitWs.ws.wsState === 'CONNECTED') {
+                return true;
+            }
+            return false;
         }
         return false;
     }

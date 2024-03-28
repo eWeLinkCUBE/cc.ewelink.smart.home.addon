@@ -6,12 +6,25 @@ import logger from '../../log';
 import iHostDeviceMap from '../../ts/class/iHostDeviceMap';
 import EUiid from '../../ts/enum/EUiid';
 import ECapability from '../../ts/enum/ECapability';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import wsService from '../webSocket/wsService';
 /** 设备状态上报  (Equipment status reporting)*/
 export default async (deviceId: string) => {
     try {
         const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);
 
         const uiid = deviceDataUtil.getUiidByDeviceId(deviceId);
+
+        if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+            // if (uiid === 28) {
+            //     const lanState = deviceDataUtil.getLastLanState(deviceId);
+            //     logger.info('28-------------lan', lanState);
+            // }
+            //如果websocket连接着，设备状态以websocket的为准，局域网不同步状态(If the websocket is connected, the device status is based on the websocket, and the LAN is not synchronized.)
+            if (wsService.isWsConnected()) {
+                return;
+            }
+        }
 
         if ([EUiid.uiid_28].includes(uiid)) {
             syncDeviceState28(deviceId);

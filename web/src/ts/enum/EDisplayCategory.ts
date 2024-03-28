@@ -30,5 +30,7 @@ export enum EDisplayCategory {
     /** 烟雾传感器 (smoke sensor) */
     SMOKE_DETECTOR = 'smokeDetector',
     /** 水浸传感器 (water immersion sensor) */
-    WATER_LEAK_DETECTOR = 'waterLeakDetector'
+    WATER_LEAK_DETECTOR = 'waterLeakDetector',
+    /** 堆叠式网关(stacked gateway) */
+    ELECTRICITY_GATEWAY = 'electricity_gateway'
 }

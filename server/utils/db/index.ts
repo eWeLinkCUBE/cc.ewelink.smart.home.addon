@@ -1,13 +1,17 @@
-import fs, { writeFileSync } from 'fs';
+import fs from 'fs';
 import _ from 'lodash';
-import config from '../config';
+import config from '../../config';
 import { encode, decode } from 'js-base64';
-import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
-import IHostDevice from '../ts/interface/IHostDevice';
-import logger from '../log';
-import IElectricityData from '../ts/interface/IElectricityData';
-import dbDataClass from '../ts/class/dbData';
-import IEWeLinkApiInfo from '../ts/interface/IEWeLinkApiInfo';
+import IEWeLinkDevice from '../../ts/interface/IEWeLinkDevice';
+import IHostDevice from '../../ts/interface/IHostDevice';
+import logger from '../../log';
+import IElectricityData from '../../ts/interface/IElectricityData';
+import dbDataClass from '../../ts/class/dbData';
+import IEWeLinkApiInfo from '../../ts/interface/IEWeLinkApiInfo';
+import { writeFile } from 'node:fs/promises'
+import Queue from './queue';
+import { v4 as uuidV4 } from 'uuid';
+
 
 type DbKey = keyof IDbData;
 
@@ -41,6 +45,9 @@ export const dbDataTmp: IDbData = {
     electricityData: {},
 };
 
+/** queue to write file */
+const queue = new Queue();
+
 /** 获取数据库文件所在路径 (Get the path to the database file) */
 function getDbPath() {
     return config.nodeApp.dbPath;
@@ -68,7 +75,8 @@ function getDb() {
 
 /** 清除所有数据 (Clear all data)*/
 function clearStore() {
-    fs.writeFileSync(getDbPath(), encode('{}'), 'utf-8');
+    const id = `${uuidV4()}----clear DB`;
+    writeFileToQueue(encode(''), id);
 }
 
 /** 设置指定的数据库数据 (Set specified database data)*/
@@ -85,7 +93,9 @@ function setDbValue(key: DbKey, v: IDbData[DbKey]) {
         const data = getDb();
         _.set(data, key, v);
         dbDataClass.dbDataMap.set('data', data);
-        writeFileSync(getDbPath(), encode(JSON.stringify(data)), 'utf-8');
+
+        const id = `${uuidV4()}---${key}`;
+        writeFileToQueue(encode(JSON.stringify(data)), id);
     } catch (error) {
         const data = getDb();
         logger.error('set db file---------------', 'error-----', error, data);
@@ -111,9 +121,18 @@ function getDbValue(key: DbKey) {
     }
 }
 
+
+async function writeFileToQueue(str: string, id: string) {
+    try {
+        await queue.execute<void>(async () => await writeFile(getDbPath(), str, 'utf-8'), id);
+    } catch (error) {
+        logger.error(`${id} queue execute error :`, error)
+    }
+}
+
 export default {
     getDb,
     clearStore,
     setDbValue,
-    getDbValue,
+    getDbValue
 };

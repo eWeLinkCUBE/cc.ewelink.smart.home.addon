@@ -10,6 +10,8 @@ export interface IControlDeviceParams {
     configure: Array<{
         startup: string;
         outlet: number;
+        enableDelay?: number;
+        width?: number;
     }>;
     pulses: Array<{
         pulse: string;
@@ -32,7 +34,7 @@ export interface IControlDeviceParams {
     colorTemp: number;
     hue: number;
     saturation: number;
-    colorMode: 'cct' | 'rgb' | 'white';
+    colorMode: 'cct' | 'rgb' | 'white' | number;
     backlight: string;
     slowlyLit: number;
     slowlyDimmed: number;
@@ -58,5 +60,8 @@ export interface IControlDeviceParams {
     windowSwitch: boolean;
     tempCorrection: number;
     scheduleParams: Partial<Record<TSchedule, string>>;
+    turbo: boolean;
+    lightSwitch: string;
+    motorReverse: boolean;
 }
 export type TSchedule = 'sun' | 'mon' | 'tues' | 'wed' | 'thur' | 'fri' | 'sat';

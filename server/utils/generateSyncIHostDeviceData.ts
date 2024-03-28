@@ -20,6 +20,7 @@ import {
     ZIGBEE_UIID_CURTAIN_LIST,
     ZIGBEE_UIID_DEVICE_LIST,
     MULTI_PROTOCOL_LIST,
+    LAN_WEB_SOCKET_UIID_DEVICE_LIST,
 } from '../const';
 import EProductMode7016 from '../ts/enum/EProductMode7016';
 import ISmartHomeConfig from '../ts/interface/ISmartHomeConfig';
@@ -58,6 +59,17 @@ async function generateSyncIHostDeviceData(deviceId: string) {
             await getEWeLinkDevice(deviceId);
         }
     }
+
+    if ([EUiid.uiid_130].includes(uiid)) {
+        //时区在保存在网关里（The time zone is stored in the gateway）
+        const parentId = _.get(eWeLinkDeviceData, ['itemData', 'params', 'parentid'], null);
+        const parentEWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(parentId);
+        const timeZone = _.get(parentEWeLinkDeviceData, ['itemData', 'params', 'timeZone'], null);
+        if (timeZone === null) {
+            logger.info('no timeZone-----------------', parentId);
+            await getEWeLinkDevice(parentId);
+        }
+    }
     const deviceInfoObj: any = {
         deviceId,
         devicekey,
@@ -81,6 +93,17 @@ async function generateSyncIHostDeviceData(deviceId: string) {
     }
     if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
         iHostState = lanStateToIHostState(deviceId, eWeLinkDeviceData.itemData.params);
+    }
+    //优先局域网(Priority LAN)
+    if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+        if (!mDnsDeviceData) {
+            iHostState = lanStateToIHostState(deviceId, eWeLinkDeviceData.itemData.params);
+        }
+    }
+
+    //子设备局域网控制需要网关id(Sub-device LAN control requires gateway ID)
+    if ([EUiid.uiid_130].includes(uiid)) {
+        _.set(deviceInfoObj, 'parentId', eWeLinkDeviceData.itemData.params.parentid);
     }
 
     // 同步zigbee-p子设备为通道设备时，获取设备的通道state (When the synchronized zigbee p sub-device is a channel device, obtain the channel state of the device)
@@ -204,6 +227,20 @@ async function generateSyncIHostDeviceData(deviceId: string) {
             return item;
         });
     }
+
+    if ([EUiid.uiid_130].includes(uiid)) {
+        capabilitiyList = capabilities.map((item: any) => {
+            if (item.capability === ECapability.TOGGLE_POWER_CONSUMPTION) {
+                const parentId = _.get(eWeLinkDeviceData, ['itemData', 'params', 'parentid'], null);
+                const parentEWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(parentId);
+                const timeZone = _.get(parentEWeLinkDeviceData, ['itemData', 'params', 'timeZone'], null);
+                item.configuration.timeZoneOffset = timeZone
+            }
+            return item;
+        });
+    }
+
+
     //将设备的超时未关是否开启状态同步到iHost
     if ([EUiid.uiid_154].includes(uiid)) {
         capabilitiyList = capabilities.map((item: any) => {

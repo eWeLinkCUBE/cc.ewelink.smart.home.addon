@@ -78,6 +78,10 @@ const UIID195_1 = require("./UIID195");
 const UIID196_1 = require("./UIID196");
 const UIID197_1 = require("./UIID197");
 const UIID198_1 = require("./UIID198");
+const UIID209_1 = require("./UIID209");
+const UIID210_1 = require("./UIID210");
+const UIID211_1 = require("./UIID211");
+const UIID212_1 = require("./UIID212");
 const UIID1000_1 = require("./UIID1000");
 const UIID1009_1 = require("./UIID1009");
 const UIID1256_1 = require("./UIID1256");
@@ -187,6 +191,10 @@ const uiidMap = new Map([
     [196, UIID196_1.UIID196_PROTOCOL],
     [197, UIID197_1.UIID197_PROTOCOL],
     [198, UIID198_1.UIID198_PROTOCOL],
+    [209, UIID209_1.UIID209_PROTOCOL],
+    [210, UIID210_1.UIID210_PROTOCOL],
+    [211, UIID211_1.UIID211_PROTOCOL],
+    [212, UIID212_1.UIID212_PROTOCOL],
     [1000, UIID1000_1.UIID1000_PROTOCOL],
     [1009, UIID1009_1.UIID1009_PROTOCOL],
     [1256, UIID1256_1.UIID1256_PROTOCOL],

@@ -6,12 +6,17 @@ import logger from '../log';
 import { decode } from 'js-base64';
 import getDayKwsData from './public/getDayKwsData';
 import EUiid from '../ts/enum/EUiid';
-import { WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
 import controlWebSocketDevice from './webSocket/controlWebSocketDevice';
-import getWebSocketKwsData from './webSocket/getWebSocketDayKwsData';
 import _ from 'lodash';
+import getWebSocketKwsData from './webSocket/getWebSocketDayKwsData';
 import getWebSocketRealSummarize from './webSocket/getWebSocketRealSummarize';
 import webSocketRealSummarizeStartEnd from './webSocket/webSocketRealSummarizeStartEnd';
+import deviceStateUtil from '../utils/deviceStateUtil';
+
+import getWebSocketKwsDataToggle from './webSocket/toggleKws/getWebSocketDayKwsDataToggle';
+import getWebSocketRealSummarizeToggle from './webSocket/toggleKws/getWebSocketRealSummarizeToggle';
+import webSocketRealSummarizeStartEndToggle from './webSocket/toggleKws/webSocketRealSummarizeStartEndToggle';
 
 /**
  * 开放给ihost后端的接口，收到iHost后端请求，控制局域网设备
@@ -31,7 +36,8 @@ export default async function toControlLanDevice(req: Request, res: Response) {
             throw new Error('no tags deviceInfo');
         }
         const deviceInfo = JSON.parse(decode(tags?.deviceInfo));
-        const { uiid } = deviceInfo;
+        const { uiid, deviceId } = deviceInfo;
+        
         //websocket请求 (Websocket request )
         if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
             if (header.name === 'QueryDeviceStates') {
@@ -44,6 +50,20 @@ export default async function toControlLanDevice(req: Request, res: Response) {
                         return res.json(await getWebSocketRealSummarize(req));
                     }
                 }
+
+                logger.info('uiid-------------------',uiid)
+
+                if(uiid === EUiid.uiid_130){
+                    const togglePowerConsumption = _.get(iHostState, ['toggle-power-consumption'], null);
+
+                    if(JSON.stringify(togglePowerConsumption).indexOf('rlSummarize')>-1){
+                        return res.json(await getWebSocketRealSummarizeToggle(req));
+                    }else {
+                        //summarize
+                        return res.json(await getWebSocketKwsDataToggle(req));
+                    }
+                }
+
                 throw new Error('no match');
             } else if (header.name === 'UpdateDeviceStates') {
                 if (uiid === EUiid.uiid_5) {
@@ -53,11 +73,35 @@ export default async function toControlLanDevice(req: Request, res: Response) {
                         return res.json(await webSocketRealSummarizeStartEnd(req));
                     }
                 }
+
+                if (uiid === EUiid.uiid_130) {
+                    const rlSummarize = _.get(iHostState, ['toggle-power-consumption'], null);
+                    //实时电量开始或者结束接口 （Real-time battery start or end api）
+                    if (rlSummarize !== null) {
+                        return res.json(await webSocketRealSummarizeStartEndToggle(req));
+                    }
+                }
+
                 return res.json(await controlWebSocketDevice(req));
             }
 
             return;
         }
+
+        if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+            const isInLanProtocol = deviceStateUtil.isInLanProtocol(deviceId);
+
+            if (!isInLanProtocol) {
+                if (header.name === 'QueryDeviceStates') {
+                    throw new Error('no match');
+                } else if (header.name === 'UpdateDeviceStates') {
+                    return res.json(await controlWebSocketDevice(req));
+                }
+
+                return;
+            }
+        }
+
         //局域网请求 (LAN request)
         if (header.name === 'QueryDeviceStates') {
             if (uiid === EUiid.uiid_190) {

@@ -5,6 +5,7 @@ export default class CoolKitWs {
     init(config: IConfig): Promise<IResponse>;
     close(): void;
     isWsExist(): boolean;
+    isWsConnected(): boolean;
     wsState(): string | null;
     sendMessage(params: IWsParams | string): void;
     updateThing(deviceConfig: IDeviceConfig): Promise<IDeviceResponse | IResponse>;

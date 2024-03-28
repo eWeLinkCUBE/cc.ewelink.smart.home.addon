@@ -14,7 +14,7 @@ export interface IReqData {
             };
         };
         payload: {
-            state: object;
+            state: any;
         };
     };
 }

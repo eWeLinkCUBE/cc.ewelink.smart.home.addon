@@ -69,6 +69,7 @@ export const MULTI_PROTOCOL_LIST = [
     EUiid.uiid_7012,
     EUiid.uiid_4256,
     EUiid.uiid_7013,
+    EUiid.uiid_130,
 ];
 
 //单通道使用多通道协议的uiid (Single channel uses the uiid of the multi-channel protocol)
@@ -124,8 +125,30 @@ export const WEB_SOCKET_UIID_DEVICE_LIST = [
     EUiid.uiid_173,
     EUiid.uiid_52,
     EUiid.uiid_57,
-    EUiid.uiid_11
+    EUiid.uiid_11,
+    EUiid.uiid_128,
+    EUiid.uiid_130,
 ];
+
+/** 支持局域网和 websocket的设备 (Devices supporting LAN and websocket) */
+export const LAN_WEB_SOCKET_UIID_DEVICE_LIST = [
+    // EUiid.uiid_1,
+    // EUiid.uiid_6,
+    // EUiid.uiid_14,
+    // EUiid.uiid_4,
+    // EUiid.uiid_8,
+    // EUiid.uiid_7,
+    // EUiid.uiid_28,
+    // EUiid.uiid_15,
+    // EUiid.uiid_32,
+    // EUiid.uiid_2,
+    // EUiid.uiid_138,
+    // EUiid.uiid_126,
+    // EUiid.uiid_3,
+    // EUiid.uiid_9
+    EUiid.uiid_138,
+    EUiid.uiid_32
+]
 /** zigbee 五色灯设备 (zigbee five color lamp sub-device) */
 export const ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST = [EUiid.uiid_3258, EUiid.uiid_7009];
 
@@ -566,6 +589,113 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
                 },
             },
             { capability: ECapability.RSSI, permission: EPermission.READ },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_130],
+        category: ECategory.SWITCH,
+        capabilities: [
+            { capability: ECapability.POWER, permission: EPermission.READ_WRITE },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '1' },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '2' },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '3' },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '4' },
+            { capability: ECapability.TOGGLE_VOLTAGE, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.TOGGLE_VOLTAGE, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.TOGGLE_VOLTAGE, permission: EPermission.READ, name: '3' },
+            { capability: ECapability.TOGGLE_VOLTAGE, permission: EPermission.READ, name: '4' },
+            { capability: ECapability.TOGGLE_ELECTRIC_CURRENT, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.TOGGLE_ELECTRIC_CURRENT, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.TOGGLE_ELECTRIC_CURRENT, permission: EPermission.READ, name: '3' },
+            { capability: ECapability.TOGGLE_ELECTRIC_CURRENT, permission: EPermission.READ, name: '4' },
+            { capability: ECapability.TOGGLE_ELECTRIC_POWER, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.TOGGLE_ELECTRIC_POWER, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.TOGGLE_ELECTRIC_POWER, permission: EPermission.READ, name: '3' },
+            { capability: ECapability.TOGGLE_ELECTRIC_POWER, permission: EPermission.READ, name: '4' },
+            {
+                capability: ECapability.TOGGLE_POWER_CONSUMPTION,
+                permission: EPermission.READ_WRITE,
+                name: '1',
+                configuration: {
+                    // 统计电量时间间隔，单位是秒，number类型，必填。取值范围 大于等于3600，即1小时以上。
+                    // Time interval for counting power, unit is second, type number, required. The value range is greater than or equal to 3600, that is, more than 1 hour。
+                    resolution: 3600 * 24,
+                    // 电量统计的时区偏移量，number 类型，必填。取值范围为 [-12.0 ~ 14.0] 。
+                    // Time zone offset of power statistics, number type, required. The value range is [-12.0 ~ 14.0].
+                    timeZoneOffset: 0,
+                    // 仅支持查询，不更新状态，boolean类型，必填。暂时仅支持true。
+                    // Only supports query, does not update status, boolean type, required. Currently only true is supported.
+                    queryCommandOnly: false,
+                },
+            },
+            {
+                capability: ECapability.TOGGLE_POWER_CONSUMPTION,
+                permission: EPermission.READ_WRITE,
+                name: '2',
+                configuration: {
+                    // 统计电量时间间隔，单位是秒，number类型，必填。取值范围 大于等于3600，即1小时以上。
+                    // Time interval for counting power, unit is second, type number, required. The value range is greater than or equal to 3600, that is, more than 1 hour。
+                    resolution: 3600 * 24,
+                    // 电量统计的时区偏移量，number 类型，必填。取值范围为 [-12.0 ~ 14.0] 。
+                    // Time zone offset of power statistics, number type, required. The value range is [-12.0 ~ 14.0].
+                    timeZoneOffset: 0,
+                    // 仅支持查询，不更新状态，boolean类型，必填。暂时仅支持true。
+                    // Only supports query, does not update status, boolean type, required. Currently only true is supported.
+                    queryCommandOnly: false,
+                },
+            },
+            {
+                capability: ECapability.TOGGLE_POWER_CONSUMPTION,
+                permission: EPermission.READ_WRITE,
+                name: '3',
+                configuration: {
+                    // 统计电量时间间隔，单位是秒，number类型，必填。取值范围 大于等于3600，即1小时以上。
+                    // Time interval for counting power, unit is second, type number, required. The value range is greater than or equal to 3600, that is, more than 1 hour。
+                    resolution: 3600 * 24,
+                    // 电量统计的时区偏移量，number 类型，必填。取值范围为 [-12.0 ~ 14.0] 。
+                    // Time zone offset of power statistics, number type, required. The value range is [-12.0 ~ 14.0].
+                    timeZoneOffset: 0,
+                    // 仅支持查询，不更新状态，boolean类型，必填。暂时仅支持true。
+                    // Only supports query, does not update status, boolean type, required. Currently only true is supported.
+                    queryCommandOnly: false,
+                },
+            },
+            {
+                capability: ECapability.TOGGLE_POWER_CONSUMPTION,
+                permission: EPermission.READ_WRITE,
+                name: '4',
+                configuration: {
+                    // 统计电量时间间隔，单位是秒，number类型，必填。取值范围 大于等于3600，即1小时以上。
+                    // Time interval for counting power, unit is second, type number, required. The value range is greater than or equal to 3600, that is, more than 1 hour。
+                    resolution: 3600 * 24,
+                    // 电量统计的时区偏移量，number 类型，必填。取值范围为 [-12.0 ~ 14.0] 。
+                    // Time zone offset of power statistics, number type, required. The value range is [-12.0 ~ 14.0].
+                    timeZoneOffset: 0,
+                    // 仅支持查询，不更新状态，boolean类型，必填。暂时仅支持true。
+                    // Only supports query, does not update status, boolean type, required. Currently only true is supported.
+                    queryCommandOnly: false,
+                },
+            },
+            {
+                capability:ECapability.TOGGLE_IDENTIFY,
+                permission: EPermission.READ_WRITE,
+                name:'1'
+            },
+            {
+                capability:ECapability.TOGGLE_IDENTIFY,
+                permission: EPermission.READ_WRITE,
+                name:'2'
+            },
+            {
+                capability:ECapability.TOGGLE_IDENTIFY,
+                permission: EPermission.READ_WRITE,
+                name:'3'
+            },
+            {
+                capability:ECapability.TOGGLE_IDENTIFY,
+                permission: EPermission.READ_WRITE,
+                name:'4'
+            }
         ],
     },
 ];

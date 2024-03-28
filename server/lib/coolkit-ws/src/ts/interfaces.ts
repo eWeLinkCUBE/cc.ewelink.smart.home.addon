@@ -118,3 +118,15 @@ export interface IReconnectSuccess {
     error: 0;
     msg: string;
 }
+
+
+export interface IDispatchAppRes {
+    error: number,
+    reason: string,
+    /** 服务器域名 */
+    domain: string,
+    /** 域名对应IP */
+    IP: string,
+    /** 服务器端口 */
+    port: number
+}

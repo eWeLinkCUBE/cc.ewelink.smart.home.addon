@@ -44,8 +44,6 @@ export const initCoolkitWs = async () => {
             throw new Error('no login for websocket');
         }
 
-        //websocket没又连接
-
         if (!eWeLinkApiInfo.user) {
             db.setDbValue('eWeLinkApiInfo', null);
             throw new Error('no login user info------,quit login');
@@ -64,7 +62,7 @@ export const initCoolkitWs = async () => {
              * 最大重试总时间，以秒为单位，默认为2小时，传入10分钟
              * Maximum total retry time, in seconds, defaults to 2 hours, enter 10 minutes
              */
-            maxRetryInterval: 10 * 60,
+            maxRetryInterval: 10 * 60
         };
         logger.info('ws--------------start');
         const res = await CoolKitWs.init(wsConfig);
