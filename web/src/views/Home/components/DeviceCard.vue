@@ -121,7 +121,7 @@ const getIhostAccessToken = async (deviceId: string, index: number) => {
         </div>
         <div v-else>
             <!-- Zigbee-P 网关显示子设备数量，不能同步 ( The gateway displays the number of sub-devices and cannot be synchronized.)-->
-            <span v-if="device.displayCategory === EDisplayCategory.ZIGBEE_P">{{ `${$t('SUB_DEVICE')}: ${device.subDeviceNum}` }}</span>
+            <span v-if="[EDisplayCategory.ZIGBEE_P,EDisplayCategory.ELECTRICITY_GATEWAY].includes(device.displayCategory)">{{ `${$t('SUB_DEVICE')}: ${device.subDeviceNum}` }}</span>
             <span v-else-if="device.displayCategory === EDisplayCategory.RF_GATEWAY">{{ $t('REMOTE', { number: device.subDeviceNum }) }}</span>
             <template v-else>
                 <a v-if="device.isSynced" @click="cancelSync(device.deviceId)" class="sync" style="color: #ff5c5b">{{ $t('CANCELING_SYNC') }}</a>

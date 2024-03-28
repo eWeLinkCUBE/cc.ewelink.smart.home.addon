@@ -1,13 +1,13 @@
 {
     "name": "coolkit-ws",
-    "version": "0.7.41",
+    "version": "0.7.44",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "",
+    "author": "SuiKa",
     "license": "ISC",
     "dependencies": {
         "axios": "0.21.1",

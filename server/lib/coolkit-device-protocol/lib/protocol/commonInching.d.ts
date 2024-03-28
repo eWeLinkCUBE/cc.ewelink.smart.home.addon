@@ -3,7 +3,7 @@ export declare function commonSingleInching(controlItem: IControlItemParams): {
     pulse: string;
     pulseWidth: number;
 };
-export declare function commonMultiInching(controlItem: IControlItemParams, width?: number): {
+export declare function commonMultiInching(controlItem: IControlItemParams, width?: number, state?: string): {
     pulses: {
         pulse: string;
         width: number;

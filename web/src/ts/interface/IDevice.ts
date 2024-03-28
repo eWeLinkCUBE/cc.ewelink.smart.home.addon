@@ -1,3 +1,4 @@
+import type { EDisplayCategory } from "../enum/EDisplayCategory";
 import type ENetworkProtocol from "../enum/ENetworkProtocol";
 
 export interface IBeforeLoginDevice {
@@ -5,10 +6,11 @@ export interface IBeforeLoginDevice {
     category: string;
 }
 
+
 export interface IAfterLoginDevice {
     deviceId: string;
     deviceName: string;
-    displayCategory: string;
+    displayCategory: EDisplayCategory;
     familyName: string;
     isMyAccount: boolean;
     isOnline: boolean;

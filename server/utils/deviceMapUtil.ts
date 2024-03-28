@@ -191,7 +191,6 @@ function getMDnsDeviceDataByDeviceId(deviceId: string) {
         return item.deviceId === deviceId;
     });
     if (!thisItem) {
-        logger.error('can not find this device lan info-------------------------', deviceId);
         return null;
     }
 

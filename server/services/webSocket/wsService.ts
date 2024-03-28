@@ -6,7 +6,7 @@ import syncWebSocketDeviceStateToIHost from './syncWebSocketDeviceStateToIHost';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import { initCoolkitWs } from '../../utils/initApi';
 import syncDeviceCapabilitiesToIHost from '../public/syncDeviceCapabilitiesToIHost';
-import { WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
 
 async function updateByWs(param: { deviceid: string; ownerApikey: string; params: any }) {
     if (!CoolKitWs.isWsExist()) {
@@ -21,6 +21,7 @@ async function updateByWs(param: { deviceid: string; ownerApikey: string; params
 
     const { deviceid, ownerApikey, params } = param;
     // console.log(`SL : 更新设备信息`, deviceid, ownerApikey, params);
+    logger.info('ws params-------',params)
     const updateResult = await CoolKitWs.updateThing({
         deviceid,
         ownerApikey,
@@ -28,7 +29,7 @@ async function updateByWs(param: { deviceid: string; ownerApikey: string; params
     });
     // console.log(`SL : 长连接更新结果`, updateResult);
     if (updateResult.error !== 0) {
-        logger.info('updateResult-------', updateResult);
+        logger.info('updateResult-------',params, updateResult);
         //{ error: 604, msg: '请求超时' }
         if (updateResult.error === 604) {
             initCoolkitWs();
@@ -45,20 +46,20 @@ async function listenWs(ev: { data: any; type: string; target: any }) {
     }
 
     const receiveMsg = JSON.parse(data);
-    // 设备开关更新，发送监听消息
+    // 设备开关更新，发送监听消息(Device switch update, send monitoring message)
     if (_.has(receiveMsg, 'action')) {
         const { deviceid, action, params } = receiveMsg;
         const uiid = deviceDataUtil.getUiidByDeviceId(deviceid);
 
         // 只允许只支持websocket设备同步状态 Only supports websocket device synchronization status.
-        if (!WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+        if (![...WEB_SOCKET_UIID_DEVICE_LIST, ...LAN_WEB_SOCKET_UIID_DEVICE_LIST].includes(uiid)) {
             return;
         }
 
         switch (action) {
             case 'update':
                 deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'params', params);
-                syncWebSocketDeviceStateToIHost(deviceid, params);
+                syncWebSocketDeviceStateToIHost(deviceid, params, uiid);
                 syncDeviceCapabilitiesToIHost(deviceid, params);
                 break;
             case 'sysmsg':
@@ -69,8 +70,19 @@ async function listenWs(ev: { data: any; type: string; target: any }) {
         }
     }
 }
+//webSocket是否初始化了(Is the Web socket initialized??)
+function isWsExist() {
+    return CoolKitWs.isWsExist();
+}
+
+//webSocket是否连接着(Is webSocket connected?)
+function isWsConnected() {
+    return CoolKitWs.isWsConnected();
+}
 
 export default {
     updateByWs,
     listenWs,
+    isWsExist,
+    isWsConnected
 };

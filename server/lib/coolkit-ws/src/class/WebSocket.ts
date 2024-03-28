@@ -44,8 +44,9 @@ export default class WebSocketService {
             // 获取服务器地址
             const { region, useTestEnv = false } = WebSocketService.connectConfig;
             WebSocketService.listenerHook = getListenerHook(WebSocketService.connectConfig);
-            const disps = await getWsIpServices(region, useTestEnv);
-            if (!disps) {
+            const dispatchAdd = await getWsIpServices(region, useTestEnv);
+            if (dispatchAdd.error !== 0) {
+                this.wsState = 'CLOSED';
                 resolve({
                     error: EErrorCode.GET_WS_SERVER_ERROR,
                     msg: '网络连接有误，无法获取长连接地址',
@@ -53,7 +54,8 @@ export default class WebSocketService {
                 return;
             }
 
-            const ws = new WebSocket(`wss://${disps}:8080/api/ws`);
+            const port = dispatchAdd?.port && typeof dispatchAdd.port === 'number' ? dispatchAdd.port : '8080';
+            const ws = new WebSocket(`wss://${dispatchAdd.domain}:${port}/api/ws`);
             // 重连状态下调用不同的监听方法
             WebSocketService.isReconnecting
                 ? EE.once(EEventType.RECONNECT_STATUS, (ev) => {
@@ -62,6 +64,10 @@ export default class WebSocketService {
                 })
                 : EE.once(`${ts}${WebSocketService.listenerHook}`, (ev) => {
                     ev.error === 0 && console.log('CK_WS: 连接成功');
+                    if (ev.error !== 0) {
+                        console.log('CK_WS: 长连接初始化失败');
+                        !WebSocketService.isReconnecting && this.close();
+                    }
                     resolve(ev);
                 });
 
@@ -313,6 +319,11 @@ export default class WebSocketService {
 
         if (decodedData.error !== 0 && decodedData.actionName === 'userOnline') {
             console.log('CK_WS: 长连接握手出错', decodedData.error);
+
+            EE.emit(`${ts}${WebSocketService.listenerHook}`, {
+                error: decodedData.error,
+                msg: decodedData["reason"] ? decodedData["reason"] : 'webSocket handshake error',
+            });
             return;
         }
 

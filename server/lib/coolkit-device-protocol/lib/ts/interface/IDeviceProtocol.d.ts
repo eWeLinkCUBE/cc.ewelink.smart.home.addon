@@ -2,7 +2,7 @@ import { ICoolkitCloudDeviceData, ICoolkitCloudGroupData } from './ICoolkitDevic
 import { IDevice } from './IDevice';
 import { IControlDeviceParams } from './IControlDevice';
 import { IDeviceParams } from './IDeviceParams';
-import { TMultiCapability, TSingleCapability, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TCurtainPercent, TActivePower, THistoryPower, TStatisticsPower, TLightColorTemperature, TBackLight, TLightSceneMode, TCurtain, TRfGateway, TTempUnit, TTargetTemp, TChildLock, TWorkMode, TStopMode, TZled, TSecurityType, TAlarmBeeps, TMediaTotal, TSlowly, TToggle, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TWindowSwitch, TempCorrection, TEcoTargetTemp, TScheduleData } from '../type/TControlType';
+import { TMultiCapability, TSingleCapability, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TCurtainPercent, TActivePower, THistoryPower, TStatisticsPower, TLightColorTemperature, TBackLight, TLightSceneMode, TCurtain, TRfGateway, TTempUnit, TTargetTemp, TChildLock, TWorkMode, TStopMode, TZled, TSecurityType, TAlarmBeeps, TMediaTotal, TSlowly, TToggle, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TWindowSwitch, TempCorrection, TEcoTargetTemp, TScheduleData, TTurbo, TLightSwitch, TMotorReverse } from '../type/TControlType';
 import { IGroup } from './IGroup';
 export interface IDeviceProtocol {
     toggle: (controlItem: IControlItemParams) => TSingleCapability | TMultiCapability;
@@ -36,6 +36,7 @@ export interface IDeviceProtocol {
     setCurtainPercent: (controlItem: IControlItemParams) => TCurtainPercent;
     setCurtainAction: (controlItem: IControlItemParams) => TSingleCapability;
     refreshPowerInfo: (controlItem: IControlItemParams) => TActivePower;
+    getOncePower: (controlItem: IControlItemParams) => THistoryPower;
     getHistoryPower: (controlItem: IControlItemParams) => THistoryPower;
     statisticsPower: (controlItem: IControlItemParams) => TStatisticsPower;
     controlCurtain: (controlItem: IControlItemParams) => TCurtain;
@@ -51,6 +52,9 @@ export interface IDeviceProtocol {
     setTempCorrection: (controlItem: IControlItemParams) => TempCorrection;
     setEcoTargetTemperature: (controlItem: IControlItemParams) => TEcoTargetTemp;
     setSchedule: (controlItem: IControlItemParams) => TScheduleData;
+    setTurbo: (controlItem: IControlItemParams) => TTurbo;
+    setLightSwitch: (controlItem: IControlItemParams) => TLightSwitch;
+    setMotorReverse: (controlItem: IControlItemParams) => TMotorReverse;
 }
 export interface IControlItemParams extends Partial<IControlDeviceParams> {
     device: IDevice | IGroup;

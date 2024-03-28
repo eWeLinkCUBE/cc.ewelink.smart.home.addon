@@ -6,8 +6,8 @@ const commonLight_1 = require("../protocol/commonLight");
 exports.UIID7009_PROTOCOL = {
     uiid: 7009,
     initParams(device) {
-        const { colorMode = 'cct', colorTemp = 0, cctBrightness = 100, rgbBrightness = 100, hue = 0, saturation = 100, ltype = 'normal', slowlyDimmed = 500, slowlyLit = 500, startup = 'on', switch: s = 'off', subOtaInfo } = device.itemData.params;
-        return { colorMode, colorTemp, cctBrightness, rgbBrightness, hue, saturation, ltype, slowlyDimmed, slowlyLit, startup, switch: s, subOtaInfo };
+        const { colorMode = 'cct', colorTemp = 0, cctBrightness = 100, rgbBrightness = 100, hue = 0, saturation = 100, ltype = 'normal', slowlyDimmed = 500, slowlyLit = 500, startup = 'on', switch: s = 'off', subOtaInfo, startupDiy } = device.itemData.params;
+        return { colorMode, colorTemp, cctBrightness, rgbBrightness, hue, saturation, ltype, slowlyDimmed, slowlyLit, startup, switch: s, subOtaInfo, startupDiy };
     },
     controlItem: {
         toggle: protocol_1.commonSingleToggle,

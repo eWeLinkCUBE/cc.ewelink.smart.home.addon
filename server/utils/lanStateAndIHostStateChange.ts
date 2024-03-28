@@ -31,6 +31,7 @@ import {
     ILanState57,
     ILanState52,
     ILanState11,
+    ILanState130,
 } from '../ts/interface/ILanState';
 import { IHostStateInterface } from '../ts/interface/IHostState';
 import deviceDataUtil from './deviceDataUtil';
@@ -449,7 +450,7 @@ function iHostStateToLanState34(iHostState: IHostStateInterface) {
     return lanState;
 }
 
-function iHostStateToLanState28(iHostState: IHostStateInterface) {
+function iHostStateToLanState28(iHostState: IHostStateInterface, isWebSocket: boolean) {
     const lanState = {};
     const pressObj = _.get(iHostState, ['press']);
     if (pressObj) {
@@ -460,8 +461,18 @@ function iHostStateToLanState28(iHostState: IHostStateInterface) {
     return lanState;
 }
 //rfTrig20: '2023-05-17T02:35:34.000Z',
-function lanStateToIHostState28(lanState: ILanState28, actions: string[]) {
+function lanStateToIHostState28(lanState: ILanState28, actions: string[],isWebSocket:boolean) {
     const iHostState = {};
+
+
+    if(isWebSocket){
+        const rfChl = _.get(lanState,'rfChl')
+        return {
+            press: {
+                press: rfChl.toString(),
+            }
+        }
+    }
 
     if (!lanState) {
         return iHostState;
@@ -1187,11 +1198,12 @@ function lanStateToIHostState5(lanState: ILanState5) {
 
     const oneKwh = _.get(lanState, 'oneKwh', null);
 
+
     if (startTime !== null && oneKwh !== null) {
         _.merge(iHostState, {
             'power-consumption': {
                 powerConsumption: {
-                    rlSummarize: ['start', 'get'].includes(oneKwh),
+                    rlSummarize: endTime === '',
                     timeRange: {
                         start: startTime,
                         end: endTime,
@@ -1642,6 +1654,121 @@ function lanStateToIHostState11(lanState: ILanState11) {
     return iHostState;
 }
 
+function lanStateToIHostState130(lanState: ILanState130) {
+    const iHostState = {};
+
+    logger.info('lanState----------------130', lanState);
+    const unitValue = 1;
+    const channelList: number[] = [0, 1, 2, 3];
+    channelList.forEach((channel: number) => {
+        const name = channel + 1;
+
+        const current = _.get(lanState, `current_0${channel}`, null);
+        if (current !== null) {
+            _.assign(iHostState, {
+                'toggle-electric-current': {
+                    [name]: {
+                        electricCurrent: toIntNumber(current * unitValue),
+                    },
+                },
+            });
+        }
+
+        const voltage = _.get(lanState, `voltage_0${channel}`, null);
+        if (voltage !== null) {
+            _.assign(iHostState, {
+                'toggle-voltage': {
+                    [name]: {
+                        voltage: toIntNumber(voltage * unitValue),
+                    },
+                },
+            });
+        }
+
+        const actPow = _.get(lanState, `actPow_0${channel}`, null);
+        if (actPow !== null) {
+            _.merge(iHostState, {
+                'toggle-electric-power': {
+                    [name]: {
+                        activePower: toIntNumber(actPow * unitValue),
+                    },
+                },
+            });
+        }
+        const apparentPow = _.get(lanState, `apparentPow_0${channel}`, null);
+        if (apparentPow !== null) {
+            _.merge(iHostState, {
+                'toggle-electric-power': {
+                    [name]: {
+                        apparentPower: toIntNumber(apparentPow * unitValue),
+                    },
+                },
+            });
+        }
+        const reactPow = _.get(lanState, `reactPow_0${channel}`, null);
+        if (reactPow !== null) {
+            _.merge(iHostState, {
+                'toggle-electric-power': {
+                    [name]: {
+                        reactivePower: toIntNumber(reactPow * unitValue),
+                    },
+                },
+            });
+        }
+
+        const startTime = _.get(lanState, `startTime_0${channel}`, null);
+
+        const endTime = _.get(lanState, `endTime_0${channel}`, '');
+
+        if (startTime !== null) {
+            _.merge(iHostState, {
+                'toggle-power-consumption': {
+                    [name]: {
+                        rlSummarize: endTime === '',
+                        timeRange: {
+                            start: startTime,
+                            end: endTime,
+                        },
+                    },
+                },
+            });
+        }
+    });
+
+    logger.info('iHostState------------130', iHostState);
+
+    return iHostState;
+}
+
+function iHostStateToLanState130(iHostState: IHostStateInterface, deviceId: string) {
+    const lanState = {};
+
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    const { devices } = initDeviceList([eWeLinkDeviceData] as any);
+    const device = devices[0];
+
+    if (!device) {
+        return {};
+    }
+
+    if (_.isEmpty(iHostState)) {
+        return {};
+    }
+
+    const toggleIdentifyObj = _.get(iHostState, ['toggle-identify']);
+    if (toggleIdentifyObj) {
+        //通道索引（Channel index）
+        const name = Object.keys(_.get(iHostState, ['toggle-identify']))[0];
+
+        const channelIndex = Number(name) - 1;
+        const proxy = controlDevice(device, 'refreshPowerInfo', { outlet: channelIndex });
+
+        _.assign(lanState, proxy);
+    }
+
+    return lanState;
+}
+
 export {
     lanStateToIHostStatePowerDevice,
     lanStateToIHostStateLight,
@@ -1685,4 +1812,6 @@ export {
     lanStateToIHostState57,
     lanStateToIHostState52,
     lanStateToIHostState11,
+    lanStateToIHostState130,
+    iHostStateToLanState130,
 };

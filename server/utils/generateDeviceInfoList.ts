@@ -3,8 +3,10 @@ import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
 import _ from 'lodash';
 import EUiid from '../ts/enum/EUiid';
 import zigbeePOnlineMap from '../ts/class/zigbeePOnlineMap';
-import { SUPPORT_UIID_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
 import getAllRemoteDeviceList from './getAllRemoteDeviceList';
+import deviceDataUtil from './deviceDataUtil';
+import deviceMapUtil from './deviceMapUtil';
 
 interface DeviceInfo {
     isOnline: boolean;
@@ -52,6 +54,8 @@ enum EType {
     WATER_LEAK_DETECTOR = 'waterLeakDetector',
     /** 温控阀 (thermostatic valve) */
     THERMOSTAT = 'thermostat',
+    /** 堆叠式网关(stacked gateway) */
+    ELECTRICITY_GATEWAY = 'electricity_gateway',
 }
 
 enum ENetworkProtocolType {
@@ -64,7 +68,7 @@ const UIID_TYPE_LIST = [
     {
         type: EType.SWITCH, //开关插座(switch socket)
         uiidList: [
-            1, 2, 3, 4, 6, 7, 8, 9, 14, 15, 32, 77, 78, 126, 128, 133, 138, 139, 140, 141, 160, 161, 162, 163, 165, 165, 182, 191, 209, 210, 211, 212, 1256, 7004, 7010, 2256, 7011,
+            1, 2, 3, 4, 6, 7, 8, 9, 14, 15, 32, 77, 78, 126, 133, 138, 139, 140, 141, 160, 161, 162, 163, 165, 165, 182, 191, 209, 210, 211, 212, 1256, 7004, 7010, 2256, 7011,
             3256, 7012, 4256, 7013, 1009, 7005, 5,
         ],
     },
@@ -124,12 +128,16 @@ const UIID_TYPE_LIST = [
         type: EType.THERMOSTAT,
         uiidList: [7017, 1772],
     },
+    {
+        type: EType.ELECTRICITY_GATEWAY,
+        uiidList: [128],
+    },
 ];
 
 /** 生成设备信息，是否已同步，在线离线，是否支持  (Generate device information, whether it has been synchronized, online and offline, whether it is supported) */
 export default function generateDeviceInfoList(syncedHostDeviceList: string[], mDnsDeviceList: IDeviceMap[], eWeLinkDeviceList: IEWeLinkDevice[]) {
     const deviceList: DeviceInfo[] = [];
-
+    //局域网内的设备(Devices within the LAN)
     mDnsDeviceList.forEach((mItem) => {
         if (!mItem.deviceId) return;
 
@@ -152,14 +160,13 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
         if (eWeLinkDeviceData) {
             device.isOnline = !!mItem.deviceData.isOnline;
             device.isMyAccount = true;
-
             device.displayCategory = getDeviceTypeByUiid(eWeLinkDeviceData);
-            device.isSupported = judgeIsSupported(eWeLinkDeviceData);
+            device.isSupported = deviceDataUtil.isSupportLanControl(eWeLinkDeviceData);
             device.familyName = eWeLinkDeviceData.familyName;
             device.deviceId = mItem.deviceId;
             device.deviceName = eWeLinkDeviceData.itemData.name;
             device.isSynced = syncedHostDeviceList.includes(mItem.deviceId);
-            device.subDeviceNum = generateSubDeviceNum(eWeLinkDeviceData);
+            device.subDeviceNum = generateSubDeviceNum(eWeLinkDeviceData, eWeLinkDeviceList);
             device.networkProtocol = ENetworkProtocolType.LAN;
         }
 
@@ -179,7 +186,7 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 const subDevice = {
                     isOnline: isZigbeePSubDevicesOnline(item.deviceId, !!mItem.deviceData.isOnline),
                     isMyAccount: true,
-                    isSupported: judgeIsSupported(eWeLinkSubDeviceData),
+                    isSupported: deviceDataUtil.isSupportLanControl(eWeLinkSubDeviceData),
                     displayCategory: getDeviceTypeByUiid(eWeLinkSubDeviceData),
                     familyName: eWeLinkDeviceData.familyName,
                     deviceId: item.deviceId,
@@ -212,9 +219,11 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
             });
         }
     });
-
+    //账号下不在局域网的设备(Devices under the account that are not on the LAN)
     eWeLinkDeviceList.forEach((item) => {
         const uiid = item.itemData.extra.uiid;
+        const deviceId = item.itemData.deviceid;
+        //仅支持websocket的设备(Only devices that support websocket)
         if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
             const device = {
                 isOnline: item.itemData.online,
@@ -222,14 +231,38 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 isSupported: true,
                 displayCategory: getDeviceTypeByUiid(item),
                 familyName: item.familyName,
-                deviceId: item.itemData.deviceid,
+                deviceId,
                 deviceName: item.itemData.name,
                 isSynced: syncedHostDeviceList.includes(item.itemData.deviceid),
-                subDeviceNum: 0,
+                subDeviceNum: generateSubDeviceNum(item, eWeLinkDeviceList),
                 networkProtocol: ENetworkProtocolType.WIFI,
             };
             //去掉局域网中的长连接设备(Remove long-connection devices in the LAN)
-            _.remove(deviceList, (t) => t.deviceId === item.itemData.deviceid);
+            _.remove(deviceList, (t) => t.deviceId === deviceId);
+            deviceList.push(device);
+        }
+        //同时支持局域网和websocket的设备(Devices that support both LAN and websocket)
+        if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+            const lanDeviceItem = deviceList.find((lanDevice) => lanDevice.deviceId === deviceId);
+            const lanDeviceData = deviceMapUtil.getMDnsDeviceDataByDeviceId(deviceId);
+            //局域网存在且在线且支持局域网功能不另外加入（The LAN exists and is online and supports the LAN function. No additional additions are required.）
+            if (lanDeviceItem && lanDeviceItem.isSupported === true && lanDeviceData && lanDeviceData.deviceData.isOnline) {
+                return;
+            }
+
+            const device = {
+                isOnline: item.itemData.online,
+                isMyAccount: true,
+                isSupported: true,
+                displayCategory: getDeviceTypeByUiid(item),
+                familyName: item.familyName,
+                deviceId,
+                deviceName: item.itemData.name,
+                isSynced: syncedHostDeviceList.includes(deviceId),
+                subDeviceNum: 0,
+                networkProtocol: ENetworkProtocolType.WIFI,
+            };
+            _.remove(deviceList, (t) => t.deviceId === deviceId);
             deviceList.push(device);
         }
     });
@@ -246,7 +279,7 @@ function generateSubDeviceList(eWeLinkDeviceData: IEWeLinkDevice) {
 }
 
 /** rf网关、zigbee-p网关设备的子设备数量 (The number of sub-devices of RF gateway and zigbee p gateway devices)*/
-function generateSubDeviceNum(eWeLinkDeviceData: IEWeLinkDevice) {
+function generateSubDeviceNum(eWeLinkDeviceData: IEWeLinkDevice, eWeLinkDeviceList: IEWeLinkDevice[]) {
     const { uiid } = eWeLinkDeviceData.itemData.extra;
 
     if ([EUiid.uiid_28].includes(uiid)) {
@@ -256,7 +289,15 @@ function generateSubDeviceNum(eWeLinkDeviceData: IEWeLinkDevice) {
 
     if ([EUiid.uiid_168].includes(uiid)) {
         const { subDevices } = eWeLinkDeviceData.itemData.params;
-        return subDevices?.length;
+        return subDevices?.length ?? 0;
+    }
+
+    if ([EUiid.uiid_128].includes(uiid)) {
+        const subDevices = _.get(eWeLinkDeviceData.itemData.params,'subDevices',[])
+        const subDeviceIdList = subDevices.map((item: { deviceid: string }) => item.deviceid);
+        //网关中子设备数据不对，去除实际不在的子设备（The sub-device data in the gateway is incorrect. Remove the sub-device that is not actually present.）
+        const trueSubDeviceList = eWeLinkDeviceList.filter((item) => subDeviceIdList.includes(item.itemData.deviceid));
+        return trueSubDeviceList.length;
     }
     return 0;
 }
@@ -271,31 +312,6 @@ function getDeviceTypeByUiid(eWeLinkDeviceData: IEWeLinkDevice) {
         return thisItem.type;
     }
     return EType.SWITCH;
-}
-
-/** 判断固件版本是否支持局域网功能 (Determine whether the firmware version supports the LAN function)*/
-function judgeIsSupported(eWeLinkDeviceData: IEWeLinkDevice) {
-    const { uiid } = eWeLinkDeviceData.itemData.extra;
-
-    if (!SUPPORT_UIID_LIST.includes(uiid)) {
-        return false;
-    }
-    //不支持的功能(Unsupported features)
-    const denyFeatures = _.get(eWeLinkDeviceData, ['itemData', 'denyFeatures'], []);
-
-    //如果不支持局域网功能(If the LAN function is not supported)
-    if (denyFeatures.includes('localCtl')) {
-        return false;
-    }
-
-    if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
-        //电表模式不支持,只支持开关和电机1,2(Meter mode is not supported, only switches and motors 1,2 are supported.)
-        if (![1, 2].includes(eWeLinkDeviceData.itemData.params?.workMode)) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 /** 判断zigbee-p子设备在线状态 (Determine the online status of the zigbee p sub-device)*/

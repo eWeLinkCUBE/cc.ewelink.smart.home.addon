@@ -10,13 +10,16 @@ function commonSingleInching(controlItem) {
     };
 }
 exports.commonSingleInching = commonSingleInching;
-function commonMultiInching(controlItem, width) {
+function commonMultiInching(controlItem, width, state) {
     const { pulses = [], device: { params: { pulses: _pulses = (0, constant_1.getDefaultInching)().pulses } } } = controlItem;
     pulses.push(..._pulses.slice(pulses.length));
     return {
         pulses: pulses.map(item => {
             if (width && typeof width === 'number' && !item.width) {
                 item.width = width;
+            }
+            if (state && typeof state === 'string' && !item.switch) {
+                item.switch = state;
             }
             return item;
         })

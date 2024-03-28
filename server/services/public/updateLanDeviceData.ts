@@ -2,6 +2,8 @@ import axios, { AxiosError } from 'axios';
 import mDnsDataParse from '../../utils/mDnsDataParse';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import logger from '../../log';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import wsService from '../webSocket/wsService';
 enum ERequestMethod {
     GET = 'get',
     POST = 'post',
@@ -53,6 +55,10 @@ async function requestDevice(deviceId: string, devicekey: string, selfApikey: st
 
         logger.info('request device res time ------', deviceId, elapsedTime + 'ms', ip, state, res.data);
 
+        if (res.data && res.data.error !== 0) {
+            return await webSocketRequest(deviceId, state, selfApikey, res.data);
+        }
+
         return res.data as {
             error: number;
             iv?: string;
@@ -60,9 +66,24 @@ async function requestDevice(deviceId: string, devicekey: string, selfApikey: st
         };
     } catch (error: any) {
         logger.error('request device res error---------------', deviceId, error);
-        return null;
+        const webSocketRes = await webSocketRequest(deviceId, state, selfApikey, null);
+        if (webSocketRes?.error !== 0) {
+            logger.info('webSocketRequest--------', webSocketRes);
+        }
+        return webSocketRes;
     }
 }
+
+const webSocketRequest = async (deviceId: string, state: string, selfApikey: string, res: any) => {
+    const uiid = deviceDataUtil.getUiidByDeviceId(deviceId);
+    if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+        logger.info('ws request --------',deviceId) 
+        const params = { deviceid: deviceId, ownerApikey: selfApikey, params: JSON.parse(state) };
+        return await wsService.updateByWs(params);
+    }
+
+    return res;
+};
 
 /** 控制单通道协议 (Control single channel protocol) */
 const setSwitch = async (deviceId: string, devicekey: string, selfApikey: string, state: string) => {

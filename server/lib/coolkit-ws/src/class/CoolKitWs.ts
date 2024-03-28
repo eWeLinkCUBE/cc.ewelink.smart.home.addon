@@ -56,13 +56,34 @@ export default class CoolKitWs {
      */
     public isWsExist() {
         if (CoolKitWs.ws) {
-            WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接已存在，状态为${CoolKitWs.ws.wsState === 'CLOSED' ? '已关闭' : '开启中'}`);
+            WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接已存在，状态为${CoolKitWs.ws.wsState}`);
             if (CoolKitWs.ws.wsState === 'CLOSED') {
                 CoolKitWs.ws = null;
                 return false;
             }
 
             return true;
+        }
+
+        return false;
+    }
+
+    
+    /**
+    * 外部函数
+    * 判断长连接是否已连接
+    * @private
+    * @returns
+    * @memberof CoolKitWs
+    */
+    public isWsConnected() {
+        if (CoolKitWs.ws) {
+            WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接状态为${CoolKitWs.ws.wsState}`);
+            if (CoolKitWs.ws.wsState === 'CONNECTED') {
+                return true;
+            }
+
+            return false;
         }
 
         return false;

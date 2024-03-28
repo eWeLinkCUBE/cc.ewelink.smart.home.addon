@@ -30,15 +30,17 @@ class WebSocketService {
                 WebSocketService.initTs = ts;
                 const { region, useTestEnv = false } = WebSocketService.connectConfig;
                 WebSocketService.listenerHook = (0, tools_1.getListenerHook)(WebSocketService.connectConfig);
-                const disps = yield (0, getWsIpServices_1.default)(region, useTestEnv);
-                if (!disps) {
+                const dispatchAdd = yield (0, getWsIpServices_1.default)(region, useTestEnv);
+                if (dispatchAdd.error !== 0) {
+                    this.wsState = 'CLOSED';
                     resolve({
                         error: enum_1.EErrorCode.GET_WS_SERVER_ERROR,
                         msg: '网络连接有误，无法获取长连接地址',
                     });
                     return;
                 }
-                const ws = new isomorphic_ws_1.default(`wss://${disps}:8080/api/ws`);
+                const port = (dispatchAdd === null || dispatchAdd === void 0 ? void 0 : dispatchAdd.port) && typeof dispatchAdd.port === 'number' ? dispatchAdd.port : '8080';
+                const ws = new isomorphic_ws_1.default(`wss://${dispatchAdd.domain}:${port}/api/ws`);
                 WebSocketService.isReconnecting
                     ? eventEmitter_1.default.once(enum_1.EEventType.RECONNECT_STATUS, (ev) => {
                         WebSocketService.connectConfig.debug && console.log(`CK_WS: 重连结束，返回结果`);
@@ -46,6 +48,10 @@ class WebSocketService {
                     })
                     : eventEmitter_1.default.once(`${ts}${WebSocketService.listenerHook}`, (ev) => {
                         ev.error === 0 && console.log('CK_WS: 连接成功');
+                        if (ev.error !== 0) {
+                            console.log('CK_WS: 长连接初始化失败');
+                            !WebSocketService.isReconnecting && this.close();
+                        }
                         resolve(ev);
                     });
                 const { reqTimeout = 15000 } = WebSocketService.connectConfig;
@@ -226,6 +232,10 @@ class WebSocketService {
             }
             if (decodedData.error !== 0 && decodedData.actionName === 'userOnline') {
                 console.log('CK_WS: 长连接握手出错', decodedData.error);
+                eventEmitter_1.default.emit(`${ts}${WebSocketService.listenerHook}`, {
+                    error: decodedData.error,
+                    msg: decodedData["reason"] ? decodedData["reason"] : 'webSocket handshake error',
+                });
                 return;
             }
             if ((decodedData.hasOwnProperty('error') && decodedData.deviceid) || decodedData.params) {

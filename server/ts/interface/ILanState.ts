@@ -165,6 +165,7 @@ export interface ILanState34 {
 //rfChl0~rfChl63
 export interface ILanState28 {
     [rfTrig: string]: string; //2023-05-16T13:15:50.000Z
+    // rfChl?: number;
 }
 /** 无线按键 (wireless button) */
 export interface ILanStateButton {
@@ -419,12 +420,62 @@ export interface ILanState52 {
     channel1: string;
 }
 
-
 export interface ILanState11 {
     /** 电动窗帘开关，on 打开，off 关闭，pause 暂停 (Electric curtain switch, on opens, off closes, pause pauses) */
-    switch:'on'|'pause'|'off',
+    switch: 'on' | 'pause' | 'off';
     /** 窗帘开启比例，0 全开，100 全关 (Curtain opening ratio, 0 is fully open, 100 is fully closed) */
-    setclose:number;
+    setclose: number;
     /** [-50,-100]	信号强度，单位dbm (Signal strength, unit dbm) */
-    rssi:number;
+    rssi: number;
+}
+
+export interface ILanState130 {
+    /** 实时电流值，Number 型。单位0.01A(Real-time current value, Number type. Unit 0.01A) */
+    current_00: number;
+    current_01: number;
+    current_02: number;
+    current_03: number;
+    /** 实时电压值，Number 型。单位0.01V(Real-time voltage value, Number type. Unit 0.01V) */
+    voltage_00: number;
+    voltage_01: number;
+    voltage_02: number;
+    voltage_03: number;
+    /** 实时有功功率值，Number型。单位0.01W(Real-time active power value, Number type. Unit 0.01W) */
+    actPow_00: number;
+    actPow_01: number;
+    actPow_02: number;
+    actPow_03: number;
+    /** 实时视在功率值，Number型。单位0.01W(Real-time apparent power value, Number type. Unit 0.01W) */
+    apparentPow_00: number;
+    apparentPow_01: number;
+    apparentPow_02: number;
+    apparentPow_03: number;
+    /** 实时无功功率值，Number型。单位0.01W(Real-time reactive power value, Number type. Unit 0.01W) */
+    reactPow_00: number;
+    reactPow_01: number;
+    reactPow_02: number;
+    reactPow_03: number;
+    /** 获取用电量类型，Number 型。 取值范围[1,2]
+     * 1 获取单次统计用电量， 2 获取历史统计用电量
+     * (Get the power consumption type, Number type. Value range[1,2],1 Get the single statistical power consumption, 2 Get the historical statistical power consumption) */
+    getKwh_00: number;
+    getKwh_01: number;
+    getKwh_02: number;
+    getKwh_03: number;
+    /** 网关设备的 deviceid (deviceid of the gateway device)*/
+    parentid: string;
+    /** 通道1 开始统计单次用电量的时间 "2024-03-06T02:27:08.817Z" (Channel 1 starts counting a single power consumption time) */
+    startTime_00: string;
+    startTime_01: string;
+    startTime_02: string;
+    startTime_03: string;
+    /** 通道1 结束统计单次用电量的时间(Channel 1: Time to end counting single power consumption) */
+    endTime_00: string;
+    endTime_01: string;
+    endTime_02: string;
+    endTime_03: string;
+    /** 子设备的CHIPID(CHIPID of the child device) */
+    subDevId: string;
+    /** 所有通道的开关状态(Switch status of all channels) */
+    switches: ILanStateSwitch[];
 }

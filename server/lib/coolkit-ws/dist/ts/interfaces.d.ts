@@ -87,4 +87,11 @@ export interface IReconnectSuccess {
     error: 0;
     msg: string;
 }
+export interface IDispatchAppRes {
+    error: number;
+    reason: string;
+    domain: string;
+    IP: string;
+    port: number;
+}
 export {};

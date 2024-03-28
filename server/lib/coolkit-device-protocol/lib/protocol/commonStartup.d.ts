@@ -6,5 +6,7 @@ export declare function commonMultiStartup(controlItem: IControlItemParams): {
     configure: {
         startup: string;
         outlet: number;
+        enableDelay?: number | undefined;
+        width?: number | undefined;
     }[];
 };

@@ -49,11 +49,13 @@ import {
     lanStateToIHostStateMotionSensor7002,
     lanStateToIHostState57,
     lanStateToIHostState52,
-    lanStateToIHostState11
+    lanStateToIHostState11,
+    lanStateToIHostState130,
+    iHostStateToLanState130
 } from './lanStateAndIHostStateChange';
 import EUiid from '../ts/enum/EUiid';
 import ECapability from '../ts/enum/ECapability';
-import { ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST, ZIGBEE_UIID_TRV_LIST, ZIGBEE_UIID_WATER_SENSOR, coolkitDeviceProfiles } from '../const';
+import { SUPPORT_UIID_LIST, ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST, ZIGBEE_UIID_TRV_LIST, ZIGBEE_UIID_WATER_SENSOR, coolkitDeviceProfiles } from '../const';
 import IHostDevice from '../ts/interface/IHostDevice';
 import { SINGLE_MULTI_PROTOCOL_LIST, MULTI_PROTOCOL_LIST, SINGLE_PROTOCOL_LIST } from '../const';
 import getAllRemoteDeviceList from './getAllRemoteDeviceList';
@@ -180,7 +182,7 @@ function getIHostDeviceDataListByDeviceId(deviceId: string) {
  * Convert the device status data format of the LAN to the iHost state data format
  * actions For uiid 28 devices, the key array supported by actions
  */
-function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: string[]) {
+function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: string[],isWebSocket = false) {
     let state;
 
     if (myLanState) {
@@ -283,7 +285,7 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
     }
 
     if ([EUiid.uiid_28].includes(uiid) && actions) {
-        _.assign(iHostState, lanStateToIHostState28(lanState as any, actions));
+        _.assign(iHostState, lanStateToIHostState28(lanState as any, actions,isWebSocket));
     }
 
     // 无线按键 (wireless button)
@@ -384,17 +386,22 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         _.assign(iHostState, lanStateToIHostStateTRV(lanState, deviceId));
     }
 
-    if([EUiid.uiid_57].includes(uiid)){
+    if ([EUiid.uiid_57].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostState57(lanState));
     }
 
-    if([EUiid.uiid_52].includes(uiid)){
+    if ([EUiid.uiid_52].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostState52(lanState));
     }
 
-    if([EUiid.uiid_11].includes(uiid)){
+    if ([EUiid.uiid_11].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostState11(lanState));
     }
+
+    if([EUiid.uiid_130].includes(uiid)){
+        _.assign(iHostState, lanStateToIHostState130(lanState));
+    }
+
     //去掉对象中不合法的值(Remove illegal value)
     Object.keys(iHostState).forEach((key) => {
         if (typeof iHostState[key] === 'object' && Object.keys(iHostState[key]).length === 0) {
@@ -429,7 +436,7 @@ function getToggleLenByUiid(uiid: number) {
  * 将iHost的设备状态state转换成局域网设备的state (Convert the device status state of iHost to the state of LAN device)
  * 单通道协议，单通道使用多通道协议，多通道协议 (Single channel protocol, single channel using multi-channel protocol, multi-channel protocol)
  */
-function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface) {
+function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface, isWebSocket = false) {
     const uiid = getUiidByDeviceId(deviceId);
     if (!uiid) {
         return null;
@@ -512,7 +519,7 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface)
     }
 
     if ([EUiid.uiid_28].includes(uiid)) {
-        _.assign(lanState, iHostStateToLanState28(iHostState));
+        _.assign(lanState, iHostStateToLanState28(iHostState, isWebSocket));
     }
 
     // 窗帘 (curtain)
@@ -521,7 +528,11 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface)
     }
 
     // websocket 灯带 (websocket light strip)
-    if ([EUiid.uiid_59, EUiid.uiid_173, EUiid.uiid_137, EUiid.uiid_22, EUiid.uiid_36, EUiid.uiid_57, EUiid.uiid_52,EUiid.uiid_11, ...ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST].includes(uiid)) {
+    if (
+        [EUiid.uiid_59, EUiid.uiid_173, EUiid.uiid_137, EUiid.uiid_22, EUiid.uiid_36, EUiid.uiid_57, EUiid.uiid_52, EUiid.uiid_11, ...ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST].includes(
+            uiid
+        )
+    ) {
         _.assign(lanState, iHostStateToLanStateWebSocket(iHostState, deviceId, uiid));
     }
     if ([EUiid.uiid_1257].includes(uiid)) {
@@ -530,6 +541,10 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface)
 
     if ([EUiid.uiid_1258, EUiid.uiid_7008].includes(uiid)) {
         _.assign(lanState, iHostStateToLanStateBicolorLamp(iHostState));
+    }
+
+    if([EUiid.uiid_130].includes(uiid)){
+        _.assign(lanState, iHostStateToLanState130(iHostState, deviceId));
     }
 
     if (ZIGBEE_UIID_TRV_LIST.includes(uiid)) {
@@ -704,6 +719,31 @@ function updateIHostDeviceDataOnline(serial_number: string, online: boolean) {
     db.setDbValue('iHostDeviceList', iHostDeviceList);
 }
 
+/** 判断固件版本是否支持局域网功能 (Determine whether the firmware version supports the LAN function)*/
+function isSupportLanControl(eWeLinkDeviceData: IEWeLinkDevice) {
+    const { uiid } = eWeLinkDeviceData.itemData.extra;
+
+    if (!SUPPORT_UIID_LIST.includes(uiid)) {
+        return false;
+    }
+    //不支持的功能(Unsupported features)
+    const denyFeatures = _.get(eWeLinkDeviceData, ['itemData', 'denyFeatures'], []);
+
+    //如果不支持局域网功能(If the LAN function is not supported)
+    if (denyFeatures.includes('localCtl')) {
+        return false;
+    }
+
+    if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
+        //电表模式不支持,只支持开关和电机1,2(Meter mode is not supported, only switches and motors 1,2 are supported.)
+        if (![1, 2].includes(eWeLinkDeviceData.itemData.params?.workMode)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export default {
     generateUpdateLanDeviceParams,
     iHostStateToLanState,
@@ -719,4 +759,5 @@ export default {
     getRfSerialNumberByDeviceIdAndIndex,
     getThirdSerialNumberByRfRemote,
     updateIHostDeviceDataOnline,
+    isSupportLanControl
 };

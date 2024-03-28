@@ -214,10 +214,11 @@ async function sendParams(callback: any, iHostState: any, send: any, deviceId: s
     event.once('delivered', callback);
     deviceTimeoutObj[deviceId] = setTimeout(async () => {
         const sendRes = await send(deviceId);
-        let res = createSuccessRes('');
-        if (sendRes && sendRes.error !== 0) {
-            res = createFailRes('');
+        let res:any = createFailRes('');
+        if (sendRes && sendRes.error === 0) {
+            res = createSuccessRes('')
         }
+
         event.emit('delivered', res);
     }, 200);
 }

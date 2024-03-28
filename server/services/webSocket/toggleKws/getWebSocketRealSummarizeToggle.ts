@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { IReqData } from '../../ts/interface/IReqData';
+import { IReqData } from '../../../ts/interface/IReqData';
 import { Request } from 'express';
-import logger from '../../log';
+import logger from '../../../log';
 import { decode } from 'js-base64';
-import wsService from './wsService';
-import { initDeviceList, controlDevice } from '../../lib/coolkit-device-protocol';
+import wsService from '../wsService';
+import { initDeviceList, controlDevice } from '../../../lib/coolkit-device-protocol';
 import _ from 'lodash';
-import deviceDataUtil from '../../utils/deviceDataUtil';
+import deviceDataUtil from '../../../utils/deviceDataUtil';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
-// 获取电量统计数据 (Get power statistics)
-export default async function getWebSocketRealSummarize(req: Request) {
+// 获取电量历史数据 (Get power history data)
+export default async function getWebSocketRealSummarizeToggle(req: Request) {
     const reqData = req.body as IReqData;
     const { header, endpoint, payload } = reqData.directive;
     const { message_id } = header;
@@ -23,6 +23,12 @@ export default async function getWebSocketRealSummarize(req: Request) {
         const iHostDeviceData = JSON.parse(decode(endpoint.tags.deviceInfo));
 
         const { deviceId, selfApikey } = iHostDeviceData;
+
+        logger.info('getWebSocketRealSummarizeToggle---------------');
+        //通道索引（Channel index）
+        const name = Object.keys(_.get(iHostState, ['toggle-power-consumption']))[0];
+
+        const channelIndex = Number(name) - 1;
 
         const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
         const { devices } = initDeviceList([eWeLinkDeviceData] as any);
@@ -33,15 +39,16 @@ export default async function getWebSocketRealSummarize(req: Request) {
             return {};
         }
 
-        const proxy = controlDevice(device, 'statisticsPower');
+        const proxy = controlDevice(device, 'getOncePower', { outlet: channelIndex });
 
         const params = { deviceid: deviceId, ownerApikey: selfApikey, params: proxy };
         //本次用电量值的10进制字符串表示，精确到小数点后2位,单位是KW.H，取值范围为[0‐50000],如：110.32
         //The decimal string representation of this power consumption value, accurate to 2 decimal places, the unit is kw.h, the value range is [0-50000], such as: 110.32
-        const res = (await wsService.updateByWs(params)) as unknown as { error: number; config: { oneKwhData: string } };
+        //oneKwhData_00,oneKwhData_01,oneKwhData_02,oneKwhData_03
+        const res = (await wsService.updateByWs(params)) as unknown as { error: number; config: any };
 
         if (res.error !== 0 || !res.config) {
-            throw new Error('get rlSummarize error');
+            throw new Error('get rlSummarizeToggle error');
         }
 
         return {
@@ -53,9 +60,11 @@ export default async function getWebSocketRealSummarize(req: Request) {
                 },
                 payload: {
                     state: {
-                        'power-consumption': {
-                            //单位 0.01kwh (Unit 0.01kwh)
-                            rlSummarize: parseFloat((Number(res.config.oneKwhData) * 100).toFixed(2)),
+                        'toggle-power-consumption': {
+                            [name]: {
+                                //单位 0.01kwh (Unit 0.01kwh)
+                                rlSummarize: Number(_.get(res, ['config', `oneKwhData_0${channelIndex}`], 0)),
+                            },
                         },
                     },
                 },

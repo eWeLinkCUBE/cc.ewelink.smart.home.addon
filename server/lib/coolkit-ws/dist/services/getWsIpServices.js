@@ -17,8 +17,8 @@ function getWsIpServices(region, useTestEnv) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let url = useTestEnv ? `https://test-dispa.coolkit.cn/dispatch/app` : `https://${region}-dispa.coolkit.${region === 'cn' ? 'cn' : 'cc'}/dispatch/app`;
-            const { data } = yield axios_1.default.get(url);
-            return data.domain;
+            const res = yield axios_1.default.get(url);
+            return res.data;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
@@ -27,7 +27,13 @@ function getWsIpServices(region, useTestEnv) {
             else {
                 console.log("CK_WS: 获取长连接ip地址报错：", error);
             }
-            return "";
+            return {
+                error: 500,
+                reason: "get dispatch address error",
+                domain: "",
+                IP: "",
+                port: 0
+            };
         }
     });
 }

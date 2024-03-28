@@ -1,10 +1,11 @@
 import logger from '../../log';
 import _ from 'lodash';
-import { WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
 import db from '../../utils/db';
 import syncDeviceOnlineIHost from '../public/syncDeviceOnlineToIHost';
 import { sleep } from '../../utils/timeUtils';
 import syncWebSocketDeviceStateToIHost from './syncWebSocketDeviceStateToIHost';
+import deviceStateUtil from '../../utils/deviceStateUtil';
 
 export default async function syncAllWebSocketDeviceStateAndOnlineIHost() {
     try {
@@ -18,15 +19,29 @@ export default async function syncAllWebSocketDeviceStateAndOnlineIHost() {
         for (const item of eWeLinkDeviceList) {
             const { uiid } = item.itemData.extra;
             const { deviceid, online } = item.itemData;
+            await sleep(50);
             if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
                 logger.info('sync device websocket device state and online to iHost-----', deviceid, online);
                 //设备离线不同步状态(Device offline and out of sync status)
-                await sleep(50);
-
                 if (online) {
-                    await syncWebSocketDeviceStateToIHost(deviceid, item.itemData.params);
+                    await syncWebSocketDeviceStateToIHost(deviceid, item.itemData.params, uiid);
                 } else {
                     await syncDeviceOnlineIHost(deviceid, online);
+                }
+            }
+
+            if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+                logger.info('sync device websocket device state and online to iHost-----', deviceid, online);
+
+                //设备离线不同步状态(Device offline and out of sync status)
+                if (online) {
+                    //同步设备状态会将设备上线（Synchronizing device status will bring the device online）
+                    await syncWebSocketDeviceStateToIHost(deviceid, item.itemData.params, uiid);
+                } else {
+                    const isInLanProtocol = deviceStateUtil.isInLanProtocol(item);
+                    if (!isInLanProtocol) {
+                        await syncDeviceOnlineIHost(deviceid, online);
+                    }
                 }
             }
         }
