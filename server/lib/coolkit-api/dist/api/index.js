@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.openPlatform = exports.other = exports.scene = exports.message = exports.family = exports.device = exports.home = exports.user = void 0;
+exports.energy = exports.openPlatform = exports.other = exports.scene = exports.message = exports.family = exports.device = exports.home = exports.user = void 0;
 var user_1 = require("./user");
 Object.defineProperty(exports, "user", { enumerable: true, get: function () { return user_1.user; } });
 var home_1 = require("./home");
@@ -17,3 +17,5 @@ var other_1 = require("./other");
 Object.defineProperty(exports, "other", { enumerable: true, get: function () { return other_1.other; } });
 var open_platform_1 = require("./open-platform");
 Object.defineProperty(exports, "openPlatform", { enumerable: true, get: function () { return open_platform_1.openPlatform; } });
+var energy_1 = require("./energy");
+Object.defineProperty(exports, "energy", { enumerable: true, get: function () { return energy_1.energy; } });

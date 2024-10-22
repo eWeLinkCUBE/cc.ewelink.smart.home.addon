@@ -2,10 +2,10 @@ import { ICoolkitCloudDeviceData, ICoolkitCloudGroupData } from './ICoolkitDevic
 import { IDevice } from './IDevice';
 import { IControlDeviceParams } from './IControlDevice';
 import { IDeviceParams } from './IDeviceParams';
-import { TMultiCapability, TSingleCapability, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TCurtainPercent, TActivePower, THistoryPower, TStatisticsPower, TLightColorTemperature, TBackLight, TLightSceneMode, TCurtain, TRfGateway, TTempUnit, TTargetTemp, TChildLock, TWorkMode, TStopMode, TZled, TSecurityType, TAlarmBeeps, TMediaTotal, TSlowly, TToggle, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TWindowSwitch, TempCorrection, TEcoTargetTemp, TScheduleData, TTurbo, TLightSwitch, TMotorReverse } from '../type/TControlType';
+import { TMultiCapability, TSingleCapability, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TCurtainPercent, TActivePower, THistoryPower, TStatisticsPower, TLightColorTemperature, TBackLight, TLightSceneMode, TCurtain, TRfGateway, TTempUnit, TTargetTemp, TChildLock, TWorkMode, TStopMode, TZled, TSecurityType, TAlarmBeeps, TMediaTotal, TSlowly, TToggle, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TWindowSwitch, TempCorrection, TEcoTargetTemp, TScheduleData, TTurbo, TLightSwitch, TMotorReverse, TControl433Button, TMultiGarageDoorCapability, TControlWaterValve, TAlarm, TWaterValveHistory, TInfraredMode } from '../type/TControlType';
 import { IGroup } from './IGroup';
 export interface IDeviceProtocol {
-    toggle: (controlItem: IControlItemParams) => TSingleCapability | TMultiCapability;
+    toggle: (controlItem: IControlItemParams) => TSingleCapability | TMultiCapability | TMultiGarageDoorCapability;
     toggleMulti: (controlItem: IControlItemParams) => TMultiCapability;
     toggleFan: (controlItem: IControlItemParams) => TMultiCapability;
     setSledOnline: (controlItem: IControlItemParams) => TSledOnline;
@@ -55,6 +55,11 @@ export interface IDeviceProtocol {
     setTurbo: (controlItem: IControlItemParams) => TTurbo;
     setLightSwitch: (controlItem: IControlItemParams) => TLightSwitch;
     setMotorReverse: (controlItem: IControlItemParams) => TMotorReverse;
+    control433Button: (controlItem: IControlItemParams) => TControl433Button;
+    controlWaterValve: (controlItem: IControlItemParams) => TControlWaterValve;
+    setAlarm: (controlItem: IControlItemParams) => TAlarm;
+    getWaterValveHistory: (controlItem: IControlItemParams) => TWaterValveHistory;
+    changeInfraredMode: (controlItem: IControlItemParams) => TInfraredMode;
 }
 export interface IControlItemParams extends Partial<IControlDeviceParams> {
     device: IDevice | IGroup;

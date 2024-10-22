@@ -6,7 +6,7 @@ import logger from '../log';
 import { decode } from 'js-base64';
 import getDayKwsData from './public/getDayKwsData';
 import EUiid from '../ts/enum/EUiid';
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../const';
 import controlWebSocketDevice from './webSocket/controlWebSocketDevice';
 import _ from 'lodash';
 import getWebSocketKwsData from './webSocket/getWebSocketDayKwsData';
@@ -17,6 +17,7 @@ import deviceStateUtil from '../utils/deviceStateUtil';
 import getWebSocketKwsDataToggle from './webSocket/toggleKws/getWebSocketDayKwsDataToggle';
 import getWebSocketRealSummarizeToggle from './webSocket/toggleKws/getWebSocketRealSummarizeToggle';
 import webSocketRealSummarizeStartEndToggle from './webSocket/toggleKws/webSocketRealSummarizeStartEndToggle';
+import deviceDataUtil from '../utils/deviceDataUtil';
 
 /**
  * 开放给ihost后端的接口，收到iHost后端请求，控制局域网设备
@@ -36,8 +37,13 @@ export default async function toControlLanDevice(req: Request, res: Response) {
             throw new Error('no tags deviceInfo');
         }
         const deviceInfo = JSON.parse(decode(tags?.deviceInfo));
-        const { uiid, deviceId } = deviceInfo;
-        
+        let { uiid } = deviceInfo;
+        const { deviceId } = deviceInfo;
+
+        // zigbee-U子设备由zigbee-U决定(zigbee-U sub-device is determined by zigbee-U)
+        if (deviceDataUtil.isZigbeeUSubDevice(deviceId)) {
+            uiid = EUiid.uiid_243;
+        }
         //websocket请求 (Websocket request )
         if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
             if (header.name === 'QueryDeviceStates') {
@@ -51,14 +57,23 @@ export default async function toControlLanDevice(req: Request, res: Response) {
                     }
                 }
 
-                logger.info('uiid-------------------',uiid)
+                logger.info('uiid-------------------', uiid);
 
-                if(uiid === EUiid.uiid_130){
+                if (uiid === EUiid.uiid_130) {
+                    // "toggle-power-consumption": {
+                    //     "1": {
+                    //         "type": "summarize",
+                    //         "timeRange": {
+                    //             "start": "2020-07-05T08:00:00Z",
+                    //             "end": "2020-07-05T09:00:00Z"
+                    //         }
+                    //     }
+                    // }
                     const togglePowerConsumption = _.get(iHostState, ['toggle-power-consumption'], null);
 
-                    if(JSON.stringify(togglePowerConsumption).indexOf('rlSummarize')>-1){
+                    if (JSON.stringify(togglePowerConsumption).indexOf('rlSummarize') > -1) {
                         return res.json(await getWebSocketRealSummarizeToggle(req));
-                    }else {
+                    } else {
                         //summarize
                         return res.json(await getWebSocketKwsDataToggle(req));
                     }
@@ -75,6 +90,11 @@ export default async function toControlLanDevice(req: Request, res: Response) {
                 }
 
                 if (uiid === EUiid.uiid_130) {
+                    //     "toggle-power-consumption ": {
+                    //         "1":{
+                    //                 "rlSummarize": true
+                    //         }
+                    //    }
                     const rlSummarize = _.get(iHostState, ['toggle-power-consumption'], null);
                     //实时电量开始或者结束接口 （Real-time battery start or end api）
                     if (rlSummarize !== null) {

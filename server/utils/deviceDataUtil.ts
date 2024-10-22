@@ -51,7 +51,8 @@ import {
     lanStateToIHostState52,
     lanStateToIHostState11,
     lanStateToIHostState130,
-    iHostStateToLanState130
+    iHostStateToLanState130,
+    lanStateToIHostStateMultiPress,
 } from './lanStateAndIHostStateChange';
 import EUiid from '../ts/enum/EUiid';
 import ECapability from '../ts/enum/ECapability';
@@ -182,7 +183,7 @@ function getIHostDeviceDataListByDeviceId(deviceId: string) {
  * Convert the device status data format of the LAN to the iHost state data format
  * actions For uiid 28 devices, the key array supported by actions
  */
-function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: string[],isWebSocket = false) {
+function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: string[], isWebSocket = false) {
     let state;
 
     if (myLanState) {
@@ -203,10 +204,12 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         //单通道协议 (single channel protocol)
         lanState = state as ILanStateSingleSwitch;
         const powerState = _.get(lanState, 'switch', null);
+        // 7020 单通道协议中 switch 取值为 true/false, 不同于 'on'/'off' (7020 The value of switch in single-channel protocol is true/false, which is different from 'on'/'off')
+        const setUiid7020PowerState = () => (powerState ? 'on' : 'off');
         if (powerState !== null) {
             iHostState = {
                 power: {
-                    powerState: powerState,
+                    powerState: uiid === EUiid.uiid_7020 ? setUiid7020PowerState() : powerState,
                 },
             };
         }
@@ -214,12 +217,13 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         //单通道用多通道协议 (Single channel uses multi-channel protocol)
         lanState = state as ILanStateMultipleSwitch;
         const switches = _.get(lanState, 'switches');
-
-        iHostState = {
-            power: {
-                powerState: switches[0].switch,
-            },
-        };
+        if (switches) {
+            iHostState = {
+                power: {
+                    powerState: switches[0].switch,
+                },
+            };
+        }
     } else if (MULTI_PROTOCOL_LIST.includes(uiid)) {
         //多通道协议 (multi-channel protocol)
         lanState = state as ILanStateMultipleSwitch;
@@ -228,15 +232,32 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
 
         const toggleLength = getToggleLenByUiid(uiid);
 
-        switches &&
-            switches.forEach((item: { outlet: number; switch: any }, index: number) => {
-                //去除掉多余的通道 (Remove unnecessary channels)
-                if (index < toggleLength) {
-                    toggle[item.outlet + 1] = {
-                        toggleState: item.switch,
-                    };
-                }
-            });
+        /**
+         * 7021，7022 的多通道协议（lanState）如下: (The multi-channel protocol (lanState) of 7021 and 7022 is as follows)
+         * {
+         *     switch_00: true, // 通道1开启 (Channel 1 is on)
+         *     switch_01: false, // 通道2关闭 (Channel 2 is off)
+         *     switch_02: true, // 通道3开启 (Channel 3 is on)
+         * }
+         */
+        if ([EUiid.uiid_7021, EUiid.uiid_7022].includes(uiid)) {
+            for (const key in lanState) {
+                if (!key.startsWith('switch_')) continue;
+                toggle[parseInt(key.split('_')[1]) + 1] = {
+                    toggleState: lanState[key] ? 'on' : 'off',
+                };
+            }
+        } else {
+            switches &&
+                switches.forEach((item: { outlet: number; switch: any }, index: number) => {
+                    //去除掉多余的通道 (Remove unnecessary channels)
+                    if (index < toggleLength) {
+                        toggle[item.outlet + 1] = {
+                            toggleState: item.switch,
+                        };
+                    }
+                });
+        }
 
         iHostState = {
             toggle,
@@ -269,9 +290,17 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
 
     if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostState126And165(lanState as any));
-        // if (_.get(lanState, 'workMode', null) !== 1) {
-        //     iHostState.toggle && delete iHostState.toggle;
-        // }
+        const lanWorkMode = _.get(myLanState, 'workMode', null);
+        const eWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(deviceId);
+        const eWeLinkWorkMode = _.get(eWeLinkDeviceData, ['itemData', 'params', 'workMode'], null);
+        const workMode = lanWorkMode ?? eWeLinkWorkMode;
+        if (workMode !== 1) {
+            iHostState.toggle && delete iHostState.toggle;
+        } else {
+            iHostState.percentage && delete iHostState.percentage;
+            iHostState['motor-control'] && delete iHostState['motor-control'];
+            iHostState['motor-clb'] && delete iHostState['motor-clb'];
+        }
 
         if (_.isEmpty(iHostState?.toggle)) {
             iHostState.toggle && delete iHostState.toggle;
@@ -285,11 +314,11 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
     }
 
     if ([EUiid.uiid_28].includes(uiid) && actions) {
-        _.assign(iHostState, lanStateToIHostState28(lanState as any, actions,isWebSocket));
+        _.assign(iHostState, lanStateToIHostState28(lanState as any, actions, isWebSocket));
     }
 
     // 无线按键 (wireless button)
-    if ([EUiid.uiid_1000, EUiid.uiid_7000].includes(uiid)) {
+    if ([EUiid.uiid_1000, EUiid.uiid_7000, EUiid.uiid_1001].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostStateButton(lanState));
     }
 
@@ -305,7 +334,7 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
 
     // 窗帘(curtain)
     if ([EUiid.uiid_7006, EUiid.uiid_7015].includes(uiid)) {
-        _.assign(iHostState, lanStateToIHostStateCurtain(lanState, uiid));
+        _.assign(iHostState, lanStateToIHostStateCurtain(lanState, uiid, deviceId));
     }
 
     //温湿度(Temperature and humidity)
@@ -398,8 +427,12 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
         _.assign(iHostState, lanStateToIHostState11(lanState));
     }
 
-    if([EUiid.uiid_130].includes(uiid)){
+    if ([EUiid.uiid_130].includes(uiid)) {
         _.assign(iHostState, lanStateToIHostState130(lanState));
+    }
+
+    if ([EUiid.uiid_1002, EUiid.uiid_1003, EUiid.uiid_1004, EUiid.uiid_1005, EUiid.uiid_1006].includes(uiid)) {
+        _.assign(iHostState, lanStateToIHostStateMultiPress(lanState));
     }
 
     //去掉对象中不合法的值(Remove illegal value)
@@ -445,8 +478,9 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface,
     let lanState = {};
     if (SINGLE_PROTOCOL_LIST.includes(uiid)) {
         const power = _.get(iHostState, 'power', null);
+        const setUiid7020Switch = () => power?.powerState === 'on';
         if (power) {
-            lanState = { switch: power.powerState };
+            lanState = { switch: uiid === EUiid.uiid_7020 ? setUiid7020Switch() : power.powerState };
         }
     } else if (SINGLE_MULTI_PROTOCOL_LIST.includes(uiid)) {
         const power = _.get(iHostState, 'power', null);
@@ -470,29 +504,43 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface,
         }
     } else if (MULTI_PROTOCOL_LIST.includes(uiid)) {
         const power = _.get(iHostState, 'power', null);
+        const is7021Or7022 = [EUiid.uiid_7021, EUiid.uiid_7022].includes(uiid);
         if (power) {
-            const switches: ILanStateSwitch[] = [];
-            Array(4)
-                .fill(null)
-                .forEach((item, index) => {
-                    switches.push({
-                        switch: power.powerState,
-                        outlet: index,
+            if (is7021Or7022) {
+                const toggleLen = getToggleLenByUiid(uiid);
+                for (let i = 0; i < toggleLen; i++) {
+                    _.set(lanState, `switch_0${i}`, power.powerState === 'on');
+                }
+            } else {
+                const switches: ILanStateSwitch[] = [];
+                Array(4)
+                    .fill(null)
+                    .forEach((item, index) => {
+                        switches.push({
+                            switch: power.powerState,
+                            outlet: index,
+                        });
                     });
-                });
 
-            lanState = { switches };
+                lanState = { switches };
+            }
         } else {
             const toggleObj = _.get(iHostState, 'toggle');
             if (toggleObj) {
-                const switches: any = [];
-                for (const toggleIndex in toggleObj) {
-                    switches.push({
-                        switch: toggleObj[toggleIndex].toggleState,
-                        outlet: Number(toggleIndex) - 1,
-                    });
+                if (is7021Or7022) {
+                    for (const toggleIndex in toggleObj) {
+                        _.set(lanState, `switch_0${parseInt(toggleIndex) - 1}`, toggleObj[toggleIndex].toggleState === 'on');
+                    }
+                } else {
+                    const switches: any = [];
+                    for (const toggleIndex in toggleObj) {
+                        switches.push({
+                            switch: toggleObj[toggleIndex].toggleState,
+                            outlet: Number(toggleIndex) - 1,
+                        });
+                    }
+                    lanState = { switches };
                 }
-                lanState = { switches };
             }
         }
     }
@@ -510,7 +558,7 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface,
     }
 
     if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
-        _.assign(lanState, iHostStateToLanState126And165(iHostState));
+        _.assign(lanState, iHostStateToLanState126And165(iHostState, deviceId, isWebSocket));
     }
 
     if ([EUiid.uiid_34].includes(uiid)) {
@@ -543,7 +591,7 @@ function iHostStateToLanState(deviceId: string, iHostState: IHostStateInterface,
         _.assign(lanState, iHostStateToLanStateBicolorLamp(iHostState));
     }
 
-    if([EUiid.uiid_130].includes(uiid)){
+    if ([EUiid.uiid_130].includes(uiid)) {
         _.assign(lanState, iHostStateToLanState130(iHostState, deviceId));
     }
 
@@ -744,6 +792,42 @@ function isSupportLanControl(eWeLinkDeviceData: IEWeLinkDevice) {
     return true;
 }
 
+/**  判断支持局域网加长连接控制 ( Determine whether LAN extended connection control is supported ) */
+function isSupportLanWebSocketControl(eWeLinkDeviceData: IEWeLinkDevice) {
+    const { uiid } = eWeLinkDeviceData.itemData.extra;
+
+    if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
+        //电表模式不支持,只支持开关和电机1,2(Meter mode is not supported, only switches and motors 1,2 are supported.)
+        if (![1, 2].includes(eWeLinkDeviceData.itemData.params?.workMode)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/** 根据zigbee子设备id拿到zigbee网关id */
+function getZigbeeParentId(deviceId: string) {
+    const iHostDeviceData = getIHostDeviceDataByDeviceId(deviceId);
+    if (iHostDeviceData && iHostDeviceData?.deviceInfo?.parentId) {
+        return iHostDeviceData?.deviceInfo?.parentId;
+    }
+    const eWelinkDeviceData = getEWeLinkDeviceDataByDeviceId(deviceId);
+    if (eWelinkDeviceData) {
+        return eWelinkDeviceData.itemData.params?.parentid;
+    }
+    return null;
+}
+
+/** 是否zigbee-U子设备 */
+function isZigbeeUSubDevice(deviceId: string) {
+    const parentId = getZigbeeParentId(deviceId);
+    if (!parentId) {
+        return false;
+    }
+    const parentUiid = getUiidByDeviceId(parentId);
+    return parentUiid === EUiid.uiid_243;
+}
+
 export default {
     generateUpdateLanDeviceParams,
     iHostStateToLanState,
@@ -759,5 +843,8 @@ export default {
     getRfSerialNumberByDeviceIdAndIndex,
     getThirdSerialNumberByRfRemote,
     updateIHostDeviceDataOnline,
-    isSupportLanControl
+    isSupportLanControl,
+    isSupportLanWebSocketControl,
+    getZigbeeParentId,
+    isZigbeeUSubDevice,
 };

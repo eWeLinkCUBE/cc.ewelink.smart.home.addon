@@ -175,6 +175,7 @@ export declare const device: {
     updateDeviceInfo(params: {
         deviceid: string;
         name?: string;
+        familyid?: string;
         roomid?: string;
     }): Promise<ApiResponse>;
     delDevice(params: {
@@ -237,6 +238,27 @@ export declare const device: {
         id: string;
         params: any;
     }): Promise<ApiResponse>;
+    getAlarmHistory(params: {
+        deviceid: string;
+        type: string;
+        from?: number;
+        num?: number;
+        rfChls?: string;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            alarmHistories: {
+                request: string;
+                opsTime: number;
+                userAgent: string;
+                rfChl?: number;
+                opsSwitchs?: string[];
+                opsAccount?: string;
+                triggerType?: number;
+            }[];
+        };
+    }>;
     addGroupDevice(params: {
         id: string;
         deviceidList: string[];
@@ -378,6 +400,67 @@ export declare const device: {
             updatedThingList: any[];
         };
     }>;
+    getDeviceUsage(params: {
+        deviceid: string;
+        last: string;
+        dateType: string;
+        format?: string;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            temperature?: {
+                hourly?: number[];
+                daily?: {
+                    min?: number;
+                    max?: number;
+                    avg?: number;
+                }[];
+                monthly?: {
+                    min?: number;
+                    max?: number;
+                    avg?: number;
+                }[];
+            };
+            humidity?: {
+                hourly: number[];
+                daily: {
+                    min?: number;
+                    max?: number;
+                }[];
+                monthly: {
+                    min?: number;
+                    max?: number;
+                }[];
+            };
+            targetTemperature?: {
+                hourly: number[];
+                daily: {
+                    avg?: number;
+                }[];
+                monthly: {
+                    avg?: number;
+                }[];
+            };
+            gasUsage?: {
+                hourly: number[];
+                daily: {
+                    avg?: number;
+                }[];
+                monthly: {
+                    avg?: number;
+                }[];
+            };
+            hourlyData?: {
+                date: string;
+                time: string;
+                temperature?: string;
+                humidity?: string;
+                targetTemperature?: string;
+                gasUsage?: string;
+            }[];
+        };
+    }>;
     getTempHumHistory(params: {
         deviceid: string;
         last: string;
@@ -413,6 +496,25 @@ export declare const device: {
                 time: string;
                 temperature: string | number;
                 humidity: string | number;
+            }[];
+        };
+    }>;
+    getMatterNodesReachableHubs(params: {
+        deviceIds: string;
+        includeOfflineHub?: boolean;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            hubs: {
+                matterNodeId: string;
+                deviceId: string;
+                online: boolean;
+                name: string;
+                familyId: string;
+                familyName: string;
+                roomId?: string;
+                roomName?: string;
             }[];
         };
     }>;

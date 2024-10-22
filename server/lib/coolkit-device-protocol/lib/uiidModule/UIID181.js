@@ -13,13 +13,17 @@ exports.UIID181_PROTOCOL = {
         setSledOnline: protocol_1.commonSledOnline,
         setSingleInchingMode(controlItem) {
             var _a;
-            const { device: { params }, width = 500 } = controlItem;
+            const { device: { params }, width = 500, switch: _switch, pulse = 'on' } = controlItem;
             const pulseConfig = (_a = params.pulseConfig) !== null && _a !== void 0 ? _a : {
                 pulse: 'on',
                 switch: 'on',
                 pulseWidth: 500
             };
             pulseConfig.pulseWidth = width;
+            pulseConfig.pulse = pulse;
+            if (_switch) {
+                pulseConfig.switch = _switch;
+            }
             return { pulseConfig };
         },
         setSingleStartup: protocol_1.commonSingleStartup,

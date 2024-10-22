@@ -35,22 +35,29 @@ exports.UIID7009_PROTOCOL = {
             return { dimming: dimming, quickSwitch: quickSwitch };
         },
         setMultiLightControl: controlItem => {
-            const { brightness, colorTemp, hue, saturation } = controlItem;
+            const { brightness, colorTemp, hue, saturation, device: { params: { colorMode, cctBrightness, rgbBrightness } } } = controlItem;
             const returnObj = {
                 switch: 'on'
             };
-            if (typeof colorTemp === 'number' && typeof brightness === 'number') {
+            let originMode = colorMode;
+            if (typeof colorTemp === 'number') {
                 Object.assign(returnObj, {
                     colorTemp,
-                    cctBrightness: brightness
+                    cctBrightness
                 });
+                originMode = 'cct';
             }
-            else if (typeof hue === 'number' && typeof brightness === 'number') {
+            else if (typeof hue === 'number') {
                 Object.assign(returnObj, {
                     hue,
                     saturation: typeof saturation === 'number' ? saturation : 100,
-                    rgbBrightness: brightness
+                    rgbBrightness
                 });
+                originMode = 'rgb';
+            }
+            if (typeof brightness === 'number') {
+                originMode === 'cct' && Object.assign(returnObj, { cctBrightness: brightness });
+                originMode === 'rgb' && Object.assign(returnObj, { rgbBrightness: brightness });
             }
             return returnObj;
         }

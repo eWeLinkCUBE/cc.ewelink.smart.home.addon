@@ -139,7 +139,7 @@ export const family = {
         deviceFamily: string;
         switchFamily: string;
     }): Promise<ApiResponse> {
-        return await sendRequest('/v2/family', 'DELETE', params, getAt());
+        return await sendRequest(`/v2/family?id=${params.id}`, 'DELETE', params, getAt());
     },
 
     /**
@@ -147,7 +147,7 @@ export const family = {
      * @param params 请求参数
      */
     async delRoom(params: { id: string; }): Promise<ApiResponse> {
-        return await sendRequest('/v2/family/room', 'DELETE', params, getAt());
+        return await sendRequest(`/v2/family/room?id=${params.id}`, 'DELETE', params, getAt());
     },
 
     /**

@@ -32,6 +32,7 @@ import {
     ILanState52,
     ILanState11,
     ILanState130,
+    ILanStateMultiPress,
 } from '../ts/interface/ILanState';
 import { IHostStateInterface } from '../ts/interface/IHostState';
 import deviceDataUtil from './deviceDataUtil';
@@ -335,8 +336,8 @@ function lanStateToIHostState126And165(lanState: ILanState126And165) {
     return iHostState;
 }
 
-function iHostStateToLanState126And165(iHostState: IHostStateInterface) {
-    const lanState = {};
+function iHostStateToLanState126And165(iHostState: IHostStateInterface, deviceId: string, isWebSocket: boolean) {
+    let lanState = {};
 
     const motorControl = _.get(iHostState, 'motor-control', null);
     const motorTurnObj = {
@@ -374,6 +375,23 @@ function iHostStateToLanState126And165(iHostState: IHostStateInterface) {
         _.assign(lanState, {
             location: 100 - percentage.percentage,
         });
+    }
+    // 设备处于websocket模式（Device is in websocket mode）
+    if (isWebSocket) {
+        const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+
+        const workMode = _.get(eWeLinkDeviceData, 'itemData.params.workMode', 1);
+        // 1 开关，2 电机,3 电表模式（ 1 switch, 2 motor 3 Meter mode）
+        if (workMode === 1) {
+            // 设备处于开关模式，去掉电机控制字段（The device is in switch mode, remove the motor control field）
+            lanState = _.omit(lanState, ['motorTurn', 'location']);
+        } else if (workMode === 2) {
+            // 设备处于电机模式，去掉开关字段（The device is in motor mode, remove the switch field）
+            lanState = _.omit(lanState, ['switches']);
+        } else if (workMode === 3) {
+            // 设备处于电表模式，去掉所有控制字段（The device is in meter mode, with all control fields removed）
+            lanState = {};
+        }
     }
 
     return lanState;
@@ -458,20 +476,25 @@ function iHostStateToLanState28(iHostState: IHostStateInterface, isWebSocket: bo
             rfChl: Number(pressObj.press),
         });
     }
+
+    // if (isWebSocket) {
+    //     _.assign(lanState, {
+    //         cmd: 'transmit',
+    //     });
+    // }
     return lanState;
 }
 //rfTrig20: '2023-05-17T02:35:34.000Z',
-function lanStateToIHostState28(lanState: ILanState28, actions: string[],isWebSocket:boolean) {
+function lanStateToIHostState28(lanState: ILanState28, actions: string[], isWebSocket: boolean) {
     const iHostState = {};
 
-
-    if(isWebSocket){
-        const rfChl = _.get(lanState,'rfChl')
+    if (isWebSocket) {
+        const rfChl = _.get(lanState, 'rfChl');
         return {
             press: {
                 press: rfChl.toString(),
-            }
-        }
+            },
+        };
     }
 
     if (!lanState) {
@@ -572,6 +595,8 @@ function lanStateToIHostStateContactSensor(lanState: ILanStateContactSensor) {
 
 function lanStateToIHostStateContactSensorWithTamperAlert(lanState: ILanStateContactSensorWithTamperAlert) {
     const iHostState = lanStateToIHostStateContactSensor(lanState);
+    // 在zigbee-P上，局域网sse和 websocket 都上报了 “被装上” 和 “被拆下” (On zigbee-P, both LAN SSE and websocket reported "mounted" and "removed")
+    // 在zigbee-U上，websocket只上报了 “被拆下”(On zigbee-U, websocket only reports "removed")
 
     // 检测到拆除，split 字段存在时值只能为1 (When demolition is detected, the value of split field can only be 1 when it exists.)
     const split = _.get(lanState, 'split', null);
@@ -586,8 +611,10 @@ function lanStateToIHostStateContactSensorWithTamperAlert(lanState: ILanStateCon
     return iHostState;
 }
 
-function lanStateToIHostStateCurtain(lanState: ILanStateCurtain, uiid: EUiid.uiid_7006 | EUiid.uiid_7015) {
+function lanStateToIHostStateCurtain(lanState: ILanStateCurtain, uiid: EUiid.uiid_7006 | EUiid.uiid_7015, deviceId: string) {
     const iHostState = {};
+    logger.info('lanStateToIHostStateCurtain-----------0', lanState);
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
 
     const curPercent = _.get(lanState, 'curPercent', null);
 
@@ -599,27 +626,52 @@ function lanStateToIHostStateCurtain(lanState: ILanStateCurtain, uiid: EUiid.uii
         });
     }
 
-    const motorClb = _.get(lanState, 'motorClb', null);
+    if (uiid === EUiid.uiid_7006) {
+        const motorClb = _.get(lanState, 'motorClb', null);
 
-    if (motorClb !== null) {
-        _.merge(iHostState, {
-            'motor-clb': {
-                motorClb,
-            },
-        });
+        if (motorClb !== null) {
+            _.merge(iHostState, {
+                'motor-clb': {
+                    motorClb,
+                },
+            });
+        }
     }
 
     /**
      * 7015 校准常态异常，未校准时上报 motorClb: normal 且 curPercent: 255 (7015 Calibration normal is abnormal. When not calibrated, motorClb: normal and curPercent: 255 are reported.)
      * 当 7015 curPercent = 255 时，同步为未校准状态 (When 7015 curPercent = 255, synchronization is uncalibrated)
      */
-    if (uiid === EUiid.uiid_7015 && curPercent === 255) {
-        _.merge(iHostState, {
-            'motor-clb': {
-                motorClb: 'calibration',
-            },
-        });
+    if (uiid === EUiid.uiid_7015) {
+        const eWeLinkUpperLimitState = _.get(eWeLinkDeviceData, ['itemData', 'params', 'upperLimitState'], null);
+        const eWeLinkLowerLimitState = _.get(eWeLinkDeviceData, ['itemData', 'params', 'lowerLimitState'], null);
+
+        const upperLimitState = _.get(lanState, 'upperLimitState', eWeLinkUpperLimitState);
+        const lowerLimitState = _.get(lanState, 'lowerLimitState', eWeLinkLowerLimitState);
+
+        // 上限位校准状态 String	"calibrated "：已校准"uncalibrated"：未校准 (Upper limit calibration status String "calibrated ": calibrated "uncalibrated": not calibrated)
+        if (upperLimitState === 'calibrated' && lowerLimitState === 'calibrated') {
+            _.merge(iHostState, {
+                'motor-clb': {
+                    motorClb: 'normal',
+                },
+            });
+        } else {
+            _.merge(iHostState, {
+                'motor-clb': {
+                    motorClb: 'calibration',
+                },
+            });
+        }
+        if (curPercent === 255) {
+            _.merge(iHostState, {
+                'motor-clb': {
+                    motorClb: 'calibration',
+                },
+            });
+        }
     }
+    logger.info('lanStateToIHostStateCurtain-----------1', iHostState);
 
     return iHostState;
 }
@@ -1198,7 +1250,6 @@ function lanStateToIHostState5(lanState: ILanState5) {
 
     const oneKwh = _.get(lanState, 'oneKwh', null);
 
-
     if (startTime !== null && oneKwh !== null) {
         _.merge(iHostState, {
             'power-consumption': {
@@ -1287,7 +1338,7 @@ function lanStateToIHostStateBicolorLamp(lanState: ILanStateBicolorLamp) {
     }
 
     const colorTemp = _.get(lanState, 'colorTemp', null);
-    if (colorTemp !== null && colorTemp >= 1 && colorTemp <= 100) {
+    if (colorTemp !== null && colorTemp >= 0 && colorTemp <= 100) {
         _.merge(iHostState, {
             'color-temperature': {
                 colorTemperature: colorTemp,
@@ -1353,7 +1404,7 @@ function lanStateToIHostStateFiveColorLamp(lanState: ILanStateFiveColorLamp, dev
 
     // 如果五色灯在 zigbee-p 网关中无色温数据时会获取到 colorTemp: 65535 (If the five-color lamp has no color temperature data in the zigbee-p gateway, colorTemp: 65535 will be obtained.)
     const colorTemp = _.get(lanState, 'colorTemp', null);
-    if (colorTemp !== null && colorTemp >= 1 && colorTemp <= 100) {
+    if (colorTemp !== null && colorTemp >= 0 && colorTemp <= 100) {
         _.merge(iHostState, {
             'color-temperature': {
                 colorTemperature: colorTemp,
@@ -1361,6 +1412,7 @@ function lanStateToIHostStateFiveColorLamp(lanState: ILanStateFiveColorLamp, dev
         });
     }
 
+    // 因为局域网只单独上报了saturation和hue,所以需要从拿云端数据补齐 (Because the LAN only reports saturation and hue separately, it needs to be supplemented with data from the cloud.)
     // 五色灯同步 saturation 取值范围 [0, 100] (Five-color light synchronization saturation value range [0, 100])
     const saturation = _.get(lanState, 'saturation', null);
     if (saturation !== null && saturation >= 0 && saturation <= 100) {
@@ -1382,14 +1434,16 @@ function lanStateToIHostStateFiveColorLamp(lanState: ILanStateFiveColorLamp, dev
             'color-rgb': { red, green, blue },
         });
     }
+    // 取当前模式下的亮度 （Get the brightness in the current mode）
+    const colorMode = _.get(lanState, 'colorMode', null);
 
     const cctBrightness = _.get(lanState, 'cctBrightness', null);
-    if (cctBrightness !== null) {
+    if (cctBrightness !== null && (colorMode === 'cct' || colorMode === null)) {
         setBrightness(cctBrightness);
     }
 
     const rgbBrightness = _.get(lanState, 'rgbBrightness', null);
-    if (rgbBrightness !== null) {
+    if (rgbBrightness !== null && (colorMode === 'rgb' || colorMode === null)) {
         setBrightness(rgbBrightness);
     }
 
@@ -1769,6 +1823,33 @@ function iHostStateToLanState130(iHostState: IHostStateInterface, deviceId: stri
     return lanState;
 }
 
+function lanStateToIHostStateMultiPress(lanState: ILanStateMultiPress) {
+    const iHostState = {};
+
+    // 无线按键：0单击，1双击，2长按
+    // Wireless buttons: 0 click, 1 double click, 2 long press
+    const BUTTON_PRESS_MAP = {
+        0: 'singlePress',
+        1: 'doublePress',
+        2: 'longPress',
+    };
+    const outlet = _.get(lanState, 'outlet', null);
+
+    const pressKey = _.get(lanState, 'key', null);
+
+    if (pressKey !== null && outlet !== null) {
+        _.merge(iHostState, {
+            'multi-press': {
+                [outlet + 1]: {
+                    press: BUTTON_PRESS_MAP[pressKey],
+                },
+            },
+        });
+    }
+
+    return iHostState;
+}
+
 export {
     lanStateToIHostStatePowerDevice,
     lanStateToIHostStateLight,
@@ -1814,4 +1895,5 @@ export {
     lanStateToIHostState11,
     lanStateToIHostState130,
     iHostStateToLanState130,
+    lanStateToIHostStateMultiPress,
 };

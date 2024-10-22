@@ -220,7 +220,7 @@ export const device = {
      * 更新设备的名称／房间信息
      * @param params 请求参数
      */
-    async updateDeviceInfo(params: { deviceid: string; name?: string; roomid?: string }): Promise<ApiResponse> {
+    async updateDeviceInfo(params: { deviceid: string; name?: string; familyid?: string; roomid?: string }): Promise<ApiResponse> {
         return await sendRequest('/v2/device/update-info', 'POST', params, getAt());
     },
 
@@ -312,7 +312,7 @@ export const device = {
      * @param params 请求参数
      */
     async delGroup(params: { id: string }): Promise<ApiResponse> {
-        return await sendRequest('/v2/device/group', 'DELETE', params, getAt());
+        return await sendRequest(`/v2/device/group?id=${params.id}`, 'DELETE', params, getAt());
     },
 
     /**
@@ -321,6 +321,33 @@ export const device = {
      */
     async updateGroupStatus(params: { id: string; params: any }): Promise<ApiResponse> {
         return await sendRequest('/v2/device/group/status', 'POST', params, getAt());
+    },
+
+    /**
+     * 获取设备的报警历史记录
+     */
+    async getAlarmHistory(params: {
+        deviceid: string;
+        type: string;
+        from?: number;
+        num?: number;
+        rfChls?: string;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            alarmHistories: {
+                request: string;
+                opsTime: number;
+                userAgent: string;
+                rfChl?: number;
+                opsSwitchs?: string[];
+                opsAccount?: string;
+                triggerType?: number;
+            }[];
+        };
+    }> {
+        return await sendRequest('/v2/device/alarm-history', 'GET', params, getAt());
     },
 
     /**
@@ -540,6 +567,73 @@ export const device = {
     },
 
     /**
+     * 获取设备使用情况
+     */
+    async getDeviceUsage(params: {
+        deviceid: string;
+        last: string;
+        dateType: string;
+        format?: string;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            temperature?: {
+                hourly?: number[];
+                daily?: {
+                    min?: number;
+                    max?: number;
+                    avg?: number;
+                }[];
+                monthly?: {
+                    min?: number;
+                    max?: number;
+                    avg?: number;
+                }[];
+            };
+            humidity?: {
+                hourly: number[];
+                daily: {
+                    min?: number;
+                    max?: number;
+                }[];
+                monthly: {
+                    min?: number;
+                    max?: number;
+                }[];
+            };
+            targetTemperature?: {
+                hourly: number[];
+                daily: {
+                    avg?: number;
+                }[];
+                monthly: {
+                    avg?: number;
+                }[];
+            };
+            gasUsage?: {
+                hourly: number[];
+                daily: {
+                    avg?: number;
+                }[];
+                monthly: {
+                    avg?: number;
+                }[];
+            };
+            hourlyData?: {
+                date: string;
+                time: string;
+                temperature?: string;
+                humidity?: string;
+                targetTemperature?: string;
+                gasUsage?: string;
+            }[];
+        };
+    }> {
+        return await sendRequest('/v2/device/device-usage', 'GET', params, getAt());
+    },
+
+    /**
      * 获取设备温湿度历史数据
      */
     async getTempHumHistory(params: {
@@ -581,5 +675,30 @@ export const device = {
         };
     }> {
         return await sendRequest('/v2/device/temp-hum-history', 'GET', params, getAt());
+    },
+
+    /**
+     * 查询 Matter 设备可达的 Hub 列表
+     */
+    async getMatterNodesReachableHubs(params: {
+        deviceIds: string;
+        includeOfflineHub?: boolean;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            hubs: {
+                matterNodeId: string;
+                deviceId: string;
+                online: boolean;
+                name: string;
+                familyId: string;
+                familyName: string;
+                roomId?: string;
+                roomName?: string;
+            }[];
+        };
+    }> {
+        return await sendRequest('/v2/device/matter/nodes/reachable-hubs', 'GET', params, getAt());
     }
 };

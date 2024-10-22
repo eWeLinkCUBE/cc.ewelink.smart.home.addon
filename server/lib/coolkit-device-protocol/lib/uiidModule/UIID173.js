@@ -38,22 +38,28 @@ exports.UIID173_PROTOCOL = {
             return { colorR: r, colorG: g, colorB: b, mode: 1, bright };
         },
         setLightMode(controlItem) {
-            const { device: { params: { bright, colorR, colorG, colorB } }, colorMode } = controlItem;
+            const { device: { params: { bright, colorTemp, colorR, colorG, colorB } }, colorMode } = controlItem;
             const mode = colorMode === 'rgb' ? 1 : colorMode === 'cct' ? 2 : 3;
             return {
                 mode,
                 switch: 'on',
                 bright,
+                colorTemp,
                 colorR,
                 colorG,
                 colorB
             };
         },
         setMultiLightControl(controlItem) {
-            const { brightness, colorTemp, hue, saturation, mode } = controlItem;
+            const { brightness, colorTemp, hue, saturation, mode, device: { params: { mode: originMode, bright: originBright, colorTemp: originColorTemp, colorG, colorR, colorB } } } = controlItem;
             const returnObj = {
                 switch: 'on',
-                mode: 1
+                mode: originMode !== null && originMode !== void 0 ? originMode : 1,
+                bright: originBright,
+                colorTemp: originColorTemp,
+                colorR,
+                colorG,
+                colorB
             };
             if (typeof brightness === 'number') {
                 Object.assign(returnObj, { bright: brightness });

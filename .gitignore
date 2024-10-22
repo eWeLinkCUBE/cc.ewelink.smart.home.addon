@@ -57,5 +57,7 @@ web/.env
 # antd auto import
 web/src/auto-import.d.ts
 
-# build project for test
+# dev file
 bin-test
+bin/push_dev.sh
+bin/build_dev.sh

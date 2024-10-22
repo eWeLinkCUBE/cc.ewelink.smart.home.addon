@@ -479,3 +479,12 @@ export interface ILanState130 {
     /** 所有通道的开关状态(Switch status of all channels) */
     switches: ILanStateSwitch[];
 }
+
+export interface ILanStateMultiPress {
+    /** 通道数，哪个按键触发，就只上报单个通道数据 0,1,2,3,4,5 对应六个按键（Number of channels, whichever key is triggered will only report the data of a single channel.0,1,2,3,4,5 correspond to six buttons）*/
+    outlet: 0 | 1 | 2 | 3 | 4 | 5; // 1通道插座只用到 outlet:0(The 1-channel socket only uses outlet:0)
+    /** [0,2] 单击0 双击1 长按2 ([0,2] Click 0 Double click 1 Long press 2) */
+    key: 0 | 1 | 2;
+    /** 触发时上报的13位时间戳 (The 13-digit timestamp reported when triggered) */
+    trigTime: string;
+}

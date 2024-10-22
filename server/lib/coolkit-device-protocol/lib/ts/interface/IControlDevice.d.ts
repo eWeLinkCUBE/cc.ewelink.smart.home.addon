@@ -63,5 +63,26 @@ export interface IControlDeviceParams {
     turbo: boolean;
     lightSwitch: string;
     motorReverse: boolean;
+    key: number;
+    controlMode: string;
+    autoAction: {
+        option: string;
+        time: {
+            type: string;
+            total: string;
+            times?: number;
+            intervals?: string;
+        };
+        volume: {
+            type: string;
+            value?: number;
+            valueGal?: number;
+            times?: number;
+            intervals?: string;
+        };
+    };
+    alarm: boolean;
+    getHistory: string;
+    infraredSetting: number;
 }
 export type TSchedule = 'sun' | 'mon' | 'tues' | 'wed' | 'thur' | 'fri' | 'sat';

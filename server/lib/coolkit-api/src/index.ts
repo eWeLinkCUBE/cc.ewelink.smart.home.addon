@@ -1,12 +1,22 @@
-import { setAppId, setAppSecret, showStore, setDebug, setUseTestEnv, setAt, setRt, setDomain, setTimeout } from './store';
-import { user, home, device, family, message, scene, other, openPlatform } from './api';
+import { setAppId, setAppSecret, showStore, setDebug, setUseTestEnv, setAt, setRt, setDomain, setTimeout, setBlockList } from './store';
+import { user, home, device, family, message, scene, other, openPlatform, energy, type CoolkitEnergy } from './api';
 import { getDomainByCountryCode, getCmsContent, getDomainByRegion } from './utils';
 
 /**
  * 初始化
  * @param params 初始化参数
  */
-function init(params: { appId: string; appSecret: string; debug?: boolean; useTestEnv?: boolean; at?: string; rt?: string; countryCode?: string; timeout?: number; region?: string; }) {
+function init(params: {
+    appId: string;
+    appSecret: string;
+    debug?: boolean;
+    useTestEnv?: boolean;
+    at?: string;
+    rt?: string;
+    countryCode?: string;
+    timeout?: number;
+    region?: string;
+}) {
     const { appId, appSecret, debug, useTestEnv = false, at, rt, countryCode, timeout, region } = params;
     setAppId(appId);
     setAppSecret(appSecret);
@@ -45,5 +55,8 @@ export default {
     scene,
     other,
     openPlatform,
-    getCmsContent
+    energy,
+    getCmsContent,
+    setBlockList
 };
+export { type CoolkitEnergy };

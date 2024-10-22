@@ -80,7 +80,6 @@ async function generateSyncIHostDeviceData(deviceId: string) {
     };
 
     const mDnsDeviceData = deviceMapUtil.getMDnsDeviceDataByDeviceId(deviceId);
-
     let iHostState: any = {};
 
     if (mDnsDeviceData) {
@@ -91,7 +90,8 @@ async function generateSyncIHostDeviceData(deviceId: string) {
         myLanState = await getState126And165(deviceId);
         iHostState = lanStateToIHostState(deviceId, myLanState);
     }
-    if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+
+    if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid) || deviceDataUtil.isZigbeeUSubDevice(deviceId)) {
         iHostState = lanStateToIHostState(deviceId, eWeLinkDeviceData.itemData.params);
     }
     //优先局域网(Priority LAN)
@@ -107,7 +107,7 @@ async function generateSyncIHostDeviceData(deviceId: string) {
     }
 
     // 同步zigbee-p子设备为通道设备时，获取设备的通道state (When the synchronized zigbee p sub-device is a channel device, obtain the channel state of the device)
-    if (ZIGBEE_UIID_DEVICE_LIST.includes(uiid)) {
+    if (ZIGBEE_UIID_DEVICE_LIST.includes(uiid) && !deviceDataUtil.isZigbeeUSubDevice(deviceId)) {
         //  zigbee-p子设备把网关设备id也同步，才能未登录控制 (The Zigbee p sub-device also synchronizes the gateway device ID so that it can be controlled without logging in.)
         const zigbeePDeviceId = eWeLinkDeviceData.itemData.params.parentid;
         const zigbeePEWelinkDeviceData = getEWeLinkDeviceDataByDeviceId(zigbeePDeviceId);
@@ -227,19 +227,17 @@ async function generateSyncIHostDeviceData(deviceId: string) {
             return item;
         });
     }
-
     if ([EUiid.uiid_130].includes(uiid)) {
         capabilitiyList = capabilities.map((item: any) => {
             if (item.capability === ECapability.TOGGLE_POWER_CONSUMPTION) {
                 const parentId = _.get(eWeLinkDeviceData, ['itemData', 'params', 'parentid'], null);
                 const parentEWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(parentId);
                 const timeZone = _.get(parentEWeLinkDeviceData, ['itemData', 'params', 'timeZone'], null);
-                item.configuration.timeZoneOffset = timeZone
+                item.configuration.timeZoneOffset = timeZone;
             }
             return item;
         });
     }
-
 
     //将设备的超时未关是否开启状态同步到iHost
     if ([EUiid.uiid_154].includes(uiid)) {
@@ -335,7 +333,6 @@ async function generateSyncIHostDeviceData(deviceId: string) {
 
     const deviceInfo = encode(JSON.stringify(deviceInfoObj));
     const firmwareVersion = eWeLinkDeviceData.itemData?.params?.fwVersion;
-
     return {
         third_serial_number: deviceId,
         name: eWeLinkDeviceData.itemData.name,
@@ -362,7 +359,9 @@ async function getDisplayCategoryAndCapabilitiesByUiid(uiid: EUiid, state: any, 
     let capabilities = [];
 
     if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
-        const workMode = _.get(myLanState, 'workMode', null);
+        const lanWorkMode = _.get(myLanState, 'workMode', null);
+        const eWeLinkWorkMode = _.get(eWeLinkDeviceData, ['itemData', 'params', 'workMode'], null);
+        const workMode = lanWorkMode ?? eWeLinkWorkMode;
         //电表模式不支持 (Meter mode is not supported)
         if (workMode === null || workMode === 3) {
             return { display_category: '', capabilities: [] };

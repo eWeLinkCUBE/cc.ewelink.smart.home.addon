@@ -16,3 +16,4 @@ export { message } from './message';
 export { scene } from './scene';
 export { other } from './other';
 export { openPlatform } from './open-platform';
+export { energy, type CoolkitEnergy } from './energy';

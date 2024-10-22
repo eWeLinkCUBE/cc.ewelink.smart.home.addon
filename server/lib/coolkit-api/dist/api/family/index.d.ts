@@ -1,5 +1,5 @@
 import { ApiResponse, MsgLang } from "../index";
-export declare type SortType = 1 | 2;
+export type SortType = 1 | 2;
 export interface RoomItem {
     id: string;
     name: string;

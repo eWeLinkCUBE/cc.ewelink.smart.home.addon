@@ -10,8 +10,8 @@ exports.UIID209_PROTOCOL = {
             return Object.assign(Object.assign({}, item), { enableDelay: 0, width: 500 });
         }), pulses = (0, constant_1.getDefaultInching)(4, 'off').pulses.map(item => {
             return Object.assign(Object.assign({}, item), { switch: 'off' });
-        }), switches = (0, constant_1.getDefaultSwitches)(4, 'off').switches, lightSwitch = 'off', lightMode = 0, sledOnline = 'off' } = device.itemData.params;
-        return { configure, pulses, switches, lightSwitch, lightMode, sledOnline };
+        }), switches = (0, constant_1.getDefaultSwitches)(4, 'off').switches, lightSwitch = 'off', lightMode = 0, sledOnline = 'off', disableSwipeGesture = true } = device.itemData.params;
+        return { configure, pulses, switches, lightSwitch, lightMode, sledOnline, disableSwipeGesture };
     },
     controlItem: {
         toggle: protocol_1.commonMultiToggle,

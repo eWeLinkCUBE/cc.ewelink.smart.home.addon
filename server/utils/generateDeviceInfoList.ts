@@ -3,10 +3,11 @@ import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
 import _ from 'lodash';
 import EUiid from '../ts/enum/EUiid';
 import zigbeePOnlineMap from '../ts/class/zigbeePOnlineMap';
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../const';
 import getAllRemoteDeviceList from './getAllRemoteDeviceList';
 import deviceDataUtil from './deviceDataUtil';
 import deviceMapUtil from './deviceMapUtil';
+import logger from '../log';
 
 interface DeviceInfo {
     isOnline: boolean;
@@ -86,7 +87,7 @@ const UIID_TYPE_LIST = [
     },
     {
         type: EType.ZIGBEE_P,
-        uiidList: [168],
+        uiidList: [168, 243],
     },
     {
         type: EType.CURTAIN,
@@ -240,6 +241,32 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
             //去掉局域网中的长连接设备(Remove long-connection devices in the LAN)
             _.remove(deviceList, (t) => t.deviceId === deviceId);
             deviceList.push(device);
+
+            if ([EUiid.uiid_243].includes(uiid)) {
+                const subDeviceList = generateSubDeviceList(item);
+
+                subDeviceList.forEach((it) => {
+                    const eWeLinkSubDeviceData = eWeLinkDeviceList.find((eItem) => it.deviceId === eItem.itemData.deviceid);
+
+                    if (!eWeLinkSubDeviceData) {
+                        return;
+                    }
+
+                    const subDevice = {
+                        isOnline: eWeLinkSubDeviceData.itemData.online,
+                        isMyAccount: true,
+                        isSupported: ZIGBEE_UIID_DEVICE_LIST.includes(eWeLinkSubDeviceData.itemData.extra.uiid),
+                        displayCategory: getDeviceTypeByUiid(eWeLinkSubDeviceData),
+                        familyName: item.familyName,
+                        deviceId: it.deviceId,
+                        deviceName: eWeLinkSubDeviceData ? eWeLinkSubDeviceData.itemData.name : '',
+                        isSynced: syncedHostDeviceList.includes(it.deviceId),
+                        subDeviceNum: 0,
+                        networkProtocol: ENetworkProtocolType.WIFI,
+                    };
+                    deviceList.push(subDevice);
+                });
+            }
         }
         //同时支持局域网和websocket的设备(Devices that support both LAN and websocket)
         if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
@@ -250,10 +277,32 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 return;
             }
 
+            // if ([EUiid.uiid_28].includes(uiid)) {
+            //     const remoteDeviceList = getAllRemoteDeviceList(deviceId);
+
+            //     remoteDeviceList.forEach((rItem, index) => {
+            //         const subDevice = {
+            //             isOnline:  item.itemData.online,
+            //             isMyAccount: true,
+            //             isSupported: true,
+            //             displayCategory: EType.RF_REMOTE,
+            //             familyName: item.familyName,
+            //             deviceId: `${deviceId}_${index}`,
+            //             deviceName: rItem.name,
+            //             isSynced: typeof rItem?.smartHomeAddonRemoteId === 'string' && syncedHostDeviceList.includes(rItem?.smartHomeAddonRemoteId),
+            //             subDeviceNum: 0,
+            //             networkProtocol: ENetworkProtocolType.WIFI,
+            //         };
+            //         deviceList.push(subDevice);
+            //     });
+
+            //     return
+            // }
+
             const device = {
                 isOnline: item.itemData.online,
                 isMyAccount: true,
-                isSupported: true,
+                isSupported: deviceDataUtil.isSupportLanWebSocketControl(item),
                 displayCategory: getDeviceTypeByUiid(item),
                 familyName: item.familyName,
                 deviceId,
@@ -287,13 +336,13 @@ function generateSubDeviceNum(eWeLinkDeviceData: IEWeLinkDevice, eWeLinkDeviceLi
         return zyx_info?.length ?? 0;
     }
 
-    if ([EUiid.uiid_168].includes(uiid)) {
+    if ([EUiid.uiid_168, EUiid.uiid_243].includes(uiid)) {
         const { subDevices } = eWeLinkDeviceData.itemData.params;
         return subDevices?.length ?? 0;
     }
 
     if ([EUiid.uiid_128].includes(uiid)) {
-        const subDevices = _.get(eWeLinkDeviceData.itemData.params,'subDevices',[])
+        const subDevices = _.get(eWeLinkDeviceData.itemData.params, 'subDevices', []);
         const subDeviceIdList = subDevices.map((item: { deviceid: string }) => item.deviceid);
         //网关中子设备数据不对，去除实际不在的子设备（The sub-device data in the gateway is incorrect. Remove the sub-device that is not actually present.）
         const trueSubDeviceList = eWeLinkDeviceList.filter((item) => subDeviceIdList.includes(item.itemData.deviceid));

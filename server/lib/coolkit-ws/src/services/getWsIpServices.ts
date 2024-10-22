@@ -9,9 +9,9 @@ export default async function getWsIpServices(region: string, useTestEnv: boolea
         return res.data as IDispatchAppRes;
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.log("CK_WS: 获取长连接ip地址报错：", error.message);
+            console.log("CK_WS: failed to obtain ws server domain and ip with error: ", error.message);
         } else {
-            console.log("CK_WS: 获取长连接ip地址报错：", error);
+            console.log("CK_WS: failed to obtain ws server domain and ip with error: ", error);
         }
         return {
             error: 500,

@@ -27,7 +27,6 @@ export default async function syncDeviceOnlineIHost(deviceId: string, isOnline: 
 
         //这个设备未同步 (This device is not synced)
         if (!iHostDeviceData) {
-            logger.info('this device not sync ---------', uiid, deviceId);
             return;
         }
 
@@ -37,8 +36,6 @@ export default async function syncDeviceOnlineIHost(deviceId: string, isOnline: 
             if (!eWeLinkDeviceData) {
                 return;
             }
-
-            logger.info('wsService.isWsConnected()---------------------------', wsService.isWsConnected(), eWeLinkDeviceData.itemData.online);
 
             //websocket连接着且设备云端在线，不同步离线状态（The websocket is connected and the device cloud is online, but the offline state is not synchronized.）
             if (wsService.isWsConnected() && eWeLinkDeviceData.itemData.online == true) {

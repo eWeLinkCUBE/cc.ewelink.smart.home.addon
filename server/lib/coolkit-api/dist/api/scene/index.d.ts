@@ -1,5 +1,5 @@
 import { ApiResponse } from '../index';
-export declare type SceneType = 'manual' | 'condition';
+export type SceneType = 'manual' | 'condition';
 export interface SceneSimple {
     id: string;
 }
@@ -138,6 +138,74 @@ export declare const scene: {
     deleteScene(params: {
         id: string;
     }): Promise<ApiResponse>;
+    setDeviceFeature(params: {
+        deviceid: string;
+        sceneId?: string;
+        trigger?: any;
+        operation?: any;
+        optRanges?: any;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            sceneId: string;
+            trigger: any;
+            operation: any;
+        };
+    }>;
+    execDeviceFeature(params: {
+        sceneId: string;
+        info: any;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            sceneId: string;
+            trigger: any;
+            operation: any;
+        };
+    }>;
+    getMyScene(params: {
+        page: number;
+        size: number;
+        versionTag: string;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            scenes: {
+                id: string;
+                name: string;
+                familyid: string;
+                familyName: string;
+                index: number;
+                sceneType: string;
+                condition?: any;
+                operations: any;
+                iconIndex: number;
+                showOnHomepage: boolean;
+                notify: boolean;
+                handlerType: string;
+            }[];
+        };
+    }>;
+    getSceneHistoryList(params: {
+        from?: number;
+        num?: number;
+        versionTag: string;
+        associatedWebhook?: boolean;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            histories: {
+                triggerType: string;
+                operations: any[];
+                ts: number;
+                sceneName: string;
+            }[];
+        };
+    }>;
     sortScene(params: {
         familyid?: string;
         sceneType: SceneType;

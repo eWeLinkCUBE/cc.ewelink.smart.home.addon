@@ -25,6 +25,7 @@ export default async function getDayKwsDataToggle(req: Request) {
         const name = Object.keys(_.get(iHostState, ['toggle-power-consumption']))[0];
 
         const channelIndex = Number(name) - 1;
+       
 
         const rlSummarize = _.get(iHostState, ['toggle-power-consumption', name, 'rlSummarize'], null);
         const startTime = _.get(iHostState, ['toggle-power-consumption', name, 'timeRange', 'start'], '');

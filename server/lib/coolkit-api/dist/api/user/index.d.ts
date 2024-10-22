@@ -1,5 +1,5 @@
 import { MsgLang, ApiResponse } from '../index';
-export declare type RegionType = 'cn' | 'as' | 'us' | 'eu';
+export type RegionType = 'cn' | 'as' | 'us' | 'eu';
 export interface UserInfo {
     countryCode?: string;
     phoneNumber?: string;
@@ -16,6 +16,12 @@ export interface UserInfo {
     denyRecharge?: boolean;
     accountConsult?: boolean;
     ipCountry?: string;
+    timezone?: {
+        id: string;
+        offset: number;
+    };
+    appForumEnterHide?: boolean;
+    appVersion?: string;
 }
 export interface CommonUserResponse {
     error: number;
@@ -124,6 +130,9 @@ export declare const user: {
             code: string;
             region: string;
             status: string;
+            extra: {
+                applicantName?: string;
+            };
         };
     }>;
     getQrCodeStatus(params: {
@@ -135,6 +144,12 @@ export declare const user: {
             status: string;
             extra: {
                 at?: string;
+                rt?: string;
+                user?: UserInfo;
+                deviceInfo?: any;
+                endpointId?: string;
+                userRegion?: string;
+                clientId?: string;
             };
         };
     }>;
@@ -153,6 +168,7 @@ export declare const user: {
             };
             charts: string[];
             things: string[];
+            cookie?: any;
             scenes: string[];
             name: string;
             setting?: {
@@ -167,6 +183,7 @@ export declare const user: {
     addCast(params: {
         name: string;
         things?: string[];
+        cookie?: any;
         scenes?: string[];
         pinCode?: string;
         charts?: string[];
@@ -205,6 +222,7 @@ export declare const user: {
         name: string;
         things?: string[];
         scenes?: string[];
+        cookie?: any;
         pinCode?: string;
         charts?: string[];
         subject?: {
@@ -227,6 +245,7 @@ export declare const user: {
         id: string;
         name?: string;
         things?: string[];
+        cookie?: any;
         scenes?: string[];
         pinCode?: string;
         charts?: string[];

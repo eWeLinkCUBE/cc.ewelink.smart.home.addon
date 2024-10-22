@@ -5,7 +5,7 @@ exports.UIID187_PROTOCOL = {
     uiid: 187,
     initParams: device => {
         const { switch: state = { switch: { value: 'off' } } } = device.itemData.params;
-        const value = typeof state !== 'string' && state.switch ? state.switch.value : 'off';
+        const value = typeof state === 'object' && state.switch ? state.switch.value : 'off';
         return {
             switch: {
                 switch: {

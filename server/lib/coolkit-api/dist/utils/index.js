@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDomainByRegion = exports.getDomainByCountryCode = exports.sendRequest = exports.getCmsContent = void 0;
+exports.getDomainByRegion = exports.getDomainByCountryCode = exports.sendRequest = exports.getExactUrl = exports.getCmsContent = void 0;
 const crypto_js_1 = __importDefault(require("crypto-js"));
 const axios_1 = __importDefault(require("axios"));
 const store_1 = require("../store");
@@ -86,8 +86,30 @@ function getCmsContent(params) {
     });
 }
 exports.getCmsContent = getCmsContent;
+function getExactUrl(url) {
+    let result = '';
+    const i = url.indexOf('?');
+    if (i !== -1) {
+        result = url.slice(0, i);
+    }
+    else {
+        result = url;
+    }
+    return result;
+}
+exports.getExactUrl = getExactUrl;
 function sendRequest(url, method, params, at) {
     return __awaiter(this, void 0, void 0, function* () {
+        const blockList = (0, store_1.getBlockList)();
+        if (Array.isArray(blockList) && blockList.length !== 0) {
+            if (blockList.some((item) => ((item.method === method) && (item.url === getExactUrl(url))))) {
+                return {
+                    error: -1,
+                    msg: 'this request has been blocked',
+                    data: {}
+                };
+            }
+        }
         const config = {
             url,
             method,
@@ -127,7 +149,7 @@ function sendRequest(url, method, params, at) {
             return res.data;
         }
         catch (e) {
-            console.log(e);
+            console.log('sendRequest() error:', method, url, e.message);
             return {
                 error: 500,
                 msg: 'axios error',
@@ -165,6 +187,9 @@ function getDomainByRegion(region) {
             break;
         case 'eu':
             result = 'https://eu-apia.coolkit.cc';
+            break;
+        case 'ir':
+            result = 'https://ir-apia.coolkit.cc';
             break;
         case 'test':
             result = 'https://test-apia.coolkit.cn';

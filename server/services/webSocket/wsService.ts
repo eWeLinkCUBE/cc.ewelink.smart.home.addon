@@ -7,6 +7,7 @@ import deviceDataUtil from '../../utils/deviceDataUtil';
 import { initCoolkitWs } from '../../utils/initApi';
 import syncDeviceCapabilitiesToIHost from '../public/syncDeviceCapabilitiesToIHost';
 import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import EUiid from '../../ts/enum/EUiid';
 
 async function updateByWs(param: { deviceid: string; ownerApikey: string; params: any }) {
     if (!CoolKitWs.isWsExist()) {
@@ -21,7 +22,7 @@ async function updateByWs(param: { deviceid: string; ownerApikey: string; params
 
     const { deviceid, ownerApikey, params } = param;
     // console.log(`SL : 更新设备信息`, deviceid, ownerApikey, params);
-    logger.info('ws params-------',params)
+    logger.info('ws params-------', params);
     const updateResult = await CoolKitWs.updateThing({
         deviceid,
         ownerApikey,
@@ -29,7 +30,7 @@ async function updateByWs(param: { deviceid: string; ownerApikey: string; params
     });
     // console.log(`SL : 长连接更新结果`, updateResult);
     if (updateResult.error !== 0) {
-        logger.info('updateResult-------',params, updateResult);
+        logger.info('updateResult-------', params, updateResult);
         //{ error: 604, msg: '请求超时' }
         if (updateResult.error === 604) {
             initCoolkitWs();
@@ -49,7 +50,12 @@ async function listenWs(ev: { data: any; type: string; target: any }) {
     // 设备开关更新，发送监听消息(Device switch update, send monitoring message)
     if (_.has(receiveMsg, 'action')) {
         const { deviceid, action, params } = receiveMsg;
-        const uiid = deviceDataUtil.getUiidByDeviceId(deviceid);
+        let uiid = deviceDataUtil.getUiidByDeviceId(deviceid);
+
+        // zigbee-U子设备由zigbee-U决定(zigbee-U sub-device is determined by zigbee-U)
+        if (deviceDataUtil.isZigbeeUSubDevice(deviceid)) {
+            uiid = EUiid.uiid_243;
+        }
 
         // 只允许只支持websocket设备同步状态 Only supports websocket device synchronization status.
         if (![...WEB_SOCKET_UIID_DEVICE_LIST, ...LAN_WEB_SOCKET_UIID_DEVICE_LIST].includes(uiid)) {
@@ -84,5 +90,5 @@ export default {
     updateByWs,
     listenWs,
     isWsExist,
-    isWsConnected
+    isWsConnected,
 };

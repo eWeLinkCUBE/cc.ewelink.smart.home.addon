@@ -28,6 +28,15 @@ exports.other = {
             return yield (0, utils_1.sendRequest)('/v2/thirdparty/oauth-code', 'POST', params, (0, store_1.getAt)());
         });
     },
+    getThirdpartyDevicesStatus(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let ids = [];
+            for (const id of params.deviceids) {
+                ids.push(`"${id}"`);
+            }
+            return yield (0, utils_1.sendRequest)(`/v2/thirdparty/devices/status?thirdparty=${params.thirdparty}&deviceids=[${ids.join(',')}]`, 'GET', null, (0, store_1.getAt)());
+        });
+    },
     getUploadFileS3PreSignUrl(params) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield (0, utils_1.sendRequest)('/v2/utils/upload-s3', 'POST', params, (0, store_1.getAt)());

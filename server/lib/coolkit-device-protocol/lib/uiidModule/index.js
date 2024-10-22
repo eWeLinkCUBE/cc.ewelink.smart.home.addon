@@ -74,6 +74,7 @@ const UIID182_1 = require("./UIID182");
 const UIID187_1 = require("./UIID187");
 const UIID188_1 = require("./UIID188");
 const UIID190_1 = require("./UIID190");
+const UIID191_1 = require("./UIID191");
 const UIID195_1 = require("./UIID195");
 const UIID196_1 = require("./UIID196");
 const UIID197_1 = require("./UIID197");
@@ -82,6 +83,10 @@ const UIID209_1 = require("./UIID209");
 const UIID210_1 = require("./UIID210");
 const UIID211_1 = require("./UIID211");
 const UIID212_1 = require("./UIID212");
+const UIID224_1 = require("./UIID224");
+const UIID236_1 = require("./UIID236");
+const UIID237_1 = require("./UIID237");
+const UIID238_1 = require("./UIID238");
 const UIID1000_1 = require("./UIID1000");
 const UIID1009_1 = require("./UIID1009");
 const UIID1256_1 = require("./UIID1256");
@@ -95,6 +100,7 @@ const UIID3026_1 = require("./UIID3026");
 const UIID3256_1 = require("./UIID3256");
 const UIID3258_1 = require("./UIID3258");
 const UIID4026_1 = require("./UIID4026");
+const UIID4256_1 = require("./UIID4256");
 const UIID7000_1 = require("./UIID7000");
 const UIID7002_1 = require("./UIID7002");
 const UIID7003_1 = require("./UIID7003");
@@ -110,12 +116,16 @@ const UIID7014_1 = require("./UIID7014");
 const UIID7016_1 = require("./UIID7016");
 const UIID7017_1 = require("./UIID7017");
 const UIID7019_1 = require("./UIID7019");
+const UIID7027_1 = require("./UIID7027");
 const UIID20001_1 = require("./UIID20001");
 const UIID20005_1 = require("./UIID20005");
 const UIID20006_1 = require("./UIID20006");
 const UIID20007_1 = require("./UIID20007");
 const UIID20008_1 = require("./UIID20008");
 const UIID30000_1 = require("./UIID30000");
+const UIID30001_1 = require("./UIID30001");
+const UIID30003_1 = require("./UIID30003");
+const UIID30004_1 = require("./UIID30004");
 const uiidMap = new Map([
     [1, UIID1_1.UIID1_PROTOCOL],
     [2, UIID2_1.UIID2_PROTOCOL],
@@ -187,6 +197,7 @@ const uiidMap = new Map([
     [187, UIID187_1.UIID187_PROTOCOL],
     [188, UIID188_1.UIID188_PROTOCOL],
     [190, UIID190_1.UIID190_PROTOCOL],
+    [191, UIID191_1.UIID191_PROTOCOL],
     [195, UIID195_1.UIID195_PROTOCOL],
     [196, UIID196_1.UIID196_PROTOCOL],
     [197, UIID197_1.UIID197_PROTOCOL],
@@ -195,6 +206,10 @@ const uiidMap = new Map([
     [210, UIID210_1.UIID210_PROTOCOL],
     [211, UIID211_1.UIID211_PROTOCOL],
     [212, UIID212_1.UIID212_PROTOCOL],
+    [224, UIID224_1.UIID224_PROTOCOL],
+    [236, UIID236_1.UIID236_PROTOCOL],
+    [237, UIID237_1.UIID237_PROTOCOL],
+    [238, UIID238_1.UIID238_PROTOCOL],
     [1000, UIID1000_1.UIID1000_PROTOCOL],
     [1009, UIID1009_1.UIID1009_PROTOCOL],
     [1256, UIID1256_1.UIID1256_PROTOCOL],
@@ -208,6 +223,7 @@ const uiidMap = new Map([
     [3256, UIID3256_1.UIID3256_PROTOCOL],
     [3258, UIID3258_1.UIID3258_PROTOCOL],
     [4026, UIID4026_1.UIID4026_PROTOCOL],
+    [4256, UIID4256_1.UIID4256_PROTOCOL],
     [7000, UIID7000_1.UIID7000_PROTOCOL],
     [7002, UIID7002_1.UIID7002_PROTOCOL],
     [7003, UIID7003_1.UIID7003_PROTOCOL],
@@ -223,12 +239,16 @@ const uiidMap = new Map([
     [7016, UIID7016_1.UIID7016_PROTOCOL],
     [7017, UIID7017_1.UIID7017_PROTOCOL],
     [7019, UIID7019_1.UIID7019_PROTOCOL],
+    [7027, UIID7027_1.UIID7027_PROTOCOL],
     [20001, UIID20001_1.UIID20001_PROTOCOL],
     [20005, UIID20005_1.UIID20005_PROTOCOL],
     [20006, UIID20006_1.UIID20006_PROTOCOL],
     [20007, UIID20007_1.UIID20007_PROTOCOL],
     [20008, UIID20008_1.UIID20008_PROTOCOL],
-    [30000, UIID30000_1.UIID30000_PROTOCOL]
+    [30000, UIID30000_1.UIID30000_PROTOCOL],
+    [30001, UIID30001_1.UIID30001_PROTOCOL],
+    [30003, UIID30003_1.UIID30003_PROTOCOL],
+    [30004, UIID30004_1.UIID30004_PROTOCOL]
 ]);
 function initCloudDevice(data) {
     return new DeviceClass_1.DeviceClass(data);
@@ -255,7 +275,7 @@ function initUiidParams(data) {
         uiid = deviceItem.itemData.extra.uiid;
     }
     const deviceProtocol = uiidMap.get(uiid);
-    const { fwVersion, rssi, parentid } = data.itemData.params;
-    return deviceProtocol ? Object.assign({ fwVersion, rssi, parentid }, deviceProtocol.initParams(data)) : data.itemData.params;
+    const { fwVersion, rssi, parentid, timers } = data.itemData.params;
+    return deviceProtocol ? Object.assign({ fwVersion, rssi, parentid, timers }, deviceProtocol.initParams(data)) : data.itemData.params;
 }
 exports.initUiidParams = initUiidParams;

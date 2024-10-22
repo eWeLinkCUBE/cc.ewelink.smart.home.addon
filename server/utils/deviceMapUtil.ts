@@ -12,6 +12,7 @@ import deviceDataUtil from './deviceDataUtil';
 import ping from 'ping';
 import { WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../const';
 import { sleep } from './timeUtils';
+import EUiid from '../ts/enum/EUiid';
 
 const { disappearTime } = config.timeConfig;
 
@@ -78,6 +79,10 @@ async function setOffline() {
             //zigbee-p 子设备，只判断网关离线的情况，把子设备离线掉 (The zigbee-p sub-device only determines the offline status of the gateway and takes the sub-device offline.)
             if (ZIGBEE_UIID_DEVICE_LIST.includes(uiid)) {
                 if (item?.parentId) {
+                    // zigbee-U子设备由zigbee-U决定(zigbee-U sub-device is determined by zigbee-U)
+                    if (deviceDataUtil.isZigbeeUSubDevice(item.deviceId)) {
+                        continue;
+                    }
                     if (!DeviceMapClass.deviceMap.has(item.parentId)) {
                         await sleep(50);
                         syncDeviceOnlineToIHost(item.deviceId, false);

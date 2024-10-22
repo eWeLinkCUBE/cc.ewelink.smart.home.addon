@@ -38,18 +38,20 @@ export default class WebSocketService {
     private async _initWs(ts: string): Promise<IResponse> {
         return new Promise(async (resolve) => {
             // 重置所需字段
+            const { debug, region, useTestEnv = false } = WebSocketService.connectConfig;
+            console.log(`CK_WS: wsState being initiated to INIT`);
             this.wsState = 'INIT';
             WebSocketService.initClose = false;
             WebSocketService.initTs = ts;
             // 获取服务器地址
-            const { region, useTestEnv = false } = WebSocketService.connectConfig;
             WebSocketService.listenerHook = getListenerHook(WebSocketService.connectConfig);
             const dispatchAdd = await getWsIpServices(region, useTestEnv);
             if (dispatchAdd.error !== 0) {
+                console.log(`CK_WS: wsState being changed to CLOSED and error being: ${JSON.stringify(dispatchAdd)}`);
                 this.wsState = 'CLOSED';
                 resolve({
                     error: EErrorCode.GET_WS_SERVER_ERROR,
-                    msg: '网络连接有误，无法获取长连接地址',
+                    msg: 'network connect error, can not access ws domain server',
                 })
                 return;
             }
@@ -58,14 +60,21 @@ export default class WebSocketService {
             const ws = new WebSocket(`wss://${dispatchAdd.domain}:${port}/api/ws`);
             // 重连状态下调用不同的监听方法
             WebSocketService.isReconnecting
-                ? EE.once(EEventType.RECONNECT_STATUS, (ev) => {
-                    WebSocketService.connectConfig.debug && console.log(`CK_WS: 重连结束，返回结果`);
+                ? EE.on(`${ts}${EEventType.RECONNECT_STATUS}`, (ev) => {
+                    if (ev.error === 0) {
+                        console.log('CK_WS: reconnect success, and the state change to CONNECTED');
+                        this.wsState = 'CONNECTED';
+                        WebSocketService.isReconnecting = false;
+                    }
+                    WebSocketService.connectConfig.debug && console.log(`CK_WS: reconnect finish`);
                     resolve(ev);
                 })
                 : EE.once(`${ts}${WebSocketService.listenerHook}`, (ev) => {
-                    ev.error === 0 && console.log('CK_WS: 连接成功');
-                    if (ev.error !== 0) {
-                        console.log('CK_WS: 长连接初始化失败');
+                    if (ev.error === 0) {
+                        console.log('CK_WS: init success');
+                        this.wsState = 'CONNECTED';
+                    } else {
+                        console.log('CK_WS: init failed');
                         !WebSocketService.isReconnecting && this.close();
                     }
                     resolve(ev);
@@ -84,9 +93,9 @@ export default class WebSocketService {
                 }
             }, reqTimeout);
 
-            ws.onclose = (ev: WebSocket.CloseEvent) => this.onClose(ev);
+            ws.onclose = (ev: WebSocket.CloseEvent) => this.onClose(ev, ts);
             ws.onopen = (ev: WebSocket.OpenEvent) => this.onOpen(ev, ts);
-            ws.onerror = (ev: WebSocket.ErrorEvent) => this.onError(ev);
+            ws.onerror = (ev: WebSocket.ErrorEvent) => this.onError(ev, ts);
             ws.onmessage = (ev: WebSocket.MessageEvent) => this.onMessage(ev, ts);
             WebSocketService.ws = ws;
         });
@@ -94,41 +103,47 @@ export default class WebSocketService {
 
     /**
      * 内部函数
-     * 长连接重连函数
+     * 长连接重连函数x
      * @private
      * @memberof WebSocketService
      */
     private async reconnect() {
+        if (WebSocketService.isReconnecting) {
+            console.log(`CK_WS: already in reconnect state, won't trigger again`);
+            return;
+        }
+
         WebSocketService.isOpen = false;
         WebSocketService.isReconnecting = true;
         WebSocketService.ws = null;
         WebSocketService.hbInterval && clearInterval(WebSocketService.hbInterval);
         const { debug = false, retryInterval = 5, maxRetry = 10 } = WebSocketService.connectConfig;
 
-        // 不论成功或失败 每个长连接实例都只会重试10次
+        // 不论成功或失败 每个长连接实例都默认只会重试10次
         for (; WebSocketService.retryCount < maxRetry;) {
             const retryCount = WebSocketService.retryCount + 1;
+            // 每次重连之前都清空监听事件
+            this.close();
             if (!WebSocketService.isOpen && !WebSocketService.initClose) {
-                // 每次重连之前都清空监听事件
-                this.close();
-                console.log(`CK_WS: 长连接重连第 ${retryCount} 次`);
-                debug && console.log(`CK_WS: 长连接重连第 ${retryCount} 次开始 ${Date.now()}`);
+                console.log(`CK_WS: reconnect for the ${retryCount} times`);
+                debug && console.log(`CK_WS: the ${retryCount} times reconnection begins in ${Date.now()}`);
                 const res = await this._initWs(`${Date.now()}`);
-                debug && console.log(`CK_WS: 长连接重连第 ${retryCount} 次结束，${JSON.stringify(res, null, 4)}`);
+                debug && console.log(`CK_WS: the ${retryCount} times reconnection ends and result being: ${JSON.stringify(res, null, 4)}`);
                 if (res.error !== 0) {
                     // 重新开启所有监听事件
                     this._onAllEventCallBack();
-                    console.log(`CK_WS: 长连接重连第 ${retryCount} 次失败`, res.msg);
+                    console.log(`CK_WS: the ${retryCount} times reconnection failed and the result being: `, res.msg);
                     EE.emit(EOpenEventType.RECONNECT, {
                         error: EErrorCode.RECONNECT_FAIL,
                         data: {
                             totalTime: WebSocketService.reconnectTotalTime / 1000,
                             count: retryCount
-                        }
+                        },
+                        msg: res?.msg || 'reconnect fail'
                     })
                     WebSocketService.retryCount++;
                     if (retryCount + 1 > maxRetry) {
-                        console.log(`CK_WS: 已达到最大重连次数，不再重连`);
+                        console.log(`CK_WS: reach the reconnection limit, stop reconnect loop`);
                         EE.emit(EOpenEventType.RECONNECT, {
                             error: EErrorCode.RECONNECT_COUNT_EXCEEDED,
                             data: {
@@ -137,17 +152,16 @@ export default class WebSocketService {
                             }
                         })
                     } else {
-                        console.log(`CK_WS: 等待第${retryCount + 1}次重连 ${Date.now()}`);
+                        console.log(`CK_WS: wait for the ${retryCount + 1} time reconnection and the time is: ${Date.now()}`);
                     }
                     // 最大重试间隔为2小时
                     const actualInterval = this._getRetryInterval(retryInterval);
-                    console.log(`SL : actualInterval:`, actualInterval);
                     WebSocketService.reconnectTotalTime = WebSocketService.reconnectTotalTime + actualInterval;
                     await sleep(actualInterval);
                     continue;
                 }
             }
-            console.log(`CK_WS: 长连接重连第 ${retryCount} 次成功`);
+            console.log(`CK_WS: the ${retryCount} times reconnection success`);
             // 重新开启所有监听事件
             this._onAllEventCallBack();
             EE.emit(EOpenEventType.RECONNECT, {
@@ -161,16 +175,11 @@ export default class WebSocketService {
             break;
         }
 
+        // 重连失败
+        // 1.关闭重连状态 2.主动关闭长连接
         if (!WebSocketService.isOpen) {
-            const errorMsg = {
-                error: EErrorCode.INIT_FAIL,
-                msg: '长连接出现错误，重试失败，请尝试重新连接！',
-            };
-            // 重连失败
-            // 1.关闭重连状态 2.主动关闭长连接 3.通知用户
             WebSocketService.ws = null;
             WebSocketService.isReconnecting = false;
-            EE.emit(EEventType.RECONNECT, errorMsg);
         }
     }
 
@@ -181,7 +190,7 @@ export default class WebSocketService {
      * @memberof WebSocketService
      */
     private async onOpen(ev: WebSocket.OpenEvent, ts: string) {
-        WebSocketService.connectConfig.debug && console.log('CK_WS: 长连接已开启');
+        WebSocketService.connectConfig.debug && console.log('CK_WS: ws connection opened');
         WebSocketService.isOpen && EE.emit(EOpenEventType.OPEN, ev);
         // 发送消息开启连接
         await WebSocketService._sendHandShakeMsg(ts);
@@ -195,21 +204,22 @@ export default class WebSocketService {
      * @param {Error} err
      * @memberof WebSocketService
      */
-    private async onError(ev: WebSocket.ErrorEvent) {
+    private async onError(ev: WebSocket.ErrorEvent, ts?: string) {
         WebSocketService.isOpen && EE.emit(EOpenEventType.ERROR, ev);
+        console.log(`CK_WS: wsState being changed to ERROR`);
         this.wsState = 'ERROR';
 
         if (!WebSocketService.isReconnecting) {
             // 尝试重连
-            console.log('CK_WS: 长连接出错，尝试重连');
+            console.log('CK_WS: ws connect error, start reconnection');
             await this.reconnect();
             return;
         }
 
         // 重连失败 发送消息
         if (WebSocketService.isReconnecting) {
-            WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接出错，本次重连失败`);
-            EE.emit(EEventType.RECONNECT_STATUS, {
+            WebSocketService.connectConfig.debug && console.log(`CK_WS: connection error, reconnection failed`);
+            EE.emit(`${ts}${EEventType.RECONNECT_STATUS}`, {
                 error: EErrorCode.RECONNECT_FAIL,
                 msg: 'reconnect error',
             });
@@ -224,13 +234,14 @@ export default class WebSocketService {
      * @param {string} reason
      * @memberof WebSocketService
      */
-    private async onClose(ev: WebSocket.CloseEvent) {
-        WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接已关闭`);
+    private async onClose(ev: WebSocket.CloseEvent, ts?: string) {
+        WebSocketService.connectConfig.debug && console.log(`CK_WS: ws connection closed`);
         WebSocketService.isOpen && EE.emit(EOpenEventType.CLOSE, ev);
+        console.log(`CK_WS: wsState being changed to CLOSED by close callback`);
         this.wsState = 'CLOSED';
         // 用户主动关闭则不再连接
         if (WebSocketService.initClose) {
-            console.log('CK_WS: 用户主动关闭');
+            console.log('CK_WS: the user choose to close the connection');
             WebSocketService.hbInterval && clearInterval(WebSocketService.hbInterval!);
             WebSocketService.initClose = false;
             return;
@@ -238,15 +249,15 @@ export default class WebSocketService {
 
         if (!WebSocketService.isReconnecting) {
             // 否则重连
-            console.log('CK_WS: 长连接被动关闭，尝试重连');
+            console.log('CK_WS: connection close due to error, start reconnection');
             await this.reconnect();
             return;
         }
 
         // 重连失败 发送消息
         if (WebSocketService.isReconnecting) {
-            WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接关闭，本次重连失败`);
-            EE.emit(EEventType.RECONNECT_STATUS, {
+            WebSocketService.connectConfig.debug && console.log(`CK_WS: connection closed, reconnection failed`);
+            EE.emit(`${ts}${EEventType.RECONNECT_STATUS}`, {
                 error: EErrorCode.RECONNECT_COUNT_EXCEEDED,
                 msg: 'reconnect close',
             });
@@ -266,7 +277,7 @@ export default class WebSocketService {
         WebSocketService.isOpen && EE.emit(EOpenEventType.MESSAGE, ev);
         // 心跳返回值
         const { data } = ev;
-        debug && console.log(`CK_WS: 长连接接收消息: `, data);
+        debug && console.log(`CK_WS: ws connection receive message: `, data);
         if (data === 'pong') {
             EE.emit(EEventType.PING_PONG);
             return;
@@ -275,8 +286,7 @@ export default class WebSocketService {
         const decodedData = JSON.parse(data as string);
         // 握手返回值
         if (decodedData.error === 0 && decodedData.config && decodedData.config.hb && ts) {
-            console.log('CK_WS: 长连接握手成功');
-            this.wsState = 'CONNECTED';
+            console.log('CK_WS: ws connection handshake success');
             WebSocketService.isOpen = true;
 
             // 配置心跳间隔时间
@@ -300,11 +310,10 @@ export default class WebSocketService {
 
             // 重连的情况下发送重连相关监听事件
             if (WebSocketService.isReconnecting) {
-                EE.emit(EEventType.RECONNECT_STATUS, {
+                EE.emit(`${ts}${EEventType.RECONNECT_STATUS}`, {
                     error: 0,
                     msg: 'success',
                 });
-                WebSocketService.isReconnecting = false;
                 return;
             }
 
@@ -318,7 +327,15 @@ export default class WebSocketService {
         }
 
         if (decodedData.error !== 0 && decodedData.actionName === 'userOnline') {
-            console.log('CK_WS: 长连接握手出错', decodedData.error);
+            console.log('CK_WS: ws connection handshake error: ', decodedData.error);
+
+            if (WebSocketService.isReconnecting) {
+                WebSocketService.connectConfig.debug && console.log(`CK_WS: ws connection handshake error, reconnection failed`);
+                EE.emit(`${ts}${EEventType.RECONNECT_STATUS}`, {
+                    error: EErrorCode.RECONNECT_FAIL,
+                    msg: 'auth fail',
+                });
+            }
 
             EE.emit(`${ts}${WebSocketService.listenerHook}`, {
                 error: decodedData.error,
@@ -391,13 +408,14 @@ export default class WebSocketService {
             // 超出规定心跳时间进行重连
             timer = setTimeout(async () => {
                 // 重试连接
+                console.log(`CK_WS: reach the heartbeat limit, start reconnection`);
                 await this.reconnect();
                 resolve(1);
             }, maxTime);
 
             // 接收到消息则不进行重连
             EE.once(EEventType.PING_PONG, () => {
-                WebSocketService.connectConfig.debug && console.log(`CK_WS: 心跳正常 ${Date.now()}`);
+                WebSocketService.connectConfig.debug && console.log(`CK_WS: heartbeat working as expected in ${Date.now()}`);
                 // 清除重连定时器
                 timer && clearTimeout(timer);
                 resolve(1);
@@ -412,7 +430,11 @@ export default class WebSocketService {
     * @memberof WebSocketService
     */
     private _onAllEventCallBack() {
+        const eventNames = EE.eventNames();
+
         for (const [name, cb] of WebSocketService.callBackStack.entries()) {
+            // 已注册的事件不再重复注册
+            if (eventNames.includes(name)) continue;
             EE.on(name, cb);
         }
     }
@@ -429,7 +451,7 @@ export default class WebSocketService {
         let interval = retryInterval;
         // 默认间隔为5s
         if (retryInterval < 5) {
-            WebSocketService.connectConfig.debug && console.log("CK_WS: 设置重试间隔小于默认值5秒，更改为默认值，即5秒");
+            WebSocketService.connectConfig.debug && console.log("CK_WS: retry interval set to lower than default interval(5s), return to default setting");
             interval = 5;
         }
         const userInterval = retryCount * interval * 1000;
@@ -449,7 +471,7 @@ export default class WebSocketService {
     */
     public static sendMessage(params: IWsParams | string) {
         if (WebSocketService.ws && WebSocketService.ws.readyState === 1) {
-            WebSocketService.connectConfig.debug && console.log(`CK_WS: 长连接发送消息，时间点为：${Date.now()}， 参数为：`, params);
+            WebSocketService.connectConfig.debug && console.log(`CK_WS: ws connection sends message in ${Date.now()} and with params being `, params);
             // 发送心跳
             if (typeof params === 'string') {
                 WebSocketService.ws.send(params);
@@ -496,12 +518,13 @@ export default class WebSocketService {
      */
     public async init() {
         if (WebSocketService.ws) {
-            WebSocketService.connectConfig.debug && console.log('CK_WS: 长连接已存在，不需要初始化');
+            WebSocketService.connectConfig.debug && console.log('CK_WS: ws connection exists, stop init');
             return {
                 error: 0,
-                msg: '长连接已存在，不需要初始化',
+                msg: 'ws connection exists, stop init',
             };
         }
+        WebSocketService.connectConfig.debug && console.log("CK_WS: ws connection begin init")
         return await this._initWs(`${Date.now()}`);
     }
 
@@ -513,11 +536,12 @@ export default class WebSocketService {
      */
     public close(userInit: boolean = false) {
         try {
+            WebSocketService.connectConfig.debug && console.log('CK_WS: close function called');
             EE.removeAllListeners();
             if (WebSocketService.ws && WebSocketService.ws.readyState === WebSocketService.ws.OPEN) {
-                WebSocketService.connectConfig.debug && console.log('CK_WS: 长连接开始关闭');
+                WebSocketService.connectConfig.debug && console.log('CK_WS: ws connection begin close');
                 if (userInit) {
-                    WebSocketService.connectConfig.debug && console.log('CK_WS: 本次关闭为用户主动调用close方法');
+                    WebSocketService.connectConfig.debug && console.log('CK_WS: the user choose to close the connection');
                     WebSocketService.initClose = true;
                 }
                 // 兼容 web 端与 node 端的使用
@@ -529,10 +553,11 @@ export default class WebSocketService {
                 }
                 WebSocketService.ws = null;
                 WebSocketService.hbInterval && clearInterval(WebSocketService.hbInterval);
+                console.log(`CK_WS: wsState being changed to CLOSED by close function`);
                 this.wsState = 'CLOSED';
             }
         } catch (error) {
-            console.error('CK_WS: 长连接关闭报错 ==', error);
+            console.error('CK_WS: ws function close error: ', error);
         }
     }
 

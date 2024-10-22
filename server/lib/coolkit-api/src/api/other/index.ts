@@ -84,6 +84,30 @@ export const other = {
         return await sendRequest('/v2/thirdparty/oauth-code', 'POST', params, getAt());
     },
 
+    /**
+     * 获取第三方设备状态
+     */
+    async getThirdpartyDevicesStatus(params: {
+        thirdparty: string;
+        deviceids: string[];
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            devices: {
+                deviceid: string;
+                online: boolean;
+                params: any;
+            }[];
+        };
+    }> {
+        let ids = [];
+        for (const id of params.deviceids) {
+            ids.push(`"${id}"`);
+        }
+        return await sendRequest(`/v2/thirdparty/devices/status?thirdparty=${params.thirdparty}&deviceids=[${ids.join(',')}]`, 'GET', null, getAt());
+    },
+
     // 获取上传文件到 S3 的预签名 URL
     async getUploadFileS3PreSignUrl(params: {
         from: string;

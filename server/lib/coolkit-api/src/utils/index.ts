@@ -2,7 +2,7 @@ import CryptoJS from 'crypto-js';
 import axios, { AxiosRequestConfig } from 'axios';
 
 import { ReqMethod, ApiResponse } from '../api';
-import { getAppId, getAppSecret, getDomain, setDomain, getDebug, getUseTestEnv, getTimeout } from '../store';
+import { getAppId, getAppSecret, getDomain, setDomain, getDebug, getUseTestEnv, getTimeout, getBlockList } from '../store';
 import { regionMap } from './regionMap';
 
 /**
@@ -104,6 +104,23 @@ export async function getCmsContent(params: {
 }
 
 /**
+ * 获取 URL 本身（不包含查询字符串）
+ *
+ * @param url URL 地址
+ */
+export function getExactUrl(url: string) {
+    let result = '';
+    const i = url.indexOf('?');
+    if (i !== -1) {
+        result = url.slice(0, i);
+    } else {
+        result = url;
+    }
+
+    return result;
+}
+
+/**
  * 发送请求
  * @param url API 的 URL
  * @param method 请求方法
@@ -111,6 +128,18 @@ export async function getCmsContent(params: {
  * @param at Access Token
  */
 export async function sendRequest(url: string, method: ReqMethod, params: any, at?: string): Promise<ApiResponse> {
+    // 拦截请求
+    const blockList = getBlockList();
+    if (Array.isArray(blockList) && blockList.length !== 0) {
+        if (blockList.some((item) => ((item.method === method) && (item.url === getExactUrl(url))))) {
+            return {
+                error: -1,
+                msg: 'this request has been blocked',
+                data: {}
+            }
+        }
+    }
+
     const config: AxiosRequestConfig = {
         url,
         method,
@@ -120,15 +149,15 @@ export async function sendRequest(url: string, method: ReqMethod, params: any, a
     };
 
     // 设置 headers
-    config.headers['X-CK-Nonce'] = getNonce();
-    config.headers['X-CK-Appid'] = getAppId();
+    config.headers!['X-CK-Nonce'] = getNonce();
+    config.headers!['X-CK-Appid'] = getAppId();
     if (at) {
-        config.headers['Authorization'] = `Bearer ${at}`;
+        config.headers!['Authorization'] = `Bearer ${at}`;
     } else {
-        config.headers['Authorization'] = `Sign ${getAuthSign(method, params)}`;
+        config.headers!['Authorization'] = `Sign ${getAuthSign(method, params)}`;
     }
     if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-        config.headers['Content-Type'] = 'application/json';
+        config.headers!['Content-Type'] = 'application/json';
     }
 
     // 设置参数
@@ -203,6 +232,10 @@ export function getDomainByRegion(region: string): string {
             break;
         case 'eu':
             result = 'https://eu-apia.coolkit.cc';
+            break;
+        /* 'ir' support updated at version 0.7.0 */
+        case 'ir':
+            result = 'https://ir-apia.coolkit.cc';
             break;
         case 'test':
             result = 'https://test-apia.coolkit.cn';

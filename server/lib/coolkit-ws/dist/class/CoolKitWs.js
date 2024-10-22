@@ -20,10 +20,10 @@ class CoolKitWs {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if ((config.userAgent === 'app' || config.userAgent === 'pc_ewelink') && (!config.at || !config.apikey || !config.appid || !config.region)) {
-                    throw new Error('CK_WS: app端长连接缺少必须参数');
+                    throw new Error('CK_WS: missing some parameter for app agent');
                 }
                 if (config.userAgent === 'device' && (!config.region || !config.apikey || !config.deviceid)) {
-                    throw new Error('CK_WS: 设备端长连接缺少必须参数');
+                    throw new Error('CK_WS: missing some parameter for device agent');
                 }
                 const newWs = new WebSocket_1.default(config);
                 const result = yield newWs.init();
@@ -31,7 +31,7 @@ class CoolKitWs {
                 return result;
             }
             catch (error) {
-                throw new Error(`CK_WS: 长连接连接出错, ${error}`);
+                throw new Error(`CK_WS: ws init error: ${error}`);
             }
         });
     }
@@ -41,7 +41,7 @@ class CoolKitWs {
     }
     isWsExist() {
         if (CoolKitWs.ws) {
-            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: 长连接已存在，状态为${CoolKitWs.ws.wsState}`);
+            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: connect exist, and the state being: ${CoolKitWs.ws.wsState}`);
             if (CoolKitWs.ws.wsState === 'CLOSED') {
                 CoolKitWs.ws = null;
                 return false;
@@ -52,10 +52,10 @@ class CoolKitWs {
     }
     isWsConnected() {
         if (CoolKitWs.ws) {
-            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: 长连接状态为${CoolKitWs.ws.wsState}`);
             if (CoolKitWs.ws.wsState === 'CONNECTED') {
                 return true;
             }
+            WebSocket_1.default.connectConfig.debug && console.log(`CK_WS: the connect state being: ${CoolKitWs.ws.wsState}`);
             return false;
         }
         return false;
@@ -75,7 +75,7 @@ class CoolKitWs {
             const ws = this.getWs();
             const { deviceid, ownerApikey, params } = deviceConfig;
             if (!deviceid || !ownerApikey || !params) {
-                throw new Error('CK_WS: 参数不能为空');
+                throw new Error('CK_WS: all the parameters is not allowed to be null!');
             }
             const { sequence } = yield ws.sendThing(deviceConfig, 'update');
             return yield this.getMessage(sequence, deviceid);
@@ -91,7 +91,7 @@ class CoolKitWs {
             }
             const { deviceid, ownerApikey, params } = queryConfig;
             if (!deviceid || !ownerApikey || !params) {
-                throw new Error('CK_WS: 参数不能为空');
+                throw new Error('CK_WS: all the parameters is not allowed to be null!');
             }
             const { sequence } = yield CoolKitWs.ws.sendThing(queryConfig, 'query');
             return yield this.getMessage(sequence, deviceid);
@@ -107,7 +107,7 @@ class CoolKitWs {
             }
             const { deviceid, ownerApikey, params } = upgradeConfig;
             if (!deviceid || !ownerApikey || !params) {
-                throw new Error('CK_WS: 参数不能为空');
+                throw new Error('CK_WS: all the parameters is not allowed to be null!');
             }
             const { sequence } = yield CoolKitWs.ws.sendThing(upgradeConfig, 'upgrade');
             return yield this.getMessage(sequence, deviceid);
@@ -143,7 +143,7 @@ class CoolKitWs {
         if (CoolKitWs.ws) {
             return CoolKitWs.ws;
         }
-        throw new Error('CK_WS: 请使用 init 方法初始化长连接后再调用本方法！');
+        throw new Error('CK_WS: please init first!');
     }
 }
 CoolKitWs.ws = null;

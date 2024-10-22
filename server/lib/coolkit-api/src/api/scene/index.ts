@@ -174,6 +174,98 @@ export const scene = {
     },
 
     /**
+     * 设置设备的功能场景
+     */
+    async setDeviceFeature(params: {
+        deviceid: string;
+        sceneId?: string;
+        trigger?: any;
+        operation?: any;
+        optRanges?: any;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            sceneId: string;
+            trigger: any;
+            operation: any;
+        };
+    }> {
+        return await sendRequest('/v2/smartscene2/device-feature', 'POST', params, getAt());
+    },
+
+    /**
+     * 执行设备的功能场景
+     */
+    async execDeviceFeature(params: {
+        sceneId: string;
+        info: any;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            sceneId: string;
+            trigger: any;
+            operation: any;
+        };
+    }> {
+        return await sendRequest('/v2/smartscene2/device-feature/execute', 'POST', params, getAt());
+    },
+
+    /**
+     * 获取自身场景
+     */
+    async getMyScene(params: {
+        page: number;
+        size: number;
+        versionTag: string;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            scenes: {
+                id: string;
+                name: string;
+                familyid: string;
+                familyName: string;
+                index: number;
+                sceneType: string;
+                condition?: any;
+                operations: any;
+                iconIndex: number;
+                showOnHomepage: boolean;
+                notify: boolean;
+                handlerType: string;
+            }[];
+        };
+    }> {
+        return await sendRequest('/v2/smartscene2/my-scene', 'POST', params, getAt());
+    },
+
+    /**
+     * 获取场景执行记录列表
+     */
+    async getSceneHistoryList(params: {
+        from?: number;
+        num?: number;
+        versionTag: string;
+        associatedWebhook?: boolean;
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            histories: {
+                triggerType: string;
+                operations: any[];
+                ts: number;
+                sceneName: string;
+            }[];
+        };
+    }> {
+        return await sendRequest('/v2/smartscene2/history-list', 'POST', params, getAt());
+    },
+
+    /**
      * 场景排序
      * @param params 请求参数
      */

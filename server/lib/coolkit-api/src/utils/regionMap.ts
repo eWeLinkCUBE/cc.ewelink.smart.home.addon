@@ -365,7 +365,7 @@ export const regionMap = [
   },
   {
     "countryCode": "+98",
-    "region": "as"
+    "region": "ir"
   },
   {
     "countryCode": "+964",

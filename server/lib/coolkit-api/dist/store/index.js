@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTimeout = exports.setTimeout = exports.getUseTestEnv = exports.setUseTestEnv = exports.getDebug = exports.setDebug = exports.getRt = exports.setRt = exports.getAt = exports.setAt = exports.getDomain = exports.setDomain = exports.getAppSecret = exports.setAppSecret = exports.getAppId = exports.setAppId = exports.showStore = void 0;
+exports.getBlockList = exports.setBlockList = exports.getTimeout = exports.setTimeout = exports.getUseTestEnv = exports.setUseTestEnv = exports.getDebug = exports.setDebug = exports.getRt = exports.setRt = exports.getAt = exports.setAt = exports.getDomain = exports.setDomain = exports.getAppSecret = exports.setAppSecret = exports.getAppId = exports.setAppId = exports.showStore = void 0;
 const store = {
     appId: '',
     appSecret: '',
@@ -9,7 +9,8 @@ const store = {
     rt: '',
     debug: false,
     useTestEnv: false,
-    timeout: 15000
+    timeout: 15000,
+    blockList: []
 };
 function showStore() {
     console.log(store);
@@ -79,3 +80,11 @@ function getTimeout() {
     return store.timeout;
 }
 exports.getTimeout = getTimeout;
+function setBlockList(v) {
+    store.blockList = v;
+}
+exports.setBlockList = setBlockList;
+function getBlockList() {
+    return store.blockList;
+}
+exports.getBlockList = getBlockList;

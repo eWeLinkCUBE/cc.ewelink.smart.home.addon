@@ -1,4 +1,5 @@
-import { showStore } from './store';
+import { showStore, setBlockList } from './store';
+import { type CoolkitEnergy } from './api';
 import { getCmsContent } from './utils';
 declare function init(params: {
     appId: string;
@@ -111,6 +112,9 @@ declare const _default: {
                 code: string;
                 region: string;
                 status: string;
+                extra: {
+                    applicantName?: string | undefined;
+                };
             };
         }>;
         getQrCodeStatus(params: {
@@ -122,6 +126,12 @@ declare const _default: {
                 status: string;
                 extra: {
                     at?: string | undefined;
+                    rt?: string | undefined;
+                    user?: import("./api/user").UserInfo | undefined;
+                    deviceInfo?: any;
+                    endpointId?: string | undefined;
+                    userRegion?: string | undefined;
+                    clientId?: string | undefined;
                 };
             };
         }>;
@@ -140,6 +150,7 @@ declare const _default: {
                 };
                 charts: string[];
                 things: string[];
+                cookie?: any;
                 scenes: string[];
                 name: string;
                 setting?: {
@@ -154,6 +165,7 @@ declare const _default: {
         addCast(params: {
             name: string;
             things?: string[] | undefined;
+            cookie?: any;
             scenes?: string[] | undefined;
             pinCode?: string | undefined;
             charts?: string[] | undefined;
@@ -192,6 +204,7 @@ declare const _default: {
             name: string;
             things?: string[] | undefined;
             scenes?: string[] | undefined;
+            cookie?: any;
             pinCode?: string | undefined;
             charts?: string[] | undefined;
             subject?: {
@@ -214,6 +227,7 @@ declare const _default: {
             id: string;
             name?: string | undefined;
             things?: string[] | undefined;
+            cookie?: any;
             scenes?: string[] | undefined;
             pinCode?: string | undefined;
             charts?: string[] | undefined;
@@ -362,6 +376,7 @@ declare const _default: {
         updateDeviceInfo(params: {
             deviceid: string;
             name?: string | undefined;
+            familyid?: string | undefined;
             roomid?: string | undefined;
         }): Promise<import("./api").ApiResponse>;
         delDevice(params: {
@@ -424,6 +439,27 @@ declare const _default: {
             id: string;
             params: any;
         }): Promise<import("./api").ApiResponse>;
+        getAlarmHistory(params: {
+            deviceid: string;
+            type: string;
+            from?: number | undefined;
+            num?: number | undefined;
+            rfChls?: string | undefined;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                alarmHistories: {
+                    request: string;
+                    opsTime: number;
+                    userAgent: string;
+                    rfChl?: number | undefined;
+                    opsSwitchs?: string[] | undefined;
+                    opsAccount?: string | undefined;
+                    triggerType?: number | undefined;
+                }[];
+            };
+        }>;
         addGroupDevice(params: {
             id: string;
             deviceidList: string[];
@@ -565,6 +601,67 @@ declare const _default: {
                 updatedThingList: any[];
             };
         }>;
+        getDeviceUsage(params: {
+            deviceid: string;
+            last: string;
+            dateType: string;
+            format?: string | undefined;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                temperature?: {
+                    hourly?: number[] | undefined;
+                    daily?: {
+                        min?: number | undefined;
+                        max?: number | undefined;
+                        avg?: number | undefined;
+                    }[] | undefined;
+                    monthly?: {
+                        min?: number | undefined;
+                        max?: number | undefined;
+                        avg?: number | undefined;
+                    }[] | undefined;
+                } | undefined;
+                humidity?: {
+                    hourly: number[];
+                    daily: {
+                        min?: number | undefined;
+                        max?: number | undefined;
+                    }[];
+                    monthly: {
+                        min?: number | undefined;
+                        max?: number | undefined;
+                    }[];
+                } | undefined;
+                targetTemperature?: {
+                    hourly: number[];
+                    daily: {
+                        avg?: number | undefined;
+                    }[];
+                    monthly: {
+                        avg?: number | undefined;
+                    }[];
+                } | undefined;
+                gasUsage?: {
+                    hourly: number[];
+                    daily: {
+                        avg?: number | undefined;
+                    }[];
+                    monthly: {
+                        avg?: number | undefined;
+                    }[];
+                } | undefined;
+                hourlyData?: {
+                    date: string;
+                    time: string;
+                    temperature?: string | undefined;
+                    humidity?: string | undefined;
+                    targetTemperature?: string | undefined;
+                    gasUsage?: string | undefined;
+                }[] | undefined;
+            };
+        }>;
         getTempHumHistory(params: {
             deviceid: string;
             last: string;
@@ -600,6 +697,25 @@ declare const _default: {
                     time: string;
                     temperature: string | number;
                     humidity: string | number;
+                }[];
+            };
+        }>;
+        getMatterNodesReachableHubs(params: {
+            deviceIds: string;
+            includeOfflineHub?: boolean | undefined;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                hubs: {
+                    matterNodeId: string;
+                    deviceId: string;
+                    online: boolean;
+                    name: string;
+                    familyId: string;
+                    familyName: string;
+                    roomId?: string | undefined;
+                    roomName?: string | undefined;
                 }[];
             };
         }>;
@@ -825,6 +941,74 @@ declare const _default: {
         deleteScene(params: {
             id: string;
         }): Promise<import("./api").ApiResponse>;
+        setDeviceFeature(params: {
+            deviceid: string;
+            sceneId?: string | undefined;
+            trigger?: any;
+            operation?: any;
+            optRanges?: any;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                sceneId: string;
+                trigger: any;
+                operation: any;
+            };
+        }>;
+        execDeviceFeature(params: {
+            sceneId: string;
+            info: any;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                sceneId: string;
+                trigger: any;
+                operation: any;
+            };
+        }>;
+        getMyScene(params: {
+            page: number;
+            size: number;
+            versionTag: string;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                scenes: {
+                    id: string;
+                    name: string;
+                    familyid: string;
+                    familyName: string;
+                    index: number;
+                    sceneType: string;
+                    condition?: any;
+                    operations: any;
+                    iconIndex: number;
+                    showOnHomepage: boolean;
+                    notify: boolean;
+                    handlerType: string;
+                }[];
+            };
+        }>;
+        getSceneHistoryList(params: {
+            from?: number | undefined;
+            num?: number | undefined;
+            versionTag: string;
+            associatedWebhook?: boolean | undefined;
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                histories: {
+                    triggerType: string;
+                    operations: any[];
+                    ts: number;
+                    sceneName: string;
+                }[];
+            };
+        }>;
         sortScene(params: {
             familyid?: string | undefined;
             sceneType: import("./api/scene").SceneType;
@@ -919,6 +1103,20 @@ declare const _default: {
                 code?: string | undefined;
                 expiredAt?: number | undefined;
                 extra?: any;
+            };
+        }>;
+        getThirdpartyDevicesStatus(params: {
+            thirdparty: string;
+            deviceids: string[];
+        }): Promise<{
+            error: number;
+            msg: string;
+            data: {
+                devices: {
+                    deviceid: string;
+                    online: boolean;
+                    params: any;
+                }[];
             };
         }>;
         getUploadFileS3PreSignUrl(params: {
@@ -1084,6 +1282,20 @@ declare const _default: {
             };
         }>;
     };
+    energy: {
+        getDeviceEnergyGroup(params: {
+            deviceid?: string | undefined;
+        }): Promise<CoolkitEnergy.IDeviceEnergyResp<CoolkitEnergy.IGetDeviceEnergyGroupResp[]>>;
+        deleteDeviceEnergyGroup(params: {
+            id: string;
+        }): Promise<CoolkitEnergy.IDeviceEnergyResp<any>>;
+        createDeviceEnergyGroup(params: CoolkitEnergy.ICreateDeviceEnergyReq): Promise<CoolkitEnergy.IDeviceEnergyResp<CoolkitEnergy.ICreateDeviceEnergyGroupResp>>;
+        updateDeviceEnergyGroup(params: CoolkitEnergy.IUpdateDeviceEnergyReq): Promise<CoolkitEnergy.IDeviceEnergyResp<any>>;
+        getEnergyData(params: CoolkitEnergy.IEnergyDataReq): Promise<CoolkitEnergy.IDeviceEnergyResp<CoolkitEnergy.IGetDeviceEnergyDataResp>>;
+        getEnergyDevices(): Promise<CoolkitEnergy.IDeviceEnergyResp<CoolkitEnergy.IEnergyDevicesResp[]>>;
+    };
     getCmsContent: typeof getCmsContent;
+    setBlockList: typeof setBlockList;
 };
 export default _default;
+export { type CoolkitEnergy };

@@ -3,6 +3,7 @@ import { syncDeviceOnlineToIHost } from '../../api/iHost';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../../log';
 import deviceDataUtil from '../../utils/deviceDataUtil';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
 
 /** 设备上下线状态上报 (Report device online and offline status)*/
 export default async function syncRfDeviceOnlineToIHost(deviceId: string, isOnline: boolean) {
@@ -11,6 +12,20 @@ export default async function syncRfDeviceOnlineToIHost(deviceId: string, isOnli
         const iHostDeviceDataList = deviceDataUtil.getIHostDeviceDataListByDeviceId(deviceId);
 
         if (!iHostDeviceDataList) return;
+        
+        //TODO：
+        // const uiid = deviceDataUtil.getUiidByDeviceId(deviceId);
+
+        // if (isOnline === false && LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
+        //     const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+
+        //     if (!eWeLinkDeviceData) {
+        //         return;
+        //     }
+        //     if (eWeLinkDeviceData.itemData.online == true) {
+        //         return;
+        //     }
+        // }
 
         const isAllOnline = iHostDeviceDataList.every((item) => item.online);
 

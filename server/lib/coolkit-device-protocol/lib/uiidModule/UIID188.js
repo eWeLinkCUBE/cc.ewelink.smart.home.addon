@@ -18,7 +18,7 @@ exports.UIID188_PROTOCOL = {
                 value: 5600
             }
         } } = device.itemData.params;
-        const value = typeof state !== 'string' && state.switch ? state.switch.value : 'off';
+        const value = typeof state === 'object' && state.switch ? state.switch.value : 'off';
         return {
             switch: {
                 switch: {

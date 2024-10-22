@@ -41,6 +41,7 @@ export const SINGLE_PROTOCOL_LIST = [
     EUiid.uiid_173,
     EUiid.uiid_59,
     EUiid.uiid_137,
+    EUiid.uiid_7020,
 ];
 
 //支持多通道协议的uiid (Support uiid for multi-channel protocols)
@@ -70,6 +71,8 @@ export const MULTI_PROTOCOL_LIST = [
     EUiid.uiid_4256,
     EUiid.uiid_7013,
     EUiid.uiid_130,
+    EUiid.uiid_7021,
+    EUiid.uiid_7022,
 ];
 
 //单通道使用多通道协议的uiid (Single channel uses the uiid of the multi-channel protocol)
@@ -109,6 +112,15 @@ export const ZIGBEE_UIID_DEVICE_LIST = [
     EUiid.uiid_7019,
     EUiid.uiid_5026,
     EUiid.uiid_7017,
+    EUiid.uiid_7020,
+    EUiid.uiid_7021,
+    EUiid.uiid_7022,
+    EUiid.uiid_1001,
+    EUiid.uiid_1002,
+    EUiid.uiid_1003,
+    EUiid.uiid_1004,
+    EUiid.uiid_1005,
+    EUiid.uiid_1006,
 ];
 
 /** zigbee 窗帘子设备 (zigbee curtain sub-device) */
@@ -128,27 +140,27 @@ export const WEB_SOCKET_UIID_DEVICE_LIST = [
     EUiid.uiid_11,
     EUiid.uiid_128,
     EUiid.uiid_130,
+    EUiid.uiid_243,
 ];
 
 /** 支持局域网和 websocket的设备 (Devices supporting LAN and websocket) */
 export const LAN_WEB_SOCKET_UIID_DEVICE_LIST = [
-    // EUiid.uiid_1,
-    // EUiid.uiid_6,
-    // EUiid.uiid_14,
-    // EUiid.uiid_4,
-    // EUiid.uiid_8,
-    // EUiid.uiid_7,
+    EUiid.uiid_1,
+    EUiid.uiid_6,
+    EUiid.uiid_14,
+    EUiid.uiid_4,
+    EUiid.uiid_8,
+    EUiid.uiid_7,
     // EUiid.uiid_28,
-    // EUiid.uiid_15,
-    // EUiid.uiid_32,
-    // EUiid.uiid_2,
-    // EUiid.uiid_138,
-    // EUiid.uiid_126,
-    // EUiid.uiid_3,
-    // EUiid.uiid_9
+    EUiid.uiid_15,
+    EUiid.uiid_2,
+    EUiid.uiid_126,
+    EUiid.uiid_3,
+    EUiid.uiid_9,
     EUiid.uiid_138,
-    EUiid.uiid_32
-]
+    EUiid.uiid_32,
+    EUiid.uiid_165,
+];
 /** zigbee 五色灯设备 (zigbee five color lamp sub-device) */
 export const ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST = [EUiid.uiid_3258, EUiid.uiid_7009];
 
@@ -209,7 +221,26 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
         ],
     },
     {
-        uiidList: [EUiid.uiid_1009, EUiid.uiid_7005],
+        uiidList: [EUiid.uiid_7021],
+        category: ECategory.PLUG,
+        capabilities: [
+            { capability: ECapability.POWER, permission: EPermission.READ_WRITE },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '1' },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '2' },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_7022],
+        category: ECategory.PLUG,
+        capabilities: [
+            { capability: ECapability.POWER, permission: EPermission.READ_WRITE },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '1' },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '2' },
+            { capability: ECapability.TOGGLE, permission: EPermission.READ_WRITE, name: '3' },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_1009, EUiid.uiid_7005, EUiid.uiid_7020],
         category: ECategory.PLUG,
         capabilities: [{ capability: ECapability.POWER, permission: EPermission.READ_WRITE }],
     },
@@ -334,9 +365,59 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
         ],
     },
     {
-        uiidList: [EUiid.uiid_1000, EUiid.uiid_7000],
+        uiidList: [EUiid.uiid_1000, EUiid.uiid_7000, EUiid.uiid_1001],
         category: ECategory.BUTTON,
         capabilities: [{ capability: ECapability.PRESS, permission: EPermission.READ }],
+    },
+    {
+        uiidList: [EUiid.uiid_1002],
+        category: ECategory.BUTTON,
+        capabilities: [
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '2' },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_1003],
+        category: ECategory.BUTTON,
+        capabilities: [
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '3' },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_1004],
+        category: ECategory.BUTTON,
+        capabilities: [
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '3' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '4' },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_1005],
+        category: ECategory.BUTTON,
+        capabilities: [
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '3' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '4' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '5' },
+        ],
+    },
+    {
+        uiidList: [EUiid.uiid_1006],
+        category: ECategory.BUTTON,
+        capabilities: [
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '1' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '2' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '3' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '4' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '5' },
+            { capability: ECapability.MULTI_PRESS, permission: EPermission.READ, name: '6' },
+        ],
     },
     {
         uiidList: [EUiid.uiid_1770, EUiid.uiid_7014],
@@ -677,25 +758,25 @@ export const coolkitDeviceProfiles: ICoolkitDeviceProfiles[] = [
                 },
             },
             {
-                capability:ECapability.TOGGLE_IDENTIFY,
+                capability: ECapability.TOGGLE_IDENTIFY,
                 permission: EPermission.READ_WRITE,
-                name:'1'
+                name: '1',
             },
             {
-                capability:ECapability.TOGGLE_IDENTIFY,
+                capability: ECapability.TOGGLE_IDENTIFY,
                 permission: EPermission.READ_WRITE,
-                name:'2'
+                name: '2',
             },
             {
-                capability:ECapability.TOGGLE_IDENTIFY,
+                capability: ECapability.TOGGLE_IDENTIFY,
                 permission: EPermission.READ_WRITE,
-                name:'3'
+                name: '3',
             },
             {
-                capability:ECapability.TOGGLE_IDENTIFY,
+                capability: ECapability.TOGGLE_IDENTIFY,
                 permission: EPermission.READ_WRITE,
-                name:'4'
-            }
+                name: '4',
+            },
         ],
     },
 ];
@@ -724,7 +805,6 @@ export const capabilityAndCategory126And165List = [
             { capability: ECapability.MOTOR_CONTROL, permission: EPermission.READ_WRITE },
             { capability: ECapability.PERCENTAGE, permission: EPermission.READ_WRITE },
             { capability: ECapability.RSSI, permission: EPermission.READ },
-            { capability: ECapability.MOTOR_CLB, permission: EPermission.READ },
         ],
     },
 ];
