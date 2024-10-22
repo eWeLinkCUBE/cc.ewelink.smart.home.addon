@@ -1775,7 +1775,7 @@ exports.thingList = [
                 "colorR": 24,
                 "colorG": 255,
                 "colorB": 243,
-                "mode": 1,
+                "mode": 2,
                 "bright": 75,
                 "light_type": 1,
                 "timeZone": 8,
@@ -1844,5 +1844,386 @@ exports.thingList = [
             "deviceFeature": {}
         },
         "index": -1
+    },
+    {
+        "itemType": 1,
+        "itemData": {
+            "name": "我的设备010d61",
+            "deviceid": "a400010d61",
+            "apikey": "5cddcbe5-9160-4514-b5d5-62e1341bf9b4",
+            "extra": {
+                "mac": "8ac171feff96ab907017",
+                "apmac": "00:00:00:00:00:00",
+                "model": "CK-MG22-TRVZB-01",
+                "modelInfo": "64e8240074881b28b1bd38ac",
+                "manufacturer": "深圳酷宅科技有限公司",
+                "brandId": "59e0dbc25c1af3a660cc1ac0",
+                "uiid": 7017,
+                "ui": "Zigbee温控阀_OTA"
+            },
+            "brandName": "coolkit",
+            "brandLogo": "",
+            "showBrand": false,
+            "productModel": "CK-MG22-TRVZB-01(7017)",
+            "tags": {},
+            "devConfig": {},
+            "family": {
+                "familyid": "602f669a07c7f4000833637b",
+                "index": -318,
+                "members": []
+            },
+            "shareTo": [],
+            "devicekey": "f126380d-dee4-4e04-acbf-72fd9cfbcb08",
+            "online": true,
+            "params": {
+                "bindInfos": {},
+                "subDevId": "8ac171feff96ab907017",
+                "parentid": "10014a6dd3",
+                "fwVersion": "1.1.1",
+                "battery": 91,
+                "supportPowConfig": 1,
+                "temperature": 267,
+                "trigTime": "1705312741000",
+                "curTargetTemp": 300,
+                "workMode": "2",
+                "workState": "1",
+                "manTargetTemp": 185,
+                "switch": "on",
+                "ecoTargetTemp": 45,
+                "autoTargetTemp": 300
+            },
+            "denyFeatures": [
+                "newVersionSubDeviceOta"
+            ],
+            "isSupportGroup": true,
+            "isSupportedOnMP": false,
+            "isSupportChannelSplit": false,
+            "deviceFeature": {}
+        },
+        "index": -318
+    },
+    {
+        "itemType": 1,
+        "itemData": {
+            "name": "T5-3C-86",
+            "deviceid": "1001e0c6bb",
+            "apikey": "5cddcbe5-9160-4514-b5d5-62e1341bf9b4",
+            "extra": {
+                "model": "SN-ESP32D0-T5-01",
+                "mac": "d0:27:03:38:4d:48",
+                "apmac": "d0:27:03:38:4d:49",
+                "uiid": 211,
+                "ui": "三通道触摸开关",
+                "modelInfo": "62e887ca963fb5bcc36ab155",
+                "brandId": "5c4c1aee3a7d24c7100be054",
+                "description": "",
+                "manufacturer": "深圳松诺技术有限公司",
+                "chipid": "5443B2704380",
+                "staMac": "54:43:b2:70:43:80"
+            },
+            "brandName": "SONOFF",
+            "brandLogo": "https://cn-ota.coolkit.cc/logo/q62PevoglDNmwUJ9oPE7kRrpt1nL1CoA.png",
+            "showBrand": true,
+            "productModel": "T5-3C-86",
+            "tags": {
+                "m_f9b4_8939": "on",
+                "channelSplitIcon": {
+                    "0": "default"
+                },
+                "disable_timers": [],
+                "m_1e06_6748": "on",
+                "channelSplit": {}
+            },
+            "devConfig": {},
+            "settings": {
+                "opsNotify": 0,
+                "opsHistory": 1,
+                "alarmNotify": 1,
+                "wxAlarmNotify": 0,
+                "wxOpsNotify": 0,
+                "wxDoorbellNotify": 0,
+                "appDoorbellNotify": 1
+            },
+            "devGroups": [],
+            "family": {
+                "familyid": "602f669a07c7f4000833637b",
+                "index": -320,
+                "members": [],
+            },
+            "shareTo": [],
+            "devicekey": "63ad1d4f-4b31-45a7-ab6e-a3ec4f5ecedf",
+            "online": false,
+            "params": {
+                "bindInfos": {},
+                "version": 8,
+                "switches": [
+                    {
+                        "switch": "on",
+                        "outlet": 0
+                    },
+                    {
+                        "switch": "on",
+                        "outlet": 1
+                    },
+                    {
+                        "switch": "on",
+                        "outlet": 2
+                    }
+                ],
+                "fwVersion": "1.3.1",
+                "timeZone": 8,
+                "ssid": "IT_DEVICE_2.4",
+                "bssid": "c0:b4:7d:10:07:f8",
+                "lightSwitch": "off",
+                "lightMode": 5,
+                "configure": [
+                    {
+                        "startup": "off",
+                        "enableDelay": 0,
+                        "width": 36000,
+                        "outlet": 0
+                    },
+                    {
+                        "startup": "off",
+                        "enableDelay": 0,
+                        "width": 8000,
+                        "outlet": 1
+                    },
+                    {
+                        "startup": "off",
+                        "enableDelay": 0,
+                        "width": 6000,
+                        "outlet": 2
+                    }
+                ],
+                "pulses": [
+                    {
+                        "pulse": "off",
+                        "switch": "off",
+                        "outlet": 0,
+                        "width": 500
+                    },
+                    {
+                        "pulse": "off",
+                        "switch": "off",
+                        "outlet": 1,
+                        "width": 500
+                    },
+                    {
+                        "pulse": "off",
+                        "switch": "off",
+                        "outlet": 2,
+                        "width": 500
+                    }
+                ],
+                "sledOnline": "on",
+                "rssi": -48,
+                "staMac": "54:43:b2:70:43:80",
+                "only_device": {
+                    "ota": "success",
+                    "ota_fail_reason": 0
+                },
+                "percentageControl": 0,
+                "calibState": false,
+                "workMode": 1,
+                "electromotor": 0
+            },
+            "isSupportGroup": true,
+            "isSupportedOnMP": false,
+            "isSupportChannelSplit": true,
+            "deviceFeature": {}
+        },
+        "index": -320
+    },
+    {
+        "itemType": 1,
+        "itemData": {
+            "name": "我的设备000060",
+            "deviceid": "ab10000060",
+            "apikey": "5cddcbe5-9160-4514-b5d5-62e1341bf9b4",
+            "extra": {
+                "mac": "8d123237393734134b353637",
+                "apmac": "00:00:00:00:00:00",
+                "model": "GD32-SM4",
+                "modelInfo": "601117ba5b6a29eb41b1f6c0",
+                "manufacturer": "深圳酷宅科技有限公司",
+                "brandId": "59e0dbc25c1af3a660cc1ac0",
+                "uiid": 130,
+                "ui": "堆叠式电表四通道开关子设备"
+            },
+            "brandName": "coolkit",
+            "brandLogo": "",
+            "showBrand": false,
+            "productModel": "GD32-SM4(130)",
+            "tags": {},
+            "devConfig": {
+                "timerCount": "16/28"
+            },
+            "family": {
+                "familyid": "602f669a07c7f4000833637b",
+                "index": -303,
+                "members": [],
+            },
+            "shareTo": [
+                {
+                    "apikey": "df6bdcde2c9e99e674a317a183e000026cff73d0a14fea22087d08db44045d3d74d2496100a562ff1b4eed0915ce3698",
+                    "phoneNumber": "+8613043485159",
+                    "comment": "",
+                    "permit": 15,
+                    "shareTime": 1709176573959,
+                    "platform": "app",
+                    "authority": {
+                        "updateTimers": true
+                    }
+                },
+                {
+                    "apikey": "c95b22011417c0530b4b4c509eb05e0b1e5971ecb608ab4692e122719b8decc168924453ed907be7e5d68a78e4f8c584",
+                    "phoneNumber": "+8613169645957",
+                    "comment": "",
+                    "permit": 15,
+                    "shareTime": 1709194989101,
+                    "platform": "app",
+                    "authority": {
+                        "updateTimers": true
+                    }
+                }
+            ],
+            "devicekey": "e44f6089-a93d-4ca2-8d53-485f58361de6",
+            "online": true,
+            "params": {
+                "bindInfos": {},
+                "subDevId": "8d123237393734134b353637",
+                "parentid": "100122bc48",
+                "demNextFetchTime": 1709740800000,
+                "configure": [
+                    {
+                        "outlet": 0,
+                        "startup": "on"
+                    },
+                    {
+                        "outlet": 0,
+                        "startup": "on"
+                    },
+                    {
+                        "outlet": 0,
+                        "startup": "on"
+                    },
+                    {
+                        "outlet": 0,
+                        "startup": "on"
+                    }
+                ],
+                "fwVersion": "1.2.0",
+                "overload_00": {
+                    "delayTime": 0,
+                    "maxAP": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "maxC": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "maxV": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "minAP": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "minV": {
+                        "en": 0,
+                        "val": 0
+                    }
+                },
+                "overload_01": {
+                    "delayTime": 0,
+                    "maxAP": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "maxC": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "maxV": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "minAP": {
+                        "en": 0,
+                        "val": 0
+                    },
+                    "minV": {
+                        "en": 0,
+                        "val": 0
+                    }
+                },
+                "switches": [
+                    {
+                        "switch": "off",
+                        "outlet": 0
+                    },
+                    {
+                        "switch": "off",
+                        "outlet": 1
+                    },
+                    {
+                        "switch": "off",
+                        "outlet": 2
+                    },
+                    {
+                        "switch": "off",
+                        "outlet": 3
+                    }
+                ],
+                "getKwh_00": 2,
+                "getKwh_01": 2,
+                "faultState": {
+                    "cse7761Com": [
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "subDevCom": 1,
+                    "overloadTrig": [
+                        {
+                            "outlet": 1,
+                            "rsn": [
+                                4
+                            ]
+                        }
+                    ]
+                },
+                "uiActive": {
+                    "outlet": 0,
+                    "time": 60
+                },
+                "actPow_00": 0,
+                "apparentPow_00": 0,
+                "current_00": 0,
+                "reactPow_00": 0,
+                "voltage_00": 3,
+                "actPow_01": 0,
+                "apparentPow_01": 0,
+                "current_01": 0,
+                "reactPow_01": 0,
+                "voltage_01": 3,
+                "rangeEnd": 29,
+                "rangeStart": 0,
+                "actPow_03": 0,
+                "apparentPow_03": 0,
+                "current_03": 0,
+                "reactPow_03": 0,
+                "voltage_03": 23501
+            },
+            "isSupportGroup": false,
+            "isSupportedOnMP": false,
+            "isSupportChannelSplit": false,
+            "deviceFeature": {}
+        },
+        "index": -303
     }
 ];

@@ -30,6 +30,16 @@ export default async function getWebSocketDayKwsDataToggle(req: Request) {
 
         const { deviceId, selfApikey } = iHostDeviceData;
 
+        // const temp = {
+        //     'power-consumption': {
+        //         timeRange: {
+        //             start: '2023-02-24T07:00:00.000Z', // 统计电量起始时间, date类型，必选。 (Start time of power statistics, date type, required)
+        //             end: '2023-02-24T10:49:00.000Z', // 统计电量结束时间，date类型，必选。 (End time of power statistics, date type, required。)
+        //         },
+        //     },
+        // };
+        // const iHostState = temp;
+
         logger.info('getWebSocketDayKwsDataToggle----------');
         //通道索引（Channel index）
         const name = Object.keys(_.get(iHostState, ['toggle-power-consumption']))[0];

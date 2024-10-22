@@ -10,11 +10,11 @@ function commonSingleToggle(controlItem) {
     return params.switch === 'on' ? { switch: 'off' } : { switch: 'on' };
 }
 exports.commonSingleToggle = commonSingleToggle;
-function commonMultiToggle(controlItem) {
+function commonMultiToggle(controlItem, len = 4) {
     var _a;
     const { device: { params }, outlet, switch: state = 'off' } = controlItem;
     if (outlet === 'all') {
-        return (0, constant_1.getDefaultSwitches)(4, state);
+        return (0, constant_1.getDefaultSwitches)(len, state);
     }
     const switches = params.switches;
     const lock = (_a = params.lock) !== null && _a !== void 0 ? _a : 0;
@@ -26,7 +26,7 @@ function commonMultiToggle(controlItem) {
                 }
                 return item;
             })
-            : (0, constant_1.getDefaultSwitches)(4, 'off').switches.map(item => {
+            : (0, constant_1.getDefaultSwitches)(len, 'off').switches.map(item => {
                 if (item.outlet === outlet) {
                     item.switch = state;
                 }

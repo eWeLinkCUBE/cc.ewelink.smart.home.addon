@@ -80,12 +80,17 @@ exports.device = {
     },
     delGroup(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield (0, utils_1.sendRequest)('/v2/device/group', 'DELETE', params, (0, store_1.getAt)());
+            return yield (0, utils_1.sendRequest)(`/v2/device/group?id=${params.id}`, 'DELETE', params, (0, store_1.getAt)());
         });
     },
     updateGroupStatus(params) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield (0, utils_1.sendRequest)('/v2/device/group/status', 'POST', params, (0, store_1.getAt)());
+        });
+    },
+    getAlarmHistory(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/device/alarm-history', 'GET', params, (0, store_1.getAt)());
         });
     },
     addGroupDevice(params) {
@@ -143,9 +148,19 @@ exports.device = {
             return yield (0, utils_1.sendRequest)('/v2/device/settings', 'POST', params, (0, store_1.getAt)());
         });
     },
+    getDeviceUsage(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/device/device-usage', 'GET', params, (0, store_1.getAt)());
+        });
+    },
     getTempHumHistory(params) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield (0, utils_1.sendRequest)('/v2/device/temp-hum-history', 'GET', params, (0, store_1.getAt)());
+        });
+    },
+    getMatterNodesReachableHubs(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/device/matter/nodes/reachable-hubs', 'GET', params, (0, store_1.getAt)());
         });
     }
 };

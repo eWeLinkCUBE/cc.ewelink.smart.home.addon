@@ -1,5 +1,5 @@
-export declare type ReqMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
-export declare type MsgLang = 'en' | 'cn';
+export type ReqMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+export type MsgLang = 'en' | 'cn';
 export interface ApiResponse {
     error: number;
     msg: string;
@@ -13,3 +13,4 @@ export { message } from './message';
 export { scene } from './scene';
 export { other } from './other';
 export { openPlatform } from './open-platform';
+export { energy, type CoolkitEnergy } from './energy';

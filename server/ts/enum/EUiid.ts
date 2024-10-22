@@ -144,6 +144,18 @@ enum EUiid {
     uiid_1772 = 1772,
     /** 温控阀 (thermostat) */
     uiid_7017 = 7017,
+    /**  Zigbee 1 通道场景开关 */
+    uiid_1001 = 1001,
+    /**  Zigbee 2 通道场景开关 */
+    uiid_1002 = 1002,
+    /**  Zigbee 3 通道场景开关 */
+    uiid_1003 = 1003,
+    /**  Zigbee 4 通道场景开关 */
+    uiid_1004 = 1004,
+    /**  Zigbee 5 通道场景开关 */
+    uiid_1005 = 1005,
+    /**  Zigbee 6 通道场景开关 */
+    uiid_1006 = 1006,
 
     /** 功率检测单通道插座 (Power detection single channel socket) */
     uiid_5 = 5,
@@ -171,6 +183,14 @@ enum EUiid {
     uiid_128 = 128,
     /** 堆叠式电表四通道开关子设备 */
     uiid_130 = 130,
+    /** Zigbee电量统计插座-单通道协议 (Zigbee power statistics socket - single channel protocol) */
+    uiid_7020 = 7020,
+    /** Zigbee电量统计插座-双通道协议 (Zigbee power statistics socket - dual channel protocol) */
+    uiid_7021 = 7021,
+    /** Zigbee电量统计插座-三通道协议 (Zigbee power statistics socket - three channel protocol) */
+    uiid_7022 = 7022,
+    /** Zigbee-U Matter网关 */
+    uiid_243 = 243,
 }
 
 export default EUiid;

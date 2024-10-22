@@ -38,6 +38,26 @@ exports.scene = {
             return yield (0, utils_1.sendRequest)(`/v2/smartscene2?id=${params.id}`, 'DELETE', {}, (0, store_1.getAt)());
         });
     },
+    setDeviceFeature(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/smartscene2/device-feature', 'POST', params, (0, store_1.getAt)());
+        });
+    },
+    execDeviceFeature(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/smartscene2/device-feature/execute', 'POST', params, (0, store_1.getAt)());
+        });
+    },
+    getMyScene(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/smartscene2/my-scene', 'POST', params, (0, store_1.getAt)());
+        });
+    },
+    getSceneHistoryList(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield (0, utils_1.sendRequest)('/v2/smartscene2/history-list', 'POST', params, (0, store_1.getAt)());
+        });
+    },
     sortScene(params) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield (0, utils_1.sendRequest)('/v2/smartscene2/sort', 'POST', params, (0, store_1.getAt)());

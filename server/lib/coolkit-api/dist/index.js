@@ -41,5 +41,7 @@ exports.default = {
     scene: api_1.scene,
     other: api_1.other,
     openPlatform: api_1.openPlatform,
-    getCmsContent: utils_1.getCmsContent
+    energy: api_1.energy,
+    getCmsContent: utils_1.getCmsContent,
+    setBlockList: store_1.setBlockList
 };

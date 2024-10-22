@@ -21,6 +21,12 @@ export interface UserInfo {
     denyRecharge?: boolean;
     accountConsult?: boolean;
     ipCountry?: string;
+    timezone?: {
+        id: string;
+        offset: number;
+    };
+    appForumEnterHide?: boolean;
+    appVersion?: string;
 }
 
 export interface CommonUserResponse {
@@ -295,6 +301,9 @@ export const user = {
             code: string;
             region: string;
             status: string;
+            extra: {
+                applicantName?: string;
+            };
         };
     }> {
         return await sendRequest('/v2/user/qr-code', 'POST', params);
@@ -310,6 +319,12 @@ export const user = {
             status: string;
             extra: {
                 at?: string;
+                rt?: string;
+                user?: UserInfo;
+                deviceInfo?: any;
+                endpointId?: string;
+                userRegion?: string;
+                clientId?: string;
             };
         };
     }> {
@@ -334,6 +349,7 @@ export const user = {
             };
             charts: string[];
             things: string[];
+            cookie?: any;
             scenes: string[];
             name: string;
             setting?: {
@@ -354,6 +370,7 @@ export const user = {
     async addCast(params: {
         name: string;
         things?: string[];
+        cookie?: any;
         scenes?: string[];
         pinCode?: string;
         charts?: string[];
@@ -418,6 +435,7 @@ export const user = {
         name: string;
         things?: string[];
         scenes?: string[];
+        cookie?: any;
         pinCode?: string;
         charts?: string[];
         subject?: {
@@ -451,6 +469,7 @@ export const user = {
             id: string;
             name?: string;
             things?: string[];
+            cookie?: any;
             scenes?: string[];
             pinCode?: string;
             charts?: string[];

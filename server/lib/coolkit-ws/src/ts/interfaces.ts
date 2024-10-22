@@ -62,9 +62,9 @@ export interface IQueryConfig extends IDeviceConfig {
 
 export interface IUpgradeConfig extends IDeviceConfig {
     params: {
-        model: string;
+        model?: string;
         version: string;
-        binList: IBinList[];
+        binList?: IBinList[];
     };
 }
 

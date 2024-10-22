@@ -45,12 +45,12 @@ exports.family = {
     },
     delFamily(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield (0, utils_1.sendRequest)('/v2/family', 'DELETE', params, (0, store_1.getAt)());
+            return yield (0, utils_1.sendRequest)(`/v2/family?id=${params.id}`, 'DELETE', params, (0, store_1.getAt)());
         });
     },
     delRoom(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield (0, utils_1.sendRequest)('/v2/family/room', 'DELETE', params, (0, store_1.getAt)());
+            return yield (0, utils_1.sendRequest)(`/v2/family/room?id=${params.id}`, 'DELETE', params, (0, store_1.getAt)());
         });
     },
     sortThing(params) {

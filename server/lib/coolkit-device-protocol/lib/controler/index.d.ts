@@ -1,13 +1,13 @@
 import { IControlDeviceParams } from '../ts/interface/IControlDevice';
 import { IDevice } from '../ts/interface/IDevice';
-import { TSingleCapability, TMultiCapability, TWifiLight, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TBackLight, TLightSceneMode, THistoryPower, TCurtain, TRfGateway, TActivePower, TTempUnit, TTargetTemp, TWorkMode, TChildLock, TStopMode, TZled, TSecurityType, TMediaTotal, TSlowly, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TStatisticsPower, TWindowSwitch, TempCorrection, TEcoTargetTemp, TTurbo, TLightSwitch, TMotorReverse } from '../ts/type/TControlType';
+import { TSingleCapability, TMultiCapability, TWifiLight, TSledOnline, TSingleInching, TMultiInching, TSingleStartup, TMultiStartup, TLock, TBackLight, TLightSceneMode, THistoryPower, TCurtain, TRfGateway, TActivePower, TTempUnit, TTargetTemp, TWorkMode, TChildLock, TStopMode, TZled, TSecurityType, TMediaTotal, TSlowly, TLightScene22, TAutoControl, TOperateHistory, TBrightAdjust, TColorTempAdjust, TSensitivity, TDetectedDuration, TStatisticsPower, TWindowSwitch, TempCorrection, TEcoTargetTemp, TTurbo, TLightSwitch, TMotorReverse, TControl433Button, TMultiGarageDoorCapability, TControlWaterValve, TAlarm, TWaterValveHistory, TInfraredMode } from '../ts/type/TControlType';
 import { IGroup } from '../ts/interface/IGroup';
 export type TInvokeData = IDevice | IGroup;
 declare function controlDevice(device: TInvokeData, type: 'toggle', params?: Partial<Pick<IControlDeviceParams, 'outlet' | 'switch'>>): TSingleCapability;
-declare function controlDevice(device: TInvokeData, type: 'toggleMulti', params: Pick<IControlDeviceParams, 'outlet' | 'switch'>): TMultiCapability;
+declare function controlDevice(device: TInvokeData, type: 'toggleMulti', params: Pick<IControlDeviceParams, 'outlet' | 'switch'>): TMultiCapability | TMultiGarageDoorCapability;
 declare function controlDevice(device: TInvokeData, type: 'setSledOnline'): TSledOnline;
 declare function controlDevice(device: TInvokeData, type: 'setZled'): TZled;
-declare function controlDevice(device: TInvokeData, type: 'setSingleInchingMode', params: Pick<IControlDeviceParams, 'pulse' | 'width'>): TSingleInching;
+declare function controlDevice(device: TInvokeData, type: 'setSingleInchingMode', params: Pick<IControlDeviceParams, 'pulse' | 'width' | 'switch'>): TSingleInching;
 declare function controlDevice(device: TInvokeData, type: 'setMultiInchingMode', params: Pick<IControlDeviceParams, 'pulses'>): TMultiInching;
 declare function controlDevice(device: TInvokeData, type: 'setSingleStartup', params: Pick<IControlDeviceParams, 'startup'>): TSingleStartup;
 declare function controlDevice(device: TInvokeData, type: 'setMultiStartup', params: Pick<IControlDeviceParams, 'configure'>): TMultiStartup;
@@ -61,5 +61,10 @@ declare function controlDevice(device: TInvokeData, type: 'setSchedule', params:
 declare function controlDevice(device: TInvokeData, type: 'setTurbo', params: Pick<IControlDeviceParams, 'turbo'>): TTurbo;
 declare function controlDevice(device: TInvokeData, type: 'setLightSwitch', params: Pick<IControlDeviceParams, 'lightSwitch'>): TLightSwitch;
 declare function controlDevice(device: TInvokeData, type: 'setMotorReverse', params: Pick<IControlDeviceParams, 'motorReverse'>): TMotorReverse;
+declare function controlDevice(device: TInvokeData, type: 'control433Button', params: Pick<IControlDeviceParams, 'key'>): TControl433Button;
+declare function controlDevice(device: TInvokeData, type: 'controlWaterValve', params: Pick<IControlDeviceParams, 'switch' | 'controlMode' | 'autoAction'>): TControlWaterValve;
+declare function controlDevice(device: TInvokeData, type: 'setAlarm', params: Pick<IControlDeviceParams, 'alarm'>): TAlarm;
+declare function controlDevice(device: TInvokeData, type: 'getWaterValveHistory', params: Pick<IControlDeviceParams, 'getHistory'>): TWaterValveHistory;
+declare function controlDevice(device: TInvokeData, type: 'changeInfraredMode', params: Pick<IControlDeviceParams, 'infraredSetting'>): TInfraredMode;
 declare function controlDevice(device: TInvokeData, type: 'setMultiLightControl', params: Partial<Pick<IControlDeviceParams, 'brightness' | 'colorTemp' | 'hue' | 'mode' | 'saturation'>>): any;
 export { controlDevice };

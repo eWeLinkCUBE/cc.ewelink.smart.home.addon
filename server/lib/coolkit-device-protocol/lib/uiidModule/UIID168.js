@@ -5,8 +5,8 @@ const protocol_1 = require("../protocol");
 exports.UIID168_PROTOCOL = {
     uiid: 168,
     initParams: device => {
-        const { sledOnline = 'on', zled = 'on' } = device.itemData.params;
-        return { sledOnline, zled };
+        const { sledOnline = 'on', zled = 'on', subDevices = [] } = device.itemData.params;
+        return { sledOnline, zled, subDevices };
     },
     controlItem: {
         setSledOnline: protocol_1.commonSledOnline,

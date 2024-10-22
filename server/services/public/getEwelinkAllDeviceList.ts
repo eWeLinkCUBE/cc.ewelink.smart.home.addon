@@ -117,9 +117,9 @@ async function getThreeTimesDeviceList(familyId: string) {
         if (i !== 1) await sleep(i * 1000);
         const res = await CkApi.device.getThingList({ familyid: familyId, num: 0 });
         logger.info('get family times-------------------------', i, familyId);
+        resData = res;
         if (res.error === 0 && res.data.thingList.length > 0) {
             logger.info('get family api ok--------------');
-            resData = res;
             break;
         }
     }

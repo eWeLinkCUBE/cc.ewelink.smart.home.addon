@@ -55,6 +55,20 @@ export declare const other: {
             extra?: any;
         };
     }>;
+    getThirdpartyDevicesStatus(params: {
+        thirdparty: string;
+        deviceids: string[];
+    }): Promise<{
+        error: number;
+        msg: string;
+        data: {
+            devices: {
+                deviceid: string;
+                online: boolean;
+                params: any;
+            }[];
+        };
+    }>;
     getUploadFileS3PreSignUrl(params: {
         from: string;
         type: string;

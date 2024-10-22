@@ -4,6 +4,8 @@ import { decode } from 'js-base64';
 import syncDeviceOnlineIHost from '../public/syncDeviceOnlineToIHost';
 import logger from '../../log';
 import deviceStateUtil from '../../utils/deviceStateUtil';
+import deviceDataUtil from '../../utils/deviceDataUtil';
+import EUiid from '../../ts/enum/EUiid';
 
 export default async function syncAllWebSocketDeviceOffline() {
     let eWeLinkDeviceList = db.getDbValue('eWeLinkDeviceList');
@@ -25,17 +27,18 @@ export default async function syncAllWebSocketDeviceOffline() {
         if (!item.tags?.deviceInfo) continue;
         const deviceInfo = JSON.parse(decode(item.tags?.deviceInfo));
 
-        const { uiid, deviceId } = deviceInfo;
+        let { uiid } = deviceInfo;
+        const { deviceId } = deviceInfo;
+        // zigbee-U子设备由zigbee-U决定(zigbee-U sub-device is determined by zigbee-U)
+        if (deviceDataUtil.isZigbeeUSubDevice(deviceId)) {
+            uiid = EUiid.uiid_243;
+        }
 
         if (WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
-            logger.info('uiid--------------', uiid);
-
             await syncDeviceOnlineIHost(deviceId, false);
         }
 
         if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
-            logger.info('uiid--------------', uiid);
-
             const isInLanProtocol = deviceStateUtil.isInLanProtocol(deviceId);
 
             if (!isInLanProtocol) {

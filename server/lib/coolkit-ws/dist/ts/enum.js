@@ -8,7 +8,7 @@ var EEventType;
     EEventType["RECONNECT"] = "reconnect";
     EEventType["RECONNECT_STATUS"] = "reconnectStatus";
     EEventType["PING_PONG"] = "ping-pong";
-})(EEventType = exports.EEventType || (exports.EEventType = {}));
+})(EEventType || (exports.EEventType = EEventType = {}));
 var EOpenEventType;
 (function (EOpenEventType) {
     EOpenEventType["MESSAGE"] = "message";
@@ -16,7 +16,7 @@ var EOpenEventType;
     EOpenEventType["RECONNECT"] = "reconnect";
     EOpenEventType["CLOSE"] = "close";
     EOpenEventType["OPEN"] = "open";
-})(EOpenEventType = exports.EOpenEventType || (exports.EOpenEventType = {}));
+})(EOpenEventType || (exports.EOpenEventType = EOpenEventType = {}));
 var EErrorCode;
 (function (EErrorCode) {
     EErrorCode[EErrorCode["INIT_FAIL"] = 601] = "INIT_FAIL";
@@ -24,4 +24,4 @@ var EErrorCode;
     EErrorCode[EErrorCode["RECONNECT_FAIL"] = 602] = "RECONNECT_FAIL";
     EErrorCode[EErrorCode["RECONNECT_COUNT_EXCEEDED"] = 603] = "RECONNECT_COUNT_EXCEEDED";
     EErrorCode[EErrorCode["GET_WS_SERVER_ERROR"] = 605] = "GET_WS_SERVER_ERROR";
-})(EErrorCode = exports.EErrorCode || (exports.EErrorCode = {}));
+})(EErrorCode || (exports.EErrorCode = EErrorCode = {}));

@@ -12,7 +12,7 @@ interface IDeviceParams {
         switch: {
             value: string;
         };
-    };
+    } | boolean;
     state: string;
     switches: Array<{
         switch: string;
@@ -65,7 +65,7 @@ interface IDeviceParams {
     leisure: IWifiLightRGBScene;
     soft: IWifiLightRGBScene;
     colorful: IWifiLightRGBScene;
-    colorMode: 'cct' | 'rgb';
+    colorMode: 'cct' | 'rgb' | number;
     brightness: number;
     cctBrightness: number;
     colorTemp: number;
@@ -91,6 +91,9 @@ interface IDeviceParams {
     lightScenes: Array<any>;
     subDevId: string;
     parentid: string;
+    subDevices: {
+        deviceid: string;
+    }[];
     init: number;
     targets: any;
     timeZone: number;
@@ -316,6 +319,52 @@ interface IDeviceParams {
     motorReversal: boolean;
     electromotor: number;
     percentageControl: number;
+    disableSwipeGesture: boolean;
+    timers: Array<any>;
+    colorTempPhysicalMinMireds: number;
+    colorTempPhysicalMaxMireds: number;
+    colorTemperatureMireds: number;
+    currentHue: number;
+    currentSaturation: number;
+    currentX: number;
+    currentY: number;
+    minLevel: number;
+    maxLevel: number;
+    currentLevel: number;
+    doorsensors: Record<string, 'on' | 'off' | 'uninstalled'>;
+    source: 'app' | 'voice';
+    NO_SAVE_DB: boolean;
+    ASYN_RESP: {
+        sequence?: string;
+    };
+    realIrrigationVolume: number;
+    realIrrigationVolumeGal: number;
+    lastIrrigationTime: string;
+    endIrrigationTime: string;
+    hasException: boolean;
+    todayWaterUsage: number;
+    todayWaterUsageGal: number;
+    exceptionReport: number[];
+    controlMode: string;
+    autoAction: {
+        option: string;
+        time?: {
+            type: string;
+            total: string;
+            times?: number;
+            intervals?: string;
+        };
+        volume?: {
+            type: string;
+            value?: number;
+            valueGal?: number;
+            times?: number;
+            intervals?: string;
+        };
+    };
+    alarm: boolean;
+    getHistory: string;
+    infraredSetting: number;
 }
 export interface IWifiLightBrCt {
     br: number;

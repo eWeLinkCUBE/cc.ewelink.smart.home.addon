@@ -5,9 +5,65 @@ import { decode } from 'js-base64';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import wsService from './wsService';
 import syncWebSocketDeviceStateToIHost from './syncWebSocketDeviceStateToIHost';
+import EventEmitter from 'events';
+
+const event = new EventEmitter();
+event.setMaxListeners(0);
+
+interface IRequestData {
+    req: Request;
+    id: string;
+}
+
+// 队列用来存储待发送的请求数据
+const requestQueue: IRequestData[] = [];
+
+// 是否正在处理请求的标志
+let isProcessing = false;
+// 将请求加入队列
+function addToQueue(requestData: IRequestData): void {
+    requestQueue.push(requestData);
+    // 如果队列中只有一个请求，并且没有正在处理的请求，则开始处理队列
+    if (requestQueue.length === 1 && !isProcessing) {
+        processQueue();
+    }
+}
+
+// 处理队列中的请求
+async function processQueue() {
+    isProcessing = true;
+    while (requestQueue.length > 0) {
+        try {
+            const processData = requestQueue[0];
+            const requestData = processData.req;
+            const sendRes = await send(requestData);
+            event.emit(processData.id, sendRes);
+        } catch (error) {
+            console.error('error:', error);
+        } finally {
+            // 移除已处理的请求
+            requestQueue.shift();
+        }
+    }
+    isProcessing = false;
+}
+
+function pending(id: string) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            resolve(createFailRes(''));
+        }, 10000);
+
+        event.once(id, (res) => {
+            resolve(res);
+            clearTimeout(timer);
+            return;
+        });
+    });
+}
 
 //控制websocket设备 (Control device)
-export default async function controlWebSocketDevice(req: Request) {
+async function send(req: Request) {
     const reqData = req.body as IReqData;
     const { header, endpoint, payload } = reqData.directive;
     const { message_id } = header;
@@ -33,14 +89,14 @@ export default async function controlWebSocketDevice(req: Request) {
 
         const params = { deviceid: deviceId, ownerApikey: selfApikey, params: lanState };
 
-        logger.info('params----------------', JSON.stringify(params,null,2));
+        logger.info('params----------------', JSON.stringify(params, null, 2));
 
         const res = await wsService.updateByWs(params);
         logger.info('ws----------------res', res);
         if (res.error === 0) {
             deviceDataUtil.updateEWeLinkDeviceData(deviceId, 'params', lanState);
             //控制成功后推送给iHost，维护操作日志（After the control is successful, push it to iHost and maintain the operation log.）
-            syncWebSocketDeviceStateToIHost(deviceId,lanState,uiid)
+            syncWebSocketDeviceStateToIHost(deviceId, lanState, uiid);
             return createSuccessRes(message_id);
         }
         return createFailRes(message_id);
@@ -76,4 +132,12 @@ function createFailRes(message_id: string) {
             },
         },
     };
+}
+
+export default async function controlWebSocketDevice(req: Request) {
+    logger.info('control webSocket device----------------');
+    const id = req.body.directive.header.message_id;
+    addToQueue({ req, id });
+    const res = await pending(id);
+    return res;
 }

@@ -7,9 +7,10 @@
         "build": "rm -rf dist && tsc && cd dist &&  cp -r ./../lib ./lib",
         "start": "node dist/index.js",
         "dev": "concurrently \"npm run build\" \"nodemon -q dist/index.js\"",
-        "serve": "rm -f log/logFile/total_dev.log && ts-node index.ts > output.log",
+        "serve": "ts-node index.ts > output.log",
         "eslint": "eslint ../server --ext .ts",
-        "test": "rm -f log/logFile/total_dev.log && node --require ts-node/register --inspect-brk=9321 index.ts > output.log"
+        "test": "node --require ts-node/register --inspect-brk=9321 index.ts > output.log",
+        "inspect": "rm -rf dist && tsc && cd dist &&  cp -r ./../lib ./lib && node index.js --inspect-brk > output.log"
     },
     "keywords": [],
     "author": "",

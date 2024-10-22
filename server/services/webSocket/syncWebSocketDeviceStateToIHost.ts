@@ -8,26 +8,25 @@ import EUiid from '../../ts/enum/EUiid';
 
 const DELAY_TIME = 5000;
 const deviceParamsTimerObj: any = {};
-let tempParams: any = {}
+let tempParams: any = {};
 
 export default async function syncWebSocketDeviceStateToIHost(deviceId: string, params: any, uiid: number) {
     try {
         logger.info('ws listen-------------------', deviceId, params);
 
-
         if (isNeedWait(params, uiid)) {
-            logger.info('now----------params', params)
+            logger.info('now----------params', params);
             const symbolString = deviceId + JSON.stringify(Object.keys(params).sort());
-            tempParams = params
+            tempParams = params;
             logger.info('symbolString---------------', symbolString);
             if (deviceParamsTimerObj[symbolString]) {
-                return
+                return;
             }
 
             deviceParamsTimerObj[symbolString] = setTimeout(() => {
-                logger.info('now----------tempParams', tempParams)
+                logger.info('now----------tempParams', tempParams);
                 sendData(deviceId, tempParams);
-                deviceParamsTimerObj[symbolString] = ''
+                deviceParamsTimerObj[symbolString] = '';
             }, DELAY_TIME);
             return;
         }
@@ -51,6 +50,11 @@ async function sendData(deviceId: string, params: any) {
     const eWeLinkApiInfo = db.getDbValue('eWeLinkApiInfo');
     if (!eWeLinkApiInfo) {
         logger.info('no login no sync websocket state----');
+        return;
+    }
+    // zigbee-u子设备离线时候不同步子设备状态
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    if (deviceDataUtil.isZigbeeUSubDevice(deviceId) && eWeLinkDeviceData && eWeLinkDeviceData.itemData.online === false) {
         return;
     }
 

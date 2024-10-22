@@ -1,4 +1,4 @@
-const store = {
+const store: any = {
     appId: '',
     appSecret: '',
     domain: '',
@@ -6,8 +6,14 @@ const store = {
     rt: '',
     debug: false,
     useTestEnv: false,
-    timeout: 15000
+    timeout: 15000,
+    blockList: []
 };
+
+export type BlockListItem = {
+    method: string
+    url: string
+}
 
 // showStore - debug only
 export function showStore() {
@@ -76,4 +82,12 @@ export function setTimeout(v: number) {
 
 export function getTimeout() {
     return store.timeout;
+}
+
+export function setBlockList(v: BlockListItem[]) {
+    store.blockList = v;
+}
+
+export function getBlockList(): BlockListItem[] {
+    return store.blockList;
 }

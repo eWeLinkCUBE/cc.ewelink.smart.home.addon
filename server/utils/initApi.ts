@@ -8,6 +8,7 @@ import wsService from '../services/webSocket/wsService';
 import logger from '../log';
 import getEwelinkAllDeviceList from '../services/public/getEwelinkAllDeviceList';
 import syncAllWebSocketDeviceOffline from '../services/webSocket/syncAllWebSocketDeviceOffline';
+import WsReconnect from '../utils/wsReconnectClass';
 
 export const initCoolkitApi = () => {
     // 初始化 coolkit api (Initialize coolkit api)
@@ -62,17 +63,27 @@ export const initCoolkitWs = async () => {
              * 最大重试总时间，以秒为单位，默认为2小时，传入10分钟
              * Maximum total retry time, in seconds, defaults to 2 hours, enter 10 minutes
              */
-            maxRetryInterval: 10 * 60
+            maxRetryInterval: 10 * 60,
+            debug: true,
         };
         logger.info('ws--------------start');
+
+        WsReconnect.stopReconnect();
         const res = await CoolKitWs.init(wsConfig);
-        if (res.error === 0) {
+        logger.info('ws res-------------------', res);
+
+        if (res.error === 605) {
+            logger.info('wsRC --------------------start reconnect');
+            WsReconnect.startReconnect(wsConfig);
+        }
+
+        if (res.error === 0 && res.msg === 'success') {
             logger.info('ws connection success ------------');
             getEwelinkAllDeviceList();
         }
         CoolKitWs.on('message', (ev) => wsService.listenWs(ev));
         CoolKitWs.on('reconnect', (data) => {
-            logger.info('reconnect----------------', data);
+            logger.info('reconnect----------------init', data);
             if (data.error == 0) {
                 getEwelinkAllDeviceList();
                 return;
