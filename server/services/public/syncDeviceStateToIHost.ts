@@ -8,6 +8,8 @@ import EUiid from '../../ts/enum/EUiid';
 import ECapability from '../../ts/enum/ECapability';
 import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
 import wsService from '../webSocket/wsService';
+import uiid_130 from '../uiid/uiid_130'
+
 /** 设备状态上报  (Equipment status reporting)*/
 export default async (deviceId: string) => {
     try {
@@ -24,6 +26,11 @@ export default async (deviceId: string) => {
             if (wsService.isWsConnected()) {
                 return;
             }
+        }
+
+        if ([EUiid.uiid_128, EUiid.uiid_130].includes(uiid)) {
+            uiid_130.syncDeviceState(deviceId)
+            return
         }
 
         if ([EUiid.uiid_28].includes(uiid)) {

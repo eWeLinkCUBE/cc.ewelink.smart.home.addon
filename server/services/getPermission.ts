@@ -4,6 +4,7 @@ import db from '../utils/db';
 import { toResponse } from '../utils/error';
 import logger from '../log';
 import config from '../config';
+import uiid_130 from './uiid/uiid_130';
 
 export default async function getPermission(req: Request, res: Response) {
     try {
@@ -20,6 +21,11 @@ export default async function getPermission(req: Request, res: Response) {
         if ([400, 401].includes(error)) {
             logger.error('get iHost token has no auth------------------------', error);
             return res.json(toResponse(1100));
+        }
+
+        if (error === 0) {
+            // 防止新安装的addon没触发更新tags（Prevent newly installed addon from triggering update tags）
+            uiid_130.toUpdateIHostUiid130Tags()
         }
 
         logger.info('get iHost token------------------------------------------------', data);

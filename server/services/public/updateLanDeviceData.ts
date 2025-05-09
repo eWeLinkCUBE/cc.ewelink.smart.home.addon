@@ -77,7 +77,7 @@ async function requestDevice(deviceId: string, devicekey: string, selfApikey: st
 const webSocketRequest = async (deviceId: string, state: string, selfApikey: string, res: any) => {
     const uiid = deviceDataUtil.getUiidByDeviceId(deviceId);
     if (LAN_WEB_SOCKET_UIID_DEVICE_LIST.includes(uiid)) {
-        logger.info('ws request --------',deviceId) 
+        logger.info('ws request --------', deviceId)
         const params = { deviceid: deviceId, ownerApikey: selfApikey, params: JSON.parse(state) };
         return await wsService.updateByWs(params);
     }
@@ -184,6 +184,31 @@ const subDeviceControl = async (deviceId: string, devicekey: string, selfApikey:
     return await requestDevice(parentId, devicekey, selfApikey, newState, 'subdev/control');
 };
 
+/** 堆叠式网关 子设备控制 (Stacked gateway sub-device control) */
+const spmSubDeviceControl = async (deviceId: string, devicekey: string, selfApikey: string, state: string) => {
+    const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);
+    const parentId = iHostDeviceData?.deviceInfo.parentId;
+
+    const newState = JSON.stringify(
+        { subDevId: deviceId, ...JSON.parse(state) },
+    );
+    return await requestDevice(parentId, devicekey, selfApikey, newState, 'switches');
+};
+/** 堆叠式网关 子设备实时监测 (Stacked gateway sub-device real-time monitoring) */
+const spmSubDeviceUiActive = async (deviceId: string, devicekey: string, selfApikey: string, state: string) => {
+    const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);
+    const parentId = iHostDeviceData?.deviceInfo.parentId;
+
+    const newState = JSON.stringify(
+        { subDevId: deviceId, ...JSON.parse(state) },
+    );
+
+    return await requestDevice(parentId, devicekey, selfApikey, newState, 'uiActive');
+};
+
+
+
+
 export default {
     setSwitch,
     setSwitches,
@@ -198,4 +223,6 @@ export default {
     setRfButton,
     getAllDevices,
     subDeviceControl,
+    spmSubDeviceControl,
+    spmSubDeviceUiActive
 };

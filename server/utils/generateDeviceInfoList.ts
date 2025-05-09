@@ -219,6 +219,29 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 deviceList.push(subDevice);
             });
         }
+
+        if ([EUiid.uiid_128].includes(uiid)) {
+            const subDeviceList = generateSubDeviceList(eWeLinkDeviceData);
+            subDeviceList.forEach((item) => {
+                const eWeLinkSubDeviceData = eWeLinkDeviceList.find((eItem) => item.deviceId === eItem.itemData.deviceid);
+                if (!eWeLinkSubDeviceData) {
+                    return;
+                }
+                const subDevice = {
+                    isOnline: !!mItem.deviceData.isOnline,
+                    isMyAccount: true,
+                    isSupported: deviceDataUtil.isSupportLanControl(eWeLinkSubDeviceData),
+                    displayCategory: getDeviceTypeByUiid(eWeLinkSubDeviceData),
+                    familyName: eWeLinkDeviceData.familyName,
+                    deviceId: item.deviceId,
+                    deviceName: eWeLinkSubDeviceData ? eWeLinkSubDeviceData.itemData.name : '',
+                    isSynced: syncedHostDeviceList.includes(item.deviceId),
+                    subDeviceNum: 0,
+                    networkProtocol: ENetworkProtocolType.LAN,
+                };
+                deviceList.push(subDevice);
+            });
+        }
     });
     //账号下不在局域网的设备(Devices under the account that are not on the LAN)
     eWeLinkDeviceList.forEach((item) => {
@@ -275,6 +298,10 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
             //局域网存在且在线且支持局域网功能不另外加入（The LAN exists and is online and supports the LAN function. No additional additions are required.）
             if (lanDeviceItem && lanDeviceItem.isSupported === true && lanDeviceData && lanDeviceData.deviceData.isOnline) {
                 return;
+            }
+            // 局域设备列表中已存在（Already exists in the local device list）
+            if ([EUiid.uiid_130].includes(uiid) && deviceList.some(dItem => dItem.deviceId === deviceId)) {
+                return
             }
 
             // if ([EUiid.uiid_28].includes(uiid)) {

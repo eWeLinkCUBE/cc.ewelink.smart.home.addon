@@ -95,21 +95,41 @@ function isInLanProtocol(value: string | IEWeLinkDevice) {
     }
     //未登陆判断为局域网
     if (!eWeLinkDeviceData) {
-        logger.info('isInLanProtocol ---- no login',deviceId)
+        logger.info('isInLanProtocol ---- no login', deviceId)
         return true;
+    }
+    const uiid = eWeLinkDeviceData.itemData.extra.uiid
+    // 堆叠式子设备的局域网在线情况由堆叠式网关决定（堆叠式子设备的局域网在线情况由堆叠式网关决定）
+    if ([EUiid.uiid_130].includes(uiid)) {
+        deviceId = eWeLinkDeviceData.itemData.params.parentid
+        eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+        if (!eWeLinkDeviceData) {
+            logger.info('isInLanProtocol ---- no login', deviceId)
+            return true;
+        }
     }
 
     const lanDeviceInfo = deviceMapUtil.getMDnsDeviceDataByDeviceId(deviceId);
 
     const isSupportedLan = deviceDataUtil.isSupportLanControl(eWeLinkDeviceData);
+
     //设备局域网在线(Device LAN online)
     if (lanDeviceInfo && lanDeviceInfo?.deviceData.isOnline == true && isSupportedLan) {
         return true
     }
     return false
 }
+/** 设备长连接在线 （Device long connection online）*/
+function isInWsProtocol(deviceId: string) {
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    if (!eWeLinkDeviceData) {
+        return false
+    }
+    return wsService.isWsConnected() && eWeLinkDeviceData.itemData.online == true
+}
 
 export default {
     whichNetworkProtocol,
     isInLanProtocol,
+    isInWsProtocol
 };

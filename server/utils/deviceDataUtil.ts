@@ -635,6 +635,8 @@ function getLastLanState(deviceId: string) {
         key: eWeLinkDeviceData ? eWeLinkDeviceData.itemData.devicekey : iHostDeviceData!.devicekey, //同步设备的时候，devicekey从云端里取，更新设备状态时才从ihost取 (When synchronizing the device, the device key is fetched from the cloud, and when the device status is updated, it is fetched from ihost.)
         data: mDnsParams.deviceData.encryptedData,
     });
+    // 堆叠式网关的子设备id
+    state['_subDeviceId'] = _.get(mDnsParams.deviceData, '_subDeviceId', null)
     return state;
 }
 
@@ -805,7 +807,7 @@ function isSupportLanWebSocketControl(eWeLinkDeviceData: IEWeLinkDevice) {
     return true;
 }
 
-/** 根据zigbee子设备id拿到zigbee网关id */
+/** 根据zigbee子设备id拿到zigbee网关id （Get the zigbee gateway id based on the zigbee sub-device id）*/
 function getZigbeeParentId(deviceId: string) {
     const iHostDeviceData = getIHostDeviceDataByDeviceId(deviceId);
     if (iHostDeviceData && iHostDeviceData?.deviceInfo?.parentId) {
@@ -818,7 +820,7 @@ function getZigbeeParentId(deviceId: string) {
     return null;
 }
 
-/** 是否zigbee-U子设备 */
+/** 是否zigbee-U子设备 （Whether zigbee-U sub-device）*/
 function isZigbeeUSubDevice(deviceId: string) {
     const parentId = getZigbeeParentId(deviceId);
     if (!parentId) {

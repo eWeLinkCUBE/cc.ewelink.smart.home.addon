@@ -90,6 +90,14 @@ async function setOffline() {
                 }
                 continue;
             }
+            // 堆叠式网关子设备是否离线由网关决定
+            if ([EUiid.uiid_130].includes(uiid)) {
+                if (!DeviceMapClass.deviceMap.has(item.parentId)) {
+                    syncDeviceOnlineToIHost(item.deviceId, false);
+                }
+            }
+
+
             //局域网设备离线 (lan device offline)
             if (!DeviceMapClass.deviceMap.has(item.deviceId)) {
                 await sleep(50);

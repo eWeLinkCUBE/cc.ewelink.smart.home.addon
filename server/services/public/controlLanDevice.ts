@@ -52,7 +52,15 @@ export default async function controlLanDevice(req: Request) {
         if (SINGLE_PROTOCOL_LIST.includes(uiid)) {
             request = updateLanDeviceData.setSwitch;
         } else {
-            request = updateLanDeviceData.setSwitches;
+            if ([EUiid.uiid_130].includes(uiid)) {
+                request = updateLanDeviceData.spmSubDeviceControl
+            } else {
+                request = updateLanDeviceData.setSwitches;
+            }
+        }
+
+        if (iHostState[ECapability.TOGGLE_IDENTIFY]) {
+            request = updateLanDeviceData.spmSubDeviceUiActive
         }
 
         if (isLightControl(iHostState)) {
@@ -76,7 +84,7 @@ export default async function controlLanDevice(req: Request) {
 
             if (uiid === EUiid.uiid_34) {
                 const lanStateObj = JSON.parse(lanState);
-                if (_.get(lanStateObj, ['light']) && _.get(lanStateObj, 'fan' || _.get(lanStateObj, 'speed', null))) {
+                if (_.get(lanStateObj, ['light']) && _.get(lanStateObj, 'fan', null) || _.get(lanStateObj, 'speed', null)) {
                     const lightLanState = _.pick(lanStateObj, ['light']);
                     const resData1 = await updateLanDeviceData.setLight(deviceId, devicekey, selfApikey, JSON.stringify(lightLanState));
                     if (resData1 && resData1.error !== 0) {
@@ -214,7 +222,7 @@ async function sendParams(callback: any, iHostState: any, send: any, deviceId: s
     event.once('delivered', callback);
     deviceTimeoutObj[deviceId] = setTimeout(async () => {
         const sendRes = await send(deviceId);
-        let res:any = createFailRes('');
+        let res: any = createFailRes('');
         if (sendRes && sendRes.error === 0) {
             res = createSuccessRes('')
         }

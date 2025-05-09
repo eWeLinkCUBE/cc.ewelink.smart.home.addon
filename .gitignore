@@ -47,7 +47,7 @@ deploy/
 
 # package-lock.json
 server/package-lock.json
-web/package-lock.json
+# web/package-lock.json
 
 # local env files
 web/.env.local

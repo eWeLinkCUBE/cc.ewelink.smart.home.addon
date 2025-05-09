@@ -135,6 +135,8 @@ const parseParams = (device: IMdnsRes) => {
         const deviceId = ptr.split('.')[0].split(/eWeLink_/gi)[1];
         return {
             deviceId,
+            // 堆叠式网关的子设备的id 保存在txt记录中（The ID of the stacked gateway's sub-device is saved in the txt record）
+            _subDeviceId: txt?.id,
             type: txt.type,
             encryptedData: `${data1}${data2}${data3}${data4}`,
             ip: a,

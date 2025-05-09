@@ -10,6 +10,7 @@ import EUiid from '../../ts/enum/EUiid';
 import { get102DeviceOnline } from '../../utils/deviceUtil';
 import syncAllWebSocketDeviceStateAndOnlineIHost from '../webSocket/syncAllWebSocketDeviceStateAndOnlineIHost';
 import { initCoolkitWs } from '../../utils/initApi';
+import uiid_130 from '../uiid/uiid_130';
 
 export default async function getEwelinkAllDeviceList() {
     try {
@@ -100,6 +101,9 @@ export default async function getEwelinkAllDeviceList() {
         //将每个rf网关的遥控器设置标识
         //Set the identification of the remote control of each rf gateway
         await toUpdateEWeLinkRfDeviceTags();
+        // 修正tags中uiid130的devicekey（Correct the devicekey of uiid130 in tags）
+        uiid_130.toUpdateIHostUiid130Tags()
+
         autoCancelSync();
 
         return deviceList;

@@ -138,8 +138,6 @@ export const WEB_SOCKET_UIID_DEVICE_LIST = [
     EUiid.uiid_52,
     EUiid.uiid_57,
     EUiid.uiid_11,
-    EUiid.uiid_128,
-    EUiid.uiid_130,
     EUiid.uiid_243,
 ];
 
@@ -160,6 +158,8 @@ export const LAN_WEB_SOCKET_UIID_DEVICE_LIST = [
     EUiid.uiid_138,
     EUiid.uiid_32,
     EUiid.uiid_165,
+    EUiid.uiid_128,
+    EUiid.uiid_130,
 ];
 /** zigbee 五色灯设备 (zigbee five color lamp sub-device) */
 export const ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST = [EUiid.uiid_3258, EUiid.uiid_7009];

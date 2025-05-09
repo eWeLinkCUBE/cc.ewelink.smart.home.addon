@@ -7,6 +7,7 @@ import EUiid from '../../ts/enum/EUiid';
 import syncRfDeviceOnlineToIHost from '../rf/syncRfDeviceOnlineToIHost';
 import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
 import wsService from '../webSocket/wsService';
+import uiid_130 from '../uiid/uiid_130';
 
 /** 设备上下线状态上报 (Report device online and offline status)*/
 export default async function syncDeviceOnlineIHost(deviceId: string, isOnline: boolean) {
@@ -21,6 +22,11 @@ export default async function syncDeviceOnlineIHost(deviceId: string, isOnline: 
         //zigbee-p 网关不作处理，都在sse里维护 (The zigbee-p gateway does not process it and maintains it in sse.)
         if ([EUiid.uiid_168].includes(uiid)) {
             return;
+        }
+        // uiid130设备是uiid128堆叠式网关的子设备，mdns消息由网关发出
+        if ([EUiid.uiid_128, EUiid.uiid_130].includes(uiid)) {
+            uiid_130.syncDeviceOnline(deviceId, isOnline)
+            return
         }
 
         const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);

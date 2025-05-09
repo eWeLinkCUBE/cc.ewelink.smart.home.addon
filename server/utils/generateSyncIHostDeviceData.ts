@@ -49,7 +49,8 @@ async function generateSyncIHostDeviceData(deviceId: string) {
     }
 
     const { uiid } = eWeLinkDeviceData.itemData.extra;
-    const { brandName = '', devicekey, apikey, productModel } = eWeLinkDeviceData.itemData;
+    const { brandName = '', apikey, productModel } = eWeLinkDeviceData.itemData;
+    let { devicekey } = eWeLinkDeviceData.itemData
 
     const service_address = `${config.localIp}/api/v1/device/${deviceId}`;
 
@@ -65,6 +66,7 @@ async function generateSyncIHostDeviceData(deviceId: string) {
         //时区在保存在网关里（The time zone is stored in the gateway）
         const parentId = _.get(eWeLinkDeviceData, ['itemData', 'params', 'parentid'], null);
         const parentEWeLinkDeviceData = getEWeLinkDeviceDataByDeviceId(parentId);
+        devicekey = parentEWeLinkDeviceData?.itemData.devicekey || ''
         const timeZone = _.get(parentEWeLinkDeviceData, ['itemData', 'params', 'timeZone'], null);
         if (timeZone === null) {
             logger.info('no timeZone-----------------', parentId);
