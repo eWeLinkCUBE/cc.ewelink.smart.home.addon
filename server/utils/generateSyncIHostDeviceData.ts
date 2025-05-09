@@ -32,6 +32,7 @@ import { v4 as uuidv4 } from 'uuid';
 import ECategory from '../ts/enum/ECategory';
 import { ILanStateFiveColorLamp } from '../ts/interface/ILanState';
 import { toIntNumber } from './tool';
+import { changeVoltageToBattery } from './deviceTool';
 
 const { getEWeLinkDeviceDataByDeviceId, lanStateToIHostState } = deviceDataUtil;
 
@@ -205,10 +206,19 @@ async function generateSyncIHostDeviceData(deviceId: string) {
         return null;
     }
 
+
     if (_.get(myLanState, 'battery', null) === null) {
-        const battery = _.get(eWeLinkDeviceData, 'itemData.params.battery', null);
-        battery !== null && _.set(iHostState, 'battery.battery', toIntNumber(battery));
+        let battery = _.get(eWeLinkDeviceData, 'itemData.params.battery', null);
+        if (battery !== null) {
+            if (uiid === EUiid.uiid_102) {
+                logger.info('sync device battery voltage:', deviceId, battery)
+                battery = changeVoltageToBattery(battery, eWeLinkDeviceData)
+                logger.info('sync device battery percentage:', deviceId, battery)
+            }
+            _.set(iHostState, 'battery.battery', toIntNumber(battery));
+        }
     }
+
 
     const { display_category, capabilities } = await getDisplayCategoryAndCapabilitiesByUiid(uiid, iHostState, myLanState, eWeLinkDeviceData);
 

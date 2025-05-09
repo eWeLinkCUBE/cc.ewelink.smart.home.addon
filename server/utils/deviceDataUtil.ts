@@ -362,7 +362,7 @@ function lanStateToIHostState(deviceId: string, myLanState?: any, actions?: stri
     }
 
     if ([EUiid.uiid_102].includes(uiid)) {
-        _.assign(iHostState, lanStateToIHostState102(lanState));
+        _.assign(iHostState, lanStateToIHostState102(lanState, deviceId));
     }
 
     if ([EUiid.uiid_154].includes(uiid)) {

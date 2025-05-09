@@ -38,5 +38,5 @@ export const devConf = {
         refreshEWeLinkTokenGapTime: 24 * 60 * 60,
     },
     /** 启动的ip (startup ip)*/
-    localIp: 'http://192.168.5.194:8321',
+    localIp: 'http://192.168.5.205:8321',
 };

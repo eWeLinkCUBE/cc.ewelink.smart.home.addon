@@ -13,6 +13,7 @@ import {
     ILanStateMotionSensor,
     ILanStatePersonExist,
     ILanState22,
+    ILanState102,
     ILanState154,
     ILanState36,
     ILanState173And137,
@@ -43,6 +44,8 @@ import { fakeTempList, brightMap, ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST } from '../co
 import { hsvToRgb, rgbToHsv } from '../utils/colorUtils';
 import _ from 'lodash';
 import { toIntNumber } from './tool';
+import { changeVoltageToBattery } from './deviceTool';
+
 
 //对 uiid 190 特殊处理 (Special handling for uiid 190)
 function lanStateToIHostStatePowerDevice(lanState: ILanState190, uiid: number) {
@@ -553,7 +556,7 @@ function lanStateToIHostStateButton(lanState: ILanStateButton) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery)
             },
         });
     }
@@ -585,7 +588,7 @@ function lanStateToIHostStateContactSensor(lanState: ILanStateContactSensor) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery),
             },
         });
     }
@@ -727,7 +730,7 @@ function lanStateToIHostStateTemAndHum(lanState: ILanStateTemAndHum) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery),
             },
         });
     }
@@ -758,7 +761,7 @@ function lanStateToIHostStateMotionSensor(lanState: ILanStateMotionSensor) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery),
             },
         });
     }
@@ -875,7 +878,7 @@ function lanStateToIHostState22(lanState: ILanState22) {
     return iHostState;
 }
 
-function lanStateToIHostState102(lanState: ILanState154) {
+function lanStateToIHostState102(lanState: ILanState102, deviceId: string) {
     const iHostState = {};
 
     const switchState = _.get(lanState, 'switch', null);
@@ -884,6 +887,20 @@ function lanStateToIHostState102(lanState: ILanState154) {
         _.merge(iHostState, {
             detect: {
                 detected: switchState === 'on',
+            },
+        });
+    }
+
+    const battery = _.get(lanState, 'battery', null);
+
+    if (battery !== null) {
+        const eWelinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+
+        const batteryPercentage = changeVoltageToBattery(battery, eWelinkDeviceData)
+        logger.info('battery voltage:', battery, 'batteryPercentage:', batteryPercentage, deviceId)
+        _.merge(iHostState, {
+            battery: {
+                battery: toIntNumber(batteryPercentage),
             },
         });
     }
@@ -935,6 +952,16 @@ function lanStateToIHostState154(lanState: ILanState154) {
                 },
             });
         }
+    }
+
+    const battery = _.get(lanState, 'battery', null);
+
+    if (battery !== null) {
+        _.merge(iHostState, {
+            battery: {
+                battery: toIntNumber(battery),
+            },
+        });
     }
 
     return iHostState;
@@ -1466,7 +1493,7 @@ function lanStateToIHostStateWaterSensor(lanState: ILanStateWaterSensor) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery),
             },
         });
     }
@@ -1490,7 +1517,7 @@ function lanStateToIHostStateSmokeDetector(lanState: ILanStateSmokeDetector) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery),
             },
         });
     }
@@ -1575,7 +1602,7 @@ function lanStateToIHostStateTRV(lanState: ILanStateTrv, deviceId: string) {
     if (battery !== null) {
         _.merge(iHostState, {
             battery: {
-                battery,
+                battery: toIntNumber(battery),
             },
         });
     }

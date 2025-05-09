@@ -324,6 +324,22 @@ export interface ILanState154 {
     switch: 'on' | 'off';
 }
 
+export interface ILanState102 {
+    /** on 开，off 关（on open，off close） */
+    switch: 'on' | 'off';
+    /** 
+     * 当前电压值，取值范围0-3V，配合lowVolAlarm来判断设备是否处于低电量模式。
+        注意：lowVolAlarm为devConfig对象中的参数
+        当battery<lowVolAlarm时显示低电量，当battery>=lowVolAlarm时显示电量充足  
+        Current voltage value, ranging from 0-3V, used with lowVolAlarm to determine whether the device is in low power mode.
+        Note: lowVolAlarm is a parameter in the devConfig object
+        When battery<lowVolAlarm, it displays low battery; when battery>=lowVolAlarm, it displays sufficient battery.
+    */
+    battery: number;
+
+
+}
+
 export interface ILanState36 {
     /** 单路调光面板灯光亮度值的调整，取值范围10-100，值越大越亮 (Adjustment of the light brightness value of a single-channel dimming panel. The value range is 10 to 100. The larger the value, the brighter it is.) */
     bright: number;
