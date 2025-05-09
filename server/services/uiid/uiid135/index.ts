@@ -17,7 +17,7 @@ export default class Uiid135 extends BaseDeviceOperate {
 
     protected _controlMode = EDeviceControlMode.LAN;
 
-    protected _channelProtocolType = EChannelProtocol.OTHER;
+    protected _channelProtocolType = EChannelProtocol.SINGLE_PROTOCOL;
 
     constructor(deviceId: string) {
         super(deviceId);
