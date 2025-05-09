@@ -1,4 +1,4 @@
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, SUPPORT_UIID_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, SUPPORT_UIID_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../constants/uiid';
 import ENetworkProtocol from '../ts/enum/ENetworkProtocol';
 import EUiid from '../ts/enum/EUiid';
 import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
@@ -33,6 +33,7 @@ function whichNetworkProtocol(deviceId: string) {
         return judeWebSocketNetWork();
     }
 
+    // TODO：The content in the judgment statement will be moved to the device operation class
     //3、特殊uiid处理
     if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
         //电表模式不支持,只支持开关和电机1,2(Meter mode is not supported, only switches and motors 1,2 are supported.)
@@ -80,9 +81,9 @@ function judeWebSocketNetWork() {
 }
 
 /** 传入设备id或者设备数据，判断该设备是否处于局域网中（Pass in the device ID or device data to determine whether the device is in the LAN）  */
-function isInLanProtocol(value: string): boolean;
-function isInLanProtocol(value: IEWeLinkDevice): boolean;
-function isInLanProtocol(value: string | IEWeLinkDevice) {
+function isInLan(value: string): boolean;
+function isInLan(value: IEWeLinkDevice): boolean;
+function isInLan(value: string | IEWeLinkDevice) {
     let eWeLinkDeviceData;
     let deviceId;
 
@@ -95,7 +96,7 @@ function isInLanProtocol(value: string | IEWeLinkDevice) {
     }
     //未登陆判断为局域网
     if (!eWeLinkDeviceData) {
-        logger.info('isInLanProtocol ---- no login',deviceId)
+        logger.info('isInLan ---- no login', deviceId)
         return true;
     }
 
@@ -109,7 +110,17 @@ function isInLanProtocol(value: string | IEWeLinkDevice) {
     return false
 }
 
+/** 设备长连接在线 （Device long connection online）*/
+function isInWsProtocol(deviceId: string) {
+    const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
+    if (!eWeLinkDeviceData) {
+        return false
+    }
+    return wsService.isWsConnected() && eWeLinkDeviceData.itemData.online == true
+}
+
 export default {
     whichNetworkProtocol,
-    isInLanProtocol,
+    isInLan,
+    isInWsProtocol
 };

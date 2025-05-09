@@ -10,7 +10,6 @@ import toControlLanDevice from '../services/toControlLanDevice';
 import toSyncDeviceToIHost from '../services/toSyncDeviceToIHost';
 import toCancelSyncDeviceToIHost from '../services/toCancelDeviceToIHost';
 import getPermission from '../services/getPermission';
-import toUpDateAutoSyncStatus from '../services/toUpdateAutoSyncStatus';
 import getLoginStatus from '../services/getLoginStatus';
 import logout from '../services/logout';
 
@@ -28,6 +27,5 @@ router.get(EApiPath.GET_PERMISSION, checkSchema({}), getPermission);
 router.post(EApiPath.CONTROL_DEVICE, checkSchema({}), toControlLanDevice);
 router.post(EApiPath.SYNC_DEVICE, checkSchema({}), toSyncDeviceToIHost);
 router.delete(EApiPath.DELETE_DEVICE, checkSchema({}), toCancelSyncDeviceToIHost);
-router.put(EApiPath.UPDATE_SYNC_STATUS, checkSchema({}), toUpDateAutoSyncStatus);
 
 export default router;

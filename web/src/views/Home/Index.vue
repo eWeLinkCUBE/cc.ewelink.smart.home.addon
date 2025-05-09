@@ -39,6 +39,7 @@ onMounted(async () => {
 const getUserInfo = async () => {
     const res = await api.smartHome.getLoginStatus();
     if (res.data && res.error === 0) {
+        etcStore.setSupport(res.data.support);
         if (res.data.loginStatus === 2) {
             const etcStore = useEtcStore();
             const deviceStore = useDeviceStore();

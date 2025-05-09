@@ -17,6 +17,7 @@ interface ILoginWithAccountData {
 
 interface IGetLoginStatusData {
     loginStatus: 0 | 1 | 2;
+    support: boolean;
     userInfo: IUser;
     at: string;
 }

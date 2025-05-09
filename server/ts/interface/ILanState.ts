@@ -33,7 +33,7 @@ export interface ILanStateMultipleSwitch {
     switches: ILanStateSwitch[];
 }
 
-export interface ILanState190 {
+export interface ILanStateElectricDevice {
     switches: { switch: Switch; outlet: 0 }[];
     /**
      * 电流(current)
@@ -166,6 +166,7 @@ export interface ILanState34 {
 export interface ILanState28 {
     [rfTrig: string]: string; //2023-05-16T13:15:50.000Z
     // rfChl?: number;
+    // cmd?: string;
 }
 /** 无线按键 (wireless button) */
 export interface ILanStateButton {
@@ -192,6 +193,8 @@ export interface ILanStateContactSensorWithTamperAlert extends ILanStateContactS
 }
 /** 窗帘 (curtain)*/
 export interface ILanStateCurtain {
+    /** 电量（Battery） */
+    battery?: string;
     /** 设备开百分比上报 (Device open percentage reporting) */
     curPercent?: number;
     /** "normal"：正常模式(已校准)(Normal mode (calibrated))   "calibration"： 正在校准(Calibrating) */
@@ -322,6 +325,22 @@ export interface ILanState22 {
 export interface ILanState154 {
     /** on 开，off 关（on open，off close） */
     switch: 'on' | 'off';
+}
+
+export interface ILanState102 {
+    /** on 开，off 关（on open，off close） */
+    switch: 'on' | 'off';
+    /** 
+     * 当前电压值，取值范围0-3V，配合lowVolAlarm来判断设备是否处于低电量模式。
+        注意：lowVolAlarm为devConfig对象中的参数
+        当battery<lowVolAlarm时显示低电量，当battery>=lowVolAlarm时显示电量充足  
+        Current voltage value, ranging from 0-3V, used with lowVolAlarm to determine whether the device is in low power mode.
+        Note: lowVolAlarm is a parameter in the devConfig object
+        When battery<lowVolAlarm, it displays low battery; when battery>=lowVolAlarm, it displays sufficient battery.
+    */
+    battery: number;
+
+
 }
 
 export interface ILanState36 {

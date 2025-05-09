@@ -40,4 +40,6 @@ export interface IMdnsParseRes {
     iv: string;
     /** 是否在线 (Is online)*/
     isOnline?: boolean;
+    /** 子设备id，若为uiid128 堆叠式网关，则有这个子设备id */
+    _subDeviceId?: string;
 }

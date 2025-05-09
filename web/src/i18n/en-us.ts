@@ -51,6 +51,7 @@ const en = {
     PLEASE_LOGIN: ', please {LOGIN_EWELINK}.',
     LOGIN_EWELINK: 'login your eWeLink account',
     LOGIN_EWELINK_ACCOUNT: 'Login with eWeLink account ',
+    VERSION_NOT_SUPPORTED: 'The "eWeLink Smart Home" add-on requires iHost version 2.1.0 or later. Please go to the Settings page and update your iHost to the available firmware version.'
 };
 
 export default en;

@@ -2,6 +2,38 @@ enum EPermission {
     READ = 'read',
     READ_WRITE = 'readWrite',
     WRITE = 'write',
+    /** 设备不可控制不可上报不可配置不可查询 */
+    NONE = '0000',
+    /** 设备可控制 */
+    UPDATE = '1000',
+    /** 设备可上报 */
+    UPDATED = '0100',
+    /** 设备可配置 */
+    CONFIGURE = '0010',
+    /** 设备可查询 */
+    QUERY = '0001',
+    /** 设备可控制可上报 */
+    UPDATE_UPDATED = '1100',
+    /** 设备可控制可配置 */
+    UPDATE_CONFIGURE = '1010',
+    /** 设备可控制可查询 */
+    UPDATE_QUERY = '1001',
+    /** 设备可上报可配置 */
+    UPDATED_CONFIGURE = '0110',
+    /** 设备可上报可查询 */
+    UPDATED_QUERY = '0101',
+    /** 设备可配置可查询 */
+    CONFIGURE_QUERY = '0011',
+    /** 设备可控制可上报可配置 */
+    UPDATE_UPDATED_CONFIGURE = '1110',
+    /** 设备可控制可上报可查询 */
+    UPDATE_UPDATED_QUERY = '1101',
+    /** 设备可控制可配置可查询 */
+    UPDATE_CONFIGURE_QUERY = '1011',
+    /** 设备可上报可配置可查询 */
+    UPDATED_CONFIGURE_QUERY = '0111',
+    /** 设备可控制可上报可配置可查询 */
+    UPDATE_UPDATED_CONFIGURE_QUERY = '1111',
 }
 
 export default EPermission;

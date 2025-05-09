@@ -8,11 +8,13 @@ import db from '../utils/db';
 import { decode } from 'js-base64';
 import getIHostSyncDeviceList from './public/getIHostSyncDeviceList';
 import getEwelinkAllDeviceList from './public/getEwelinkAllDeviceList';
-import syncTagsRfChlToIHostAfterRefresh from './rf/syncTagsRfChlToIHostAfterRefresh';
+import { getUiidOperateInstance } from '../utils/deviceOperateInstanceMange';
 import dayjs from 'dayjs';
 import config from '../config';
 import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
 import EUiid from '../ts/enum/EUiid';
+import Uiid28 from './uiid/uiid28';
+
 const { disappearTime } = config.timeConfig;
 
 interface DeviceInfo {
@@ -76,6 +78,7 @@ export default async function getLanDeviceInfoList(req: Request, res: Response) 
             if (!item.tags?.deviceInfo) return '';
             const deviceInfo = JSON.parse(decode(item.tags?.deviceInfo));
             if (deviceInfo) {
+                // TODO：The content in the judgment statement will be moved to the device operation class
                 if (deviceInfo.uiid === EUiid.uiid_28) {
                     return deviceInfo.third_serial_number;
                 }
@@ -102,9 +105,10 @@ export default async function getLanDeviceInfoList(req: Request, res: Response) 
 
 /** 判断是否要同步设备信息 (Determine whether to synchronize device information)*/
 function judgeToSyncDeviceInfo(deviceList: DeviceInfo[]) {
-    deviceList.forEach((item) => {
+    deviceList.forEach(item => {
         if (item.isSynced) {
-            syncTagsRfChlToIHostAfterRefresh(item.deviceId);
+            const operateInstance = getUiidOperateInstance<Uiid28>(item.deviceId)
+            operateInstance?.syncTagsToIHostAfterRefresh?.();
         }
     });
 }

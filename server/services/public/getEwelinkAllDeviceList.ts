@@ -4,12 +4,13 @@ import IEWeLinkDevice from '../../ts/interface/IEWeLinkDevice';
 import db from '../../utils/db';
 import logger from '../../log';
 import autoCancelSync from '../../utils/autoCancelSync';
-import toUpdateEWeLinkRfDeviceTags from '../rf/toUpdateEWelinkRfDeviceTags';
+import toUpdateEWeLinkDeviceTags from './toUpdateEWeLinkDeviceTags';
 import { sleep } from '../../utils/timeUtils';
 import EUiid from '../../ts/enum/EUiid';
 import { get102DeviceOnline } from '../../utils/deviceUtil';
 import syncAllWebSocketDeviceStateAndOnlineIHost from '../webSocket/syncAllWebSocketDeviceStateAndOnlineIHost';
 import { initCoolkitWs } from '../../utils/initApi';
+import Uiid130 from '../uiid/uiid130';
 
 export default async function getEwelinkAllDeviceList() {
     try {
@@ -99,7 +100,9 @@ export default async function getEwelinkAllDeviceList() {
 
         //将每个rf网关的遥控器设置标识
         //Set the identification of the remote control of each rf gateway
-        await toUpdateEWeLinkRfDeviceTags();
+        await toUpdateEWeLinkDeviceTags();
+        // 修正tags中uiid130的devicekey（Correct the devicekey of uiid130 in tags）
+        Uiid130.updateIHostTags()
         autoCancelSync();
 
         return deviceList;
@@ -129,6 +132,7 @@ async function getThreeTimesDeviceList(familyId: string) {
 function modifyDeviceOnlineStatus(eWeLinkDeviceList: IEWeLinkDevice[]) {
     const deviceList = eWeLinkDeviceList.map((item) => {
         const uiid = item.itemData.extra.uiid;
+        // TODO：The content in the judgment statement will be moved to the device operation class
         if (uiid === EUiid.uiid_102) {
             item.itemData.online = get102DeviceOnline(item);
         }

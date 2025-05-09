@@ -5,9 +5,10 @@ import _ from 'lodash';
 import deviceMapUtil from './deviceMapUtil';
 import syncDeviceStateToIHost from '../services/public/syncDeviceStateToIHost';
 import logger from '../log';
-import syncTagsRfChlToIHost from '../services/rf/syncTagsRfChlToIHost';
 import deviceDataUtil from './deviceDataUtil';
 import checkToInitSse from './checkToInitSse';
+import { getUiidOperateInstance } from './deviceOperateInstanceMange';
+import Uiid28 from '../services/uiid/uiid28';
 
 const mdns = makeMdns();
 
@@ -95,6 +96,8 @@ mdns.on('response', (response: any) => {
         return;
     }
 
+    const operateInstance = getUiidOperateInstance<Uiid28>(params.deviceId);
+
     // 维护局域网设备队列 (Maintain LAN device queue)
     deviceMapUtil.setOnline(params);
 
@@ -102,7 +105,7 @@ mdns.on('response', (response: any) => {
     syncDeviceStateToIHost(params.deviceId);
 
     //同步局域网的设备信息到iHost里 (Synchronize LAN device information to iHost)
-    syncTagsRfChlToIHost(params.deviceId);
+    operateInstance?.syncTagsToIHost?.();
 
     //检查zigbee-p 的sse连接情况 (Check the sse connection status of zigbee-p)
     checkToInitSse(params.deviceId, params.ip);
@@ -135,6 +138,8 @@ const parseParams = (device: IMdnsRes) => {
         const deviceId = ptr.split('.')[0].split(/eWeLink_/gi)[1];
         return {
             deviceId,
+            // 堆叠式网关的子设备的id 保存在txt记录中（The ID of the stacked gateway's sub-device is saved in the txt record）
+            _subDeviceId: txt?.id,
             type: txt.type,
             encryptedData: `${data1}${data2}${data3}${data4}`,
             ip: a,

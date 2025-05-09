@@ -1,3 +1,5 @@
+import ECapability from "../enum/ECapability";
+
 export interface IHostStateInterface {
     power?: {
         powerState: 'on' | 'off';
@@ -28,4 +30,7 @@ export interface IHostStateInterface {
     mode?: {
         [key: string]: { modeValue: string };
     };
+    [ECapability.RSSI]?: {
+        rssi: number
+    }
 }

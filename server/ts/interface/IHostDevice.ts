@@ -1,3 +1,5 @@
+import ICapability from './ICapability';
+
 export default interface IHostDevice {
     serial_number: string;
     name: null | string;
@@ -5,15 +7,7 @@ export default interface IHostDevice {
     model: string;
     firmware_version: string;
     display_category: string;
-    capabilities: [
-        {
-            capability: string;
-            permission: 'readWrite' | 'read' | 'write';
-            configuration?: {
-                actions?: string[];
-            };
-        }
-    ];
+    capabilities: ICapability[];
     state: object;
     tags: {
         deviceInfo: string;

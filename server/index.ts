@@ -6,12 +6,14 @@ import info from './middleware/info';
 import router from './routes';
 import { internalError, notFound } from './middleware/error';
 import config from './config';
-import db, { dbDataTmp } from './utils/db';
+import { dbDataTmp } from './utils/db';
 import oauth from './middleware/oauth';
 import gapTimeRun from './utils/gapTimeRun';
 import responseInterceptor from './middleware/responseInterceptor';
 import { initCoolkitApi, initCoolkitWs } from './utils/initApi';
+import getIHostVersionSupport from './services/public/getIHostVersionSupport';
 import { encode } from 'js-base64';
+import os from 'os';
 
 const app = express();
 const port = config.nodeApp.port;
@@ -58,8 +60,9 @@ app.use(notFound);
 app.use(internalError);
 
 app.listen(port, '0.0.0.0', async () => {
-    logger.info(`Server is running at http://localhost:${port}----env: ${config.nodeApp.env}----version: v${config.nodeApp.version}`);
+    logger.info(`Server is running at http://localhost:${port}, env: ${config.nodeApp.env}, version: v${config.nodeApp.version}, platform: ${os.hostname()}`);
     initCoolkitApi();
     initCoolkitWs();
+    getIHostVersionSupport();
     gapTimeRun();
 });

@@ -38,6 +38,7 @@ export const useDeviceStore = defineStore('addon_device', {
         },
         async getAfterLoginDeviceList(forceRefresh:boolean = false) {
             const res = await api.smartHome.getAllLanDeviceAfterLogin(forceRefresh);
+            
 
             if (res.data && res.error === 0) {
                 const isMyAccountDeviceList = res.data.deviceList.filter((item) => {

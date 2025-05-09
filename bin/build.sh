@@ -49,7 +49,7 @@ cp -r Dockerfile .dockerignore $deploy_dir
 echo "$(date +%Y-%m-%d" "%H:%M:%S)" '[encrypto code] - done'
 
 # 6. Copy push.sh to deploy
-cp bin/push.sh version $deploy_dir
+cp bin/push.sh bin/push_dev_with_buildx.sh version $deploy_dir
 if [ -d "$dev_push_dir" ]; then cp bin/push.sh version $dev_push_dir
 fi
 echo "$(date +%Y-%m-%d" "%H:%M:%S)" '[copy push.sh] - done'
