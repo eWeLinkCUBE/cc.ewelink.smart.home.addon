@@ -33,7 +33,7 @@ export interface ILanStateMultipleSwitch {
     switches: ILanStateSwitch[];
 }
 
-export interface ILanState190 {
+export interface ILanStateElectricDevice {
     switches: { switch: Switch; outlet: 0 }[];
     /**
      * 电流(current)
@@ -166,6 +166,7 @@ export interface ILanState34 {
 export interface ILanState28 {
     [rfTrig: string]: string; //2023-05-16T13:15:50.000Z
     // rfChl?: number;
+    // cmd?: string;
 }
 /** 无线按键 (wireless button) */
 export interface ILanStateButton {
@@ -192,6 +193,8 @@ export interface ILanStateContactSensorWithTamperAlert extends ILanStateContactS
 }
 /** 窗帘 (curtain)*/
 export interface ILanStateCurtain {
+    /** 电量（Battery） */
+    battery?: string;
     /** 设备开百分比上报 (Device open percentage reporting) */
     curPercent?: number;
     /** "normal"：正常模式(已校准)(Normal mode (calibrated))   "calibration"： 正在校准(Calibrating) */

@@ -16,7 +16,7 @@ export const prodConf = {
         appSecret: '&!imrc%uk47plfI^^sldiQ0^nNWWf9L6',
     },
     iHost: {
-        api: `http://${os.hostname()}/open-api/v1/rest`,
+        api: `http://${os.hostname()}/open-api/v2/rest`,
     },
     log: {
         path: 'log/logFile/total_prod.log',

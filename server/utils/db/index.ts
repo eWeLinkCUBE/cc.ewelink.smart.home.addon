@@ -32,6 +32,8 @@ interface IDbData {
     isFirstInit: boolean;
     /** 190电量历史记录，按设备id存储 (190 power history records, stored by device ID)*/
     electricityData: { [deviceId: string]: IElectricityData[] };
+    /** 根据当前 iHost 版本得出是否支持使用 add-on */
+    support: boolean;
 }
 
 export const dbDataTmp: IDbData = {
@@ -43,6 +45,7 @@ export const dbDataTmp: IDbData = {
     autoSyncStatus: false,
     isFirstInit: true,
     electricityData: {},
+    support: true,
 };
 
 /** queue to write file */
@@ -88,6 +91,7 @@ function setDbValue(key: 'iHostDeviceList', v: IDbData['iHostDeviceList']): void
 function setDbValue(key: 'autoSyncStatus', v: IDbData['autoSyncStatus']): void;
 function setDbValue(key: 'isFirstInit', v: IDbData['isFirstInit']): void;
 function setDbValue(key: 'electricityData', v: IDbData['electricityData']): void;
+function setDbValue(key: 'support', v: IDbData['support']): void;
 function setDbValue(key: DbKey, v: IDbData[DbKey]) {
     try {
         const data = getDb();
@@ -111,6 +115,7 @@ function getDbValue(key: 'iHostToken'): IDbData['iHostToken'];
 function getDbValue(key: 'autoSyncStatus'): IDbData['autoSyncStatus'];
 function getDbValue(key: 'isFirstInit'): IDbData['isFirstInit'];
 function getDbValue(key: 'electricityData'): IDbData['electricityData'];
+function getDbValue(key: 'support'): IDbData['support'];
 function getDbValue(key: DbKey) {
     const data = getDb();
     try {

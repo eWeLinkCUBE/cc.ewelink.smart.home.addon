@@ -52,6 +52,7 @@ const cn = {
     PLEASE_LOGIN: '，请{LOGIN_EWELINK}后使用',
     LOGIN_EWELINK: '登录易微联账号',
     LOGIN_EWELINK_ACCOUNT: '登录易微联账号 ',
+    VERSION_NOT_SUPPORTED: '当前使用的 "ewelink Smart Home" add-on 版本需配合iHost 2.1.0 及以上版本使用，请前往iHost设置页面升级iHost固件'
 };
 
 export default cn;

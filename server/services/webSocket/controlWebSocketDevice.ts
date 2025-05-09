@@ -13,6 +13,7 @@ event.setMaxListeners(0);
 interface IRequestData {
     req: Request;
     id: string;
+    lanState: any; // iHostState 经过转换后的 lanState
 }
 
 // 队列用来存储待发送的请求数据
@@ -35,8 +36,8 @@ async function processQueue() {
     while (requestQueue.length > 0) {
         try {
             const processData = requestQueue[0];
-            const requestData = processData.req;
-            const sendRes = await send(requestData);
+            const { req: requestData, lanState } = processData;
+            const sendRes = await send(requestData, lanState);
             event.emit(processData.id, sendRes);
         } catch (error) {
             console.error('error:', error);
@@ -63,13 +64,12 @@ function pending(id: string) {
 }
 
 //控制websocket设备 (Control device)
-async function send(req: Request) {
+async function send(req: Request, lanStateString: any) {
     const reqData = req.body as IReqData;
-    const { header, endpoint, payload } = reqData.directive;
+    const { header, endpoint } = reqData.directive;
     const { message_id } = header;
 
     try {
-        const iHostState = payload.state;
         const iHostDeviceData = JSON.parse(decode(endpoint.tags.deviceInfo));
 
         const { deviceId, selfApikey, uiid } = iHostDeviceData;
@@ -78,8 +78,6 @@ async function send(req: Request) {
             logger.error('control device can not get uiid------------------------', uiid);
             return;
         }
-
-        const lanStateString = deviceDataUtil.iHostStateToLanState(deviceId, iHostState, true);
 
         if (!lanStateString) {
             throw new Error('null');
@@ -96,7 +94,7 @@ async function send(req: Request) {
         if (res.error === 0) {
             deviceDataUtil.updateEWeLinkDeviceData(deviceId, 'params', lanState);
             //控制成功后推送给iHost，维护操作日志（After the control is successful, push it to iHost and maintain the operation log.）
-            syncWebSocketDeviceStateToIHost(deviceId, lanState, uiid);
+            syncWebSocketDeviceStateToIHost(deviceId, lanState);
             return createSuccessRes(message_id);
         }
         return createFailRes(message_id);
@@ -112,7 +110,7 @@ function createSuccessRes(message_id: string) {
             header: {
                 name: 'UpdateDeviceStatesResponse',
                 message_id,
-                version: '1',
+                version: '2',
             },
             payload: {},
         },
@@ -125,7 +123,7 @@ function createFailRes(message_id: string) {
             header: {
                 name: 'ErrorResponse',
                 message_id,
-                version: '1',
+                version: '2',
             },
             payload: {
                 type: 'ENDPOINT_UNREACHABLE',
@@ -134,10 +132,10 @@ function createFailRes(message_id: string) {
     };
 }
 
-export default async function controlWebSocketDevice(req: Request) {
+export default async function controlWebSocketDevice(req: Request, lanState: any) {
     logger.info('control webSocket device----------------');
     const id = req.body.directive.header.message_id;
-    addToQueue({ req, id });
+    addToQueue({ req, id, lanState });
     const res = await pending(id);
     return res;
 }

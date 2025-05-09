@@ -1,4 +1,4 @@
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, SUPPORT_UIID_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, SUPPORT_UIID_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../constants/uiid';
 import ENetworkProtocol from '../ts/enum/ENetworkProtocol';
 import EUiid from '../ts/enum/EUiid';
 import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
@@ -33,6 +33,7 @@ function whichNetworkProtocol(deviceId: string) {
         return judeWebSocketNetWork();
     }
 
+    // TODO：The content in the judgment statement will be moved to the device operation class
     //3、特殊uiid处理
     if ([EUiid.uiid_126, EUiid.uiid_165].includes(uiid)) {
         //电表模式不支持,只支持开关和电机1,2(Meter mode is not supported, only switches and motors 1,2 are supported.)
@@ -98,27 +99,17 @@ function isInLanProtocol(value: string | IEWeLinkDevice) {
         logger.info('isInLanProtocol ---- no login', deviceId)
         return true;
     }
-    const uiid = eWeLinkDeviceData.itemData.extra.uiid
-    // 堆叠式子设备的局域网在线情况由堆叠式网关决定（堆叠式子设备的局域网在线情况由堆叠式网关决定）
-    if ([EUiid.uiid_130].includes(uiid)) {
-        deviceId = eWeLinkDeviceData.itemData.params.parentid
-        eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);
-        if (!eWeLinkDeviceData) {
-            logger.info('isInLanProtocol ---- no login', deviceId)
-            return true;
-        }
-    }
 
     const lanDeviceInfo = deviceMapUtil.getMDnsDeviceDataByDeviceId(deviceId);
 
     const isSupportedLan = deviceDataUtil.isSupportLanControl(eWeLinkDeviceData);
-
     //设备局域网在线(Device LAN online)
     if (lanDeviceInfo && lanDeviceInfo?.deviceData.isOnline == true && isSupportedLan) {
         return true
     }
     return false
 }
+
 /** 设备长连接在线 （Device long connection online）*/
 function isInWsProtocol(deviceId: string) {
     const eWeLinkDeviceData = deviceDataUtil.getEWeLinkDeviceDataByDeviceId(deviceId);

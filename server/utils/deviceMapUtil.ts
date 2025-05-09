@@ -10,7 +10,7 @@ import mdns from './initMdns';
 import { decode } from 'js-base64';
 import deviceDataUtil from './deviceDataUtil';
 import ping from 'ping';
-import { WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../const';
+import { WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../constants/uiid';
 import { sleep } from './timeUtils';
 import EUiid from '../ts/enum/EUiid';
 
@@ -50,6 +50,7 @@ function updateAData(deviceIdDomain: string, ip: string) {
 }
 
 /** 设置离线状态 (Set offline status)*/
+// TODO：The content in the judgment statement will be moved to the device operation class
 async function setOffline() {
     //网关切换wifi的情况下，将已同步的设备但是不在局域网中的设备离线 (When the gateway switches to wifi, devices that have been synchronized but are not in the LAN will be offline)
     const iHostDeviceList = db.getDbValue('iHostDeviceList');
@@ -90,14 +91,12 @@ async function setOffline() {
                 }
                 continue;
             }
-            // 堆叠式网关子设备是否离线由网关决定
+            // 堆叠式网关子设备是否离线由网关决定(Whether the stacked gateway sub-device is offline is determined by the gateway)
             if ([EUiid.uiid_130].includes(uiid)) {
                 if (!DeviceMapClass.deviceMap.has(item.parentId)) {
                     syncDeviceOnlineToIHost(item.deviceId, false);
                 }
             }
-
-
             //局域网设备离线 (lan device offline)
             if (!DeviceMapClass.deviceMap.has(item.deviceId)) {
                 await sleep(50);

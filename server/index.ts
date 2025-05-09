@@ -11,6 +11,7 @@ import oauth from './middleware/oauth';
 import gapTimeRun from './utils/gapTimeRun';
 import responseInterceptor from './middleware/responseInterceptor';
 import { initCoolkitApi, initCoolkitWs } from './utils/initApi';
+import getIHostVersionSupport from './services/public/getIHostVersionSupport';
 import { encode } from 'js-base64';
 import os from 'os';
 
@@ -62,5 +63,6 @@ app.listen(port, '0.0.0.0', async () => {
     logger.info(`Server is running at http://localhost:${port}, env: ${config.nodeApp.env}, version: v${config.nodeApp.version}, platform: ${os.hostname()}`);
     initCoolkitApi();
     initCoolkitWs();
+    getIHostVersionSupport();
     gapTimeRun();
 });

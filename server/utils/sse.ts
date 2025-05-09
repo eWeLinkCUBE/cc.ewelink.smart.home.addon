@@ -2,17 +2,16 @@ import EventSource from 'eventsource';
 import mDnsDataParse from './mDnsDataParse';
 import logger from '../log';
 import zigbeePSseMap from '../ts/class/zigbeePSseMap';
-import syncZigbeeDeviceStateToIHost from '../services/zigbeeP/syncZigbeeDeviceStateToIHost';
-import syncZigbeeDeviceOnlineToIHost from '../services/zigbeeP/syncZigbeeDeviceOnlineToIHost';
-import cancelSyncZigbeeDeviceToIHostBySse from '../services/zigbeeP/cancelSyncZigbeeDeviceToIHostBySse';
 import syncDeviceOnlineToIHost from '../services/public/syncDeviceOnlineToIHost';
 import zigbeePOnlineMap from '../ts/class/zigbeePOnlineMap';
 import _ from 'lodash';
 import deviceMapUtil from './deviceMapUtil';
 import deviceDataUtil from './deviceDataUtil';
-import addZigbeeSubDevice from '../services/zigbeeP/addZigbeeSubDevice';
-import { ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST } from '../const';
+import { ZIGBEE_UIID_FIVE_COLOR_LAMP_LIST } from '../constants/uiid';
 import { sleep } from './timeUtils';
+import { getUiidOperateInstance } from './deviceOperateInstanceMange';
+import type Uiid168 from '../services/uiid/uiid168';
+import type ZigbeeDeviceOperate from '../services/uiid/zigbeeDeviceOperate';
 
 //zigbee-p 的子设备离线由sse维护，sse断了，全部子设备离线，sse连接到了，请求-p网关获取所有子设备接口，拿到子设备状态
 // The offline sub-devices of /zigbee-p are maintained by sse. When sse is disconnected, all sub-devices are offline. When sse is connected, request the -p gateway to obtain all sub-device interfaces and obtain the sub-device status.
@@ -51,6 +50,7 @@ class SSEClient {
     private currentRetryInterval: number;
     private timeout: any;
     private sseStatus: ESseStatus;
+    private zigbeePInstance!: Uiid168 | undefined;    // 网关设备的操作实例
 
     constructor(ip: string, deviceId: string, devicekey: string) {
         this.ip = ip;
@@ -85,8 +85,11 @@ class SSEClient {
 
                 this.currentRetryInterval = INITIAL_RETRY_INTERVAL; // Reset backOff interval on successful connection
 
+                this.zigbeePInstance = getUiidOperateInstance<Uiid168>(this.deviceId);
+
                 //去判断是否上线zigbee-p子设备 (To determine whether the zigbee p sub-device is online)
-                syncZigbeeDeviceOnlineToIHost(this.deviceId, true);
+                // syncZigbeeDeviceOnlineToIHost(this.deviceId, true);
+                this.zigbeePInstance?.syncZigbeeDeviceOnlineToIHost()
             };
 
             this.eventSource.onmessage = (event) => {
@@ -99,17 +102,18 @@ class SSEClient {
                 const { data, iv } = JSON.parse(event.data);
 
                 const sseData = mDnsDataParse.decryptionDataZigbeeP({ iv, key: this.devicekey, data });
-                const { action } = sseData;
+                const { action, deviceid } = sseData;
+                const zigbeePSubDeviceOperateInstance = getUiidOperateInstance<ZigbeeDeviceOperate>(deviceid); // zigbee-p 子设备实例
 
                 if (action === ESseActionType.UPDATE) {
                     logger.info('zigbee-p -------------------', ESseActionType.UPDATE, JSON.stringify(sseData, null, 2));
                     // async device status to iHost
-                    const { deviceid, params } = sseData;
+                    const { params } = sseData;
                     //保存在线状态，用于smart-home的前端页面 (Save online status for the front-end page of smart home)
                     deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'params', params);
                     zigbeePOnlineMap.zigbeePSubDevicesMap.set(deviceid, true);
-                    syncZigbeeDeviceStateToIHost(deviceid, params);
-                    addZigbeeSubDevice(this.deviceId, deviceid);
+                    zigbeePSubDeviceOperateInstance?.syncDeviceStateToIHostByZigbeeP(params);
+                    this.zigbeePInstance?.addZigbeeSubDevice(deviceid);
 
                     /**
                      * zigbee-p 网关固件版本：1.7.1
@@ -129,16 +133,15 @@ class SSEClient {
                     }
                 } else if (action === ESseActionType.ONLINE) {
                     logger.info('zigbee-p -------------------', ESseActionType.ONLINE, sseData);
-                    const { deviceid, params } = sseData;
+                    const { params } = sseData;
                     //保存在线状态，用于smart-home的前端页面 (Save online status for the front-end page of smart home)
                     deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'itemData', params);
                     zigbeePOnlineMap.zigbeePSubDevicesMap.set(deviceid, params.online);
                     syncDeviceOnlineToIHost(deviceid, params.online);
-                    addZigbeeSubDevice(this.deviceId, deviceid);
+                    this.zigbeePInstance?.addZigbeeSubDevice(deviceid);
                 } else if (action === ESseActionType.DELETE) {
                     logger.info('zigbee-p -------------------', ESseActionType.DELETE, JSON.stringify(sseData, null, 2));
-                    const { deviceid } = sseData;
-                    cancelSyncZigbeeDeviceToIHostBySse(deviceid);
+                    zigbeePSubDeviceOperateInstance?.cancelSyncZigbeeDeviceToIHostBySse();
                     zigbeePOnlineMap.zigbeePSubDevicesMap.delete(deviceid);
                 }
             };
@@ -191,7 +194,7 @@ class SSEClient {
             if (i === TOTAL_RETRY_TIMES) {
                 logger.info('reconnecting end -----');
                 deviceMapUtil.setOfflineDevice(this.deviceId);
-                syncZigbeeDeviceOnlineToIHost(this.deviceId, false);
+                this.zigbeePInstance?.toOfflineAllZigbeePDevices();
                 this.close();
                 return;
             }

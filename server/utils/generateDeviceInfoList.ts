@@ -3,11 +3,10 @@ import IEWeLinkDevice from '../ts/interface/IEWeLinkDevice';
 import _ from 'lodash';
 import EUiid from '../ts/enum/EUiid';
 import zigbeePOnlineMap from '../ts/class/zigbeePOnlineMap';
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST, ZIGBEE_UIID_DEVICE_LIST } from '../constants/uiid';
 import getAllRemoteDeviceList from './getAllRemoteDeviceList';
 import deviceDataUtil from './deviceDataUtil';
 import deviceMapUtil from './deviceMapUtil';
-import logger from '../log';
 
 interface DeviceInfo {
     isOnline: boolean;
@@ -176,6 +175,8 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
         if (!eWeLinkDeviceData) return;
         const { uiid } = eWeLinkDeviceData.itemData.extra;
 
+        // TODO：The content in the judgment statement will be moved to the device operation class
+
         if ([EUiid.uiid_168].includes(uiid)) {
             const subDeviceList = generateSubDeviceList(eWeLinkDeviceData);
 
@@ -304,27 +305,29 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 return
             }
 
-            // if ([EUiid.uiid_28].includes(uiid)) {
-            //     const remoteDeviceList = getAllRemoteDeviceList(deviceId);
+            if ([EUiid.uiid_28].includes(uiid)) {
+                // 已在局域网阶段添加，不再次添加（Added in the LAN stage, not added again）
+                if (deviceList.some(dItem => dItem.deviceId === deviceId)) {
+                    return
+                }
+                const remoteDeviceList = getAllRemoteDeviceList(deviceId);
 
-            //     remoteDeviceList.forEach((rItem, index) => {
-            //         const subDevice = {
-            //             isOnline:  item.itemData.online,
-            //             isMyAccount: true,
-            //             isSupported: true,
-            //             displayCategory: EType.RF_REMOTE,
-            //             familyName: item.familyName,
-            //             deviceId: `${deviceId}_${index}`,
-            //             deviceName: rItem.name,
-            //             isSynced: typeof rItem?.smartHomeAddonRemoteId === 'string' && syncedHostDeviceList.includes(rItem?.smartHomeAddonRemoteId),
-            //             subDeviceNum: 0,
-            //             networkProtocol: ENetworkProtocolType.WIFI,
-            //         };
-            //         deviceList.push(subDevice);
-            //     });
-
-            //     return
-            // }
+                remoteDeviceList.forEach((rItem, index) => {
+                    const subDevice = {
+                        isOnline: item.itemData.online,
+                        isMyAccount: true,
+                        isSupported: true,
+                        displayCategory: EType.RF_REMOTE,
+                        familyName: item.familyName,
+                        deviceId: `${deviceId}_${index}`,
+                        deviceName: rItem.name,
+                        isSynced: typeof rItem?.smartHomeAddonRemoteId === 'string' && syncedHostDeviceList.includes(rItem?.smartHomeAddonRemoteId),
+                        subDeviceNum: 0,
+                        networkProtocol: ENetworkProtocolType.WIFI,
+                    };
+                    deviceList.push(subDevice);
+                });
+            }
 
             const device = {
                 isOnline: item.itemData.online,
@@ -335,7 +338,7 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
                 deviceId,
                 deviceName: item.itemData.name,
                 isSynced: syncedHostDeviceList.includes(deviceId),
-                subDeviceNum: 0,
+                subDeviceNum: generateSubDeviceNum(item, eWeLinkDeviceList),
                 networkProtocol: ENetworkProtocolType.WIFI,
             };
             _.remove(deviceList, (t) => t.deviceId === deviceId);
@@ -355,6 +358,7 @@ function generateSubDeviceList(eWeLinkDeviceData: IEWeLinkDevice) {
 }
 
 /** rf网关、zigbee-p网关设备的子设备数量 (The number of sub-devices of RF gateway and zigbee p gateway devices)*/
+// TODO：The content in the judgment statement will be moved to the device operation class
 function generateSubDeviceNum(eWeLinkDeviceData: IEWeLinkDevice, eWeLinkDeviceList: IEWeLinkDevice[]) {
     const { uiid } = eWeLinkDeviceData.itemData.extra;
 

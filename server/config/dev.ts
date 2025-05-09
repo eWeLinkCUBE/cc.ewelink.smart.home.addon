@@ -15,7 +15,7 @@ export const devConf = {
         appSecret: 'KCLh*HfIik$CWf1M@^%TFit45eq9Ha@w',
     },
     iHost: {
-        api: 'http://192.168.3.17/open-api/v1/rest',
+        api: 'http://10.10.10.214/open-api/v2/rest',
     },
     log: {
         path: 'log/logFile/total_dev.log',
@@ -38,5 +38,5 @@ export const devConf = {
         refreshEWeLinkTokenGapTime: 24 * 60 * 60,
     },
     /** 启动的ip (startup ip)*/
-    localIp: 'http://192.168.3.95:8321',
+    localIp: 'http://10.10.4.168:8321',
 };

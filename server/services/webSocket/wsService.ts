@@ -5,8 +5,7 @@ import syncDeviceOnlineIHost from '../../services/public/syncDeviceOnlineToIHost
 import syncWebSocketDeviceStateToIHost from './syncWebSocketDeviceStateToIHost';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import { initCoolkitWs } from '../../utils/initApi';
-import syncDeviceCapabilitiesToIHost from '../public/syncDeviceCapabilitiesToIHost';
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST, WEB_SOCKET_UIID_DEVICE_LIST } from '../../constants/uiid';
 import EUiid from '../../ts/enum/EUiid';
 
 async function updateByWs(param: { deviceid: string; ownerApikey: string; params: any }) {
@@ -21,14 +20,12 @@ async function updateByWs(param: { deviceid: string; ownerApikey: string; params
     }
 
     const { deviceid, ownerApikey, params } = param;
-    // console.log(`SL : 更新设备信息`, deviceid, ownerApikey, params);
     logger.info('ws params-------', params);
     const updateResult = await CoolKitWs.updateThing({
         deviceid,
         ownerApikey,
         params,
     });
-    // console.log(`SL : 长连接更新结果`, updateResult);
     if (updateResult.error !== 0) {
         logger.info('updateResult-------', params, updateResult);
         //{ error: 604, msg: '请求超时' }
@@ -50,6 +47,8 @@ async function listenWs(ev: { data: any; type: string; target: any }) {
     // 设备开关更新，发送监听消息(Device switch update, send monitoring message)
     if (_.has(receiveMsg, 'action')) {
         const { deviceid, action, params } = receiveMsg;
+
+        // TODO：The content in the judgment statement will be moved to the device operation class
         let uiid = deviceDataUtil.getUiidByDeviceId(deviceid);
 
         // zigbee-U子设备由zigbee-U决定(zigbee-U sub-device is determined by zigbee-U)
@@ -65,8 +64,7 @@ async function listenWs(ev: { data: any; type: string; target: any }) {
         switch (action) {
             case 'update':
                 deviceDataUtil.updateEWeLinkDeviceData(deviceid, 'params', params);
-                syncWebSocketDeviceStateToIHost(deviceid, params, uiid);
-                syncDeviceCapabilitiesToIHost(deviceid, params);
+                syncWebSocketDeviceStateToIHost(deviceid, params);
                 break;
             case 'sysmsg':
                 logger.info('sysmsg-------------------', receiveMsg);

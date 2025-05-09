@@ -97,7 +97,17 @@ enum ECapability {
     /** 子组件电量统计 (sub component power statistics)*/
     TOGGLE_POWER_CONSUMPTION = 'toggle-power-consumption',
     /** 子组件识别/激活(Sub component identification/activation) */
-    TOGGLE_IDENTIFY= 'toggle-identify'
+    TOGGLE_IDENTIFY= 'toggle-identify',
+
+    // 传感器细分出来的新增能力
+    /** 烟雾检测 */
+    SMOKE = 'smoke',
+    /** 门磁开合检测 */
+    CONTACT = 'contact',
+    /** 人体移动监测 */
+    MOTION = 'motion',
+    /** 水浸检测 */
+    WATER_LEAK = 'water-leak',
 }
 
 export default ECapability;

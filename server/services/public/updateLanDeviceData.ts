@@ -2,8 +2,9 @@ import axios, { AxiosError } from 'axios';
 import mDnsDataParse from '../../utils/mDnsDataParse';
 import deviceDataUtil from '../../utils/deviceDataUtil';
 import logger from '../../log';
-import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../const';
+import { LAN_WEB_SOCKET_UIID_DEVICE_LIST } from '../../constants/uiid';
 import wsService from '../webSocket/wsService';
+import { IRequestDeviceResponse } from '../../ts/interface/ILanRequest';
 enum ERequestMethod {
     GET = 'get',
     POST = 'post',
@@ -15,7 +16,7 @@ const deviceAxiosInstance = axios.create({
 // 'content-type': 'application/json',
 
 /** 请求局域网设备 (Request LAN device) */
-async function requestDevice(deviceId: string, devicekey: string, selfApikey: string, state: string, path: string, method: ERequestMethod = ERequestMethod.POST) {
+async function requestDevice(deviceId: string, devicekey: string, selfApikey: string, state: string, path: string, method: ERequestMethod = ERequestMethod.POST): Promise<IRequestDeviceResponse | null> {
     try {
         const params = deviceDataUtil.generateUpdateLanDeviceParams(deviceId);
 
@@ -184,16 +185,6 @@ const subDeviceControl = async (deviceId: string, devicekey: string, selfApikey:
     return await requestDevice(parentId, devicekey, selfApikey, newState, 'subdev/control');
 };
 
-/** 堆叠式网关 子设备控制 (Stacked gateway sub-device control) */
-const spmSubDeviceControl = async (deviceId: string, devicekey: string, selfApikey: string, state: string) => {
-    const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);
-    const parentId = iHostDeviceData?.deviceInfo.parentId;
-
-    const newState = JSON.stringify(
-        { subDevId: deviceId, ...JSON.parse(state) },
-    );
-    return await requestDevice(parentId, devicekey, selfApikey, newState, 'switches');
-};
 /** 堆叠式网关 子设备实时监测 (Stacked gateway sub-device real-time monitoring) */
 const spmSubDeviceUiActive = async (deviceId: string, devicekey: string, selfApikey: string, state: string) => {
     const iHostDeviceData = deviceDataUtil.getIHostDeviceDataByDeviceId(deviceId);
@@ -205,8 +196,6 @@ const spmSubDeviceUiActive = async (deviceId: string, devicekey: string, selfApi
 
     return await requestDevice(parentId, devicekey, selfApikey, newState, 'uiActive');
 };
-
-
 
 
 export default {
@@ -223,6 +212,5 @@ export default {
     setRfButton,
     getAllDevices,
     subDeviceControl,
-    spmSubDeviceControl,
     spmSubDeviceUiActive
 };

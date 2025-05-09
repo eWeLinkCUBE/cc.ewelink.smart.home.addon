@@ -9,6 +9,7 @@ import logger from '../log';
 import getEwelinkAllDeviceList from '../services/public/getEwelinkAllDeviceList';
 import syncAllWebSocketDeviceOffline from '../services/webSocket/syncAllWebSocketDeviceOffline';
 import WsReconnect from '../utils/wsReconnectClass';
+import { getIHostInfo } from '../api/iHost';
 
 export const initCoolkitApi = () => {
     // 初始化 coolkit api (Initialize coolkit api)

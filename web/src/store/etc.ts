@@ -15,6 +15,7 @@ interface IEtcState {
     getAccessTokenTimeNumber: number;
     getAccessTokenNumber: number;
     getUserInfoInterval: number;
+    support: boolean;
 }
 
 export const useEtcStore = defineStore('addon_etc', {
@@ -43,6 +44,8 @@ export const useEtcStore = defineStore('addon_etc', {
             getAccessTokenNumber: 0,
             /** 获取登录信息轮询接口的返回值 (Get the return value of the login information polling interface)*/
             getUserInfoInterval: 0,
+            /** 当前 iHost 版本是否支持使用 add-on 功能 */
+            support: true,
         };
     },
     getters: {},
@@ -60,6 +63,9 @@ export const useEtcStore = defineStore('addon_etc', {
         },
         setLoginState(state: boolean) {
             this.isLogin = state;
+        },
+        setSupport(state: boolean) {
+            this.support = state;
         },
         setUserInfo(userInfo: IUser) {
             this.userInfo = userInfo;

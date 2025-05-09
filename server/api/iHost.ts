@@ -1,6 +1,12 @@
 import EMethod from '../ts/enum/EMethod';
 import { request, requestNoError } from '../utils/request';
 import IHostDevice from '../ts/interface/IHostDevice';
+
+/** 获取网关信息 */
+export const getIHostInfo = () => {
+    return request<{ fw_version: string }>('/bridge', EMethod.GET);
+}
+
 export const getPermissionApi = (params: { app_name: string }) => {
     return request<{ token: string }>('/bridge/access_token', EMethod.GET, params);
 };
@@ -156,6 +162,7 @@ interface SyncDeviceInformationToIHostReq {
                 capability: string;
                 permission: string;
                 configuration?: any;
+                settings?: any;
                 name?: string;
             }[];
         };

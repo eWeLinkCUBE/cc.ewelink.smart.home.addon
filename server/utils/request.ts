@@ -13,7 +13,7 @@ export interface ApiResponse<T> {
 
 axios.defaults.timeout = 60000;
 
-const iHostAxiosInstance = axios.create({
+export const iHostAxiosInstance = axios.create({
     baseURL: config.iHost.api, //基本请求路径(Basic request path)
     timeout: 60000, //超时设定 (Timeout setting)
 });
