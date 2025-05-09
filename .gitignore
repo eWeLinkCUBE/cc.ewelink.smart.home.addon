@@ -61,6 +61,4 @@ web/src/auto-import.d.ts
 bin-test
 bin/push_dev.sh
 bin/build_dev.sh
-bin/build_dev.sh
 bin/push_dev_with_buildx.sh
-bin-dis

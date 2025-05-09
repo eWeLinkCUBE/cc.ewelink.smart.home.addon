@@ -2,6 +2,7 @@ import _ from 'lodash';
 import CkApi from '../../lib/coolkit-api';
 import logger from '../../log';
 import db from '../../utils/db';
+import toLogout from '../../utils/toLogout';
 
 function atExpired() {
     const AT_LIFETIME = 86400000 * 15; // 15 day
@@ -31,6 +32,7 @@ export default async function refreshEWeLinkToken() {
     const refreshRes = await CkApi.user.refresh();
     logger.info('retry refresh at res ----------------------------------', refreshRes);
     if (refreshRes.error !== 0) {
+        toLogout()
         return;
     }
     const { at, rt } = refreshRes.data;

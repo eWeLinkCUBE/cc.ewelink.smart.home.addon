@@ -1,4 +1,5 @@
 import { COOLKIT_SECRET } from './secret';
+import os from 'os';
 
 export const prodConf = {
     nodeApp: {
@@ -15,7 +16,7 @@ export const prodConf = {
         appSecret: '&!imrc%uk47plfI^^sldiQ0^nNWWf9L6',
     },
     iHost: {
-        api: 'http://ihost/open-api/v1/rest',
+        api: `http://${os.hostname()}/open-api/v1/rest`,
     },
     log: {
         path: 'log/logFile/total_prod.log',
@@ -38,5 +39,5 @@ export const prodConf = {
         refreshEWeLinkTokenGapTime: 24 * 60 * 60,
     },
     /** 启动的ip */
-    localIp: 'http://ihost:8321',
+    localIp: `http://${os.hostname()}:8321`,
 };
