@@ -24,7 +24,7 @@ export default class Uiid7002 extends ZigbeeDeviceOperate {
     }
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanStateMotionSensor7002) {
-        const iHostState = lanStateToIHostState.motionSensor(lanState);
+        const iHostState = lanStateToIHostState.motionSensor(lanState, this._iHostDeviceData);
         // uiid 7002 移动传感器需要同步光照等级数据 (uiid 7002 motion sensor need to sync illumination-level data)
         const brState = _.get(lanState, 'brState', null);
         if (brState !== null) {

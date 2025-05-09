@@ -26,6 +26,6 @@ export default class Uiid5026 extends ZigbeeDeviceOperate {
     }
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanStateSmokeDetector) {
-        return lanStateToIHostState.smokeDetector(lanState);
+        return lanStateToIHostState.smokeDetector(lanState, this._iHostDeviceData);
     }
 }

@@ -24,6 +24,6 @@ export default class Uiid7019 extends ZigbeeDeviceOperate {
     }
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanStateWaterSensor) {
-        return lanStateToIHostState.waterSensor(lanState);
+        return lanStateToIHostState.waterSensor(lanState, this._iHostDeviceData);
     }
 }

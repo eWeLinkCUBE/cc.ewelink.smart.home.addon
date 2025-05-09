@@ -12,6 +12,7 @@ import getAllRemoteDeviceList from './getAllRemoteDeviceList';
 import IRemoteDevice from '../ts/interface/IRemoteDevice';
 import { get102DeviceOnline } from './deviceUtil';
 import syncDeviceOnlineIHost from '../services/public/syncDeviceOnlineToIHost';
+import IHostDeviceData from '../ts/interface/IHostDeviceData';
 
 /** 根据设备id得到ewelink里的设备数据 (Get the device data in ewelink based on the device ID)*/
 function getEWeLinkDeviceDataByDeviceId(deviceId: string) {
@@ -63,7 +64,7 @@ function getIHostDeviceDataByDeviceId(deviceId: string) {
     }
 
     const deviceInfo = JSON.parse(decode(iHostDeviceData.tags.deviceInfo));
-    return {
+    const params: IHostDeviceData =  {
         serial_number: iHostDeviceData.serial_number,
         deviceId: deviceInfo.deviceId,
         devicekey: deviceInfo.devicekey,
@@ -74,6 +75,7 @@ function getIHostDeviceDataByDeviceId(deviceId: string) {
         capabilityList: iHostDeviceData.capabilities.map((item) => item.capability),
         third_serial_number: deviceInfo?.third_serial_number ?? deviceId,
     };
+    return params;
 }
 
 function getIHostDeviceDataByThirdSerialNumber(thirdSerialNumber: string) {

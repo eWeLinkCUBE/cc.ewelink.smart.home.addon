@@ -24,7 +24,7 @@ export default class uiid_7003 extends ZigbeeDeviceOperate {
     }
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanStateContactSensorWithTamperAlert) {
-        const iHostState = lanStateToIHostState.contactSensor(lanState);
+        const iHostState = lanStateToIHostState.contactSensor(lanState, this._iHostDeviceData);
         // 在zigbee-P上，局域网sse和 websocket 都上报了 “被装上” 和 “被拆下” (On zigbee-P, both LAN SSE and websocket reported "mounted" and "removed")
         // 在zigbee-U上，websocket只上报了 “被拆下”(On zigbee-U, websocket only reports "removed")
 

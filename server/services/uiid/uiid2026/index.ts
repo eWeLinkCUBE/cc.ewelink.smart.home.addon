@@ -21,6 +21,6 @@ export default class Uiid2026 extends ZigbeeDeviceOperate {
     }
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanStateMotionSensor) {
-        return lanStateToIHostState.motionSensor(lanState);
+        return lanStateToIHostState.motionSensor(lanState, this._iHostDeviceData);  
     }
 }

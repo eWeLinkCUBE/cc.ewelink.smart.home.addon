@@ -11,6 +11,7 @@ import { changeVoltageToBattery } from "../../../utils/deviceTool";
 import EDeviceControlMode from "../../../ts/enum/EDeviceControlMode";
 import EChannelProtocol from "../../../ts/enum/EChannelProtocol";
 import deviceDataUtil from "../../../utils/deviceDataUtil";
+import { getSensorState } from "../common/lanStateToIHostState/sensor";
 
 /** WiFi门磁(Wi fi gate) */
 export default class Uiid102 extends BaseDeviceOperate {
@@ -37,11 +38,7 @@ export default class Uiid102 extends BaseDeviceOperate {
         const switchState = _.get(lanState, 'switch', null);
 
         if (switchState !== null) {
-            _.merge(iHostState, {
-                contact: {
-                    contact: switchState === 'on',
-                },
-            });
+            _.merge(iHostState, getSensorState(this._iHostDeviceData, switchState === 'on', [ECapability.CONTACT, ECapability.CONTACT]))
         }
 
         const battery = _.get(lanState, 'battery', null);

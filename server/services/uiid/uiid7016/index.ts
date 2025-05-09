@@ -6,6 +6,7 @@ import ECapability from "../../../ts/enum/ECapability";
 import EPermission from "../../../ts/enum/EPermission";
 import { ILanStatePersonExist } from "../../../ts/interface/ILanState";
 import EProductMode7016 from "../../../ts/enum/EProductMode7016";
+import { getSensorState } from "../common/lanStateToIHostState/sensor";
 import EChannelProtocol from "../../../ts/enum/EChannelProtocol";
 
 /**人体存在传感器 (human presence sensor)*/
@@ -57,6 +58,7 @@ export default class Uiid7020 extends ZigbeeDeviceOperate {
                     motion: HUMAN_MAP[human],
                 },
             });
+            _.merge(iHostState, getSensorState(this._iHostDeviceData, HUMAN_MAP[human], [ECapability.MOTION, ECapability.MOTION]))
         }
 
         const brState = _.get(lanState, 'brState', null);

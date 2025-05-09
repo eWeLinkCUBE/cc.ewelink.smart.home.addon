@@ -21,6 +21,6 @@ export default class Uiid3026 extends ZigbeeDeviceOperate {
     }
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanStateContactSensor) {
-        return lanStateToIHostState.contactSensor(lanState);
+        return lanStateToIHostState.contactSensor(lanState, this._iHostDeviceData);
     }
 }
