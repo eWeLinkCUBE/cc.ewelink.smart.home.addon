@@ -350,7 +350,7 @@ export default function generateDeviceInfoList(syncedHostDeviceList: string[], m
 }
 /** 拿到zigbee-p网关子设备数据 (Get zigbee p gateway sub-device data)*/
 function generateSubDeviceList(eWeLinkDeviceData: IEWeLinkDevice) {
-    const subDevices = eWeLinkDeviceData.itemData.params.subDevices as { deviceid: string; uiid: number }[];
+    const { subDevices = [] }: { subDevices: { deviceid: string; uiid: number }[] } = eWeLinkDeviceData.itemData.params;
     const subDeviceList = subDevices.map((item) => {
         return { uiid: item.uiid, deviceId: item.deviceid };
     });
