@@ -27,6 +27,7 @@ import external from "./external";
 import { IHostStateInterface } from "../../../ts/interface/IHostState";
 import controlDeviceByLan from "../common/controlDeviceByLan";
 import IResData from "../../../ts/interface/IResData";
+import { skipTriggerCapsOnGetEWLDeviceList, needCollectCapabilities, lanPrioritizedCapabilities } from "../../../constants/capability";
 
 /** 设备相关操作的公共类 (设备相关操作的公共类) */
 export default class BaseDeviceOperate {
@@ -325,10 +326,9 @@ export default class BaseDeviceOperate {
     // ================================== 设备控制相关逻辑 begin (Device control related logic begin) ====================================
 
     /** 是否需要收集参数 (Is it necessary to collect parameters) */
-    protected _isNeedCollect(iHostState: IHostStateInterface) {
-        return [ECapability.BRIGHTNESS, ECapability.COLOR_TEMPERATURE, ECapability.COLOR_RGB, ECapability.TOGGLE, ECapability.MODE].some((ability) => _.get(iHostState, [ability]));
+    private _isNeedCollect(iHostState: IHostStateInterface) {
+        return needCollectCapabilities.some((ability) => _.get(iHostState, [ability]));
     }
-
 
     /** 设备控制时，iHost 能力状态 => 设备状态 (iHost capability status => Device status during device control) */
     protected _iHostStateToLanState(iHostState: any) {
@@ -370,7 +370,7 @@ export default class BaseDeviceOperate {
             return await this._queryWanDeviceStates(req)
         }
 
-        if (deviceStateUtil.isInLanProtocol(this._deviceId)) {
+        if (deviceStateUtil.isInLan(this._deviceId)) {
             return await this._queryLanDeviceStates(req)
         } else {
             return await this._queryWanDeviceStates(req)
@@ -397,22 +397,20 @@ export default class BaseDeviceOperate {
             return await this._updateWanDeviceStates(req, iHostState)
         }
 
-        if (deviceStateUtil.isInLanProtocol(this._deviceId)) {
+        if (deviceStateUtil.isInLan(this._deviceId)) {
             return await this._updateLanDeviceStatesCollect(req, iHostState)
         } else {
             return await this._updateWanDeviceStates(req, iHostState)
         }
     }
     protected async _updateLanDeviceStatesCollect(req: Request, iHostState: IHostStateInterface) {
-        let newIHostState = iHostState
         if (this._isNeedCollect(iHostState)) {
-            const collectIHostState = await controlDeviceByLan.utils.toCollectIHostState(req)
-            if (!collectIHostState) {
-                return null;
-            }
-            newIHostState = collectIHostState
+            return await controlDeviceByLan.utils.toCollectControl(
+                req,
+                async (req: Request, iHostState: IHostStateInterface) => await this._updateLanDeviceStates(req, iHostState)
+            );
         }
-        return await this._updateLanDeviceStates(req, newIHostState)
+        return await this._updateLanDeviceStates(req, iHostState);
     }
     /** 控制 lan 设备 (Control lan equipment) */
     protected async _updateLanDeviceStates(req: Request, iHostState: IHostStateInterface): Promise<IResData | null> {
@@ -438,8 +436,16 @@ export default class BaseDeviceOperate {
 
     // ================================== 设备状态上报相关逻辑 begin (Device status reporting related logic begin) =================================
 
+    /** 
+     * 既支持长连接和局域网的设备是否需要阻止长连接上报 
+     * Whether devices that support both long connections and LANs need to block long connection reporting
+     */
+    private _isNeedBlockWanUpdate(iHostState: IHostStateInterface) {
+        return lanPrioritizedCapabilities.some((ability) => _.get(iHostState, [ability]));
+    }
+
     /** 设备上报发送消息：websocket (设备上报发送消息：websocket) */
-    protected async _sendDataWhenSyncDeviceStateToIHostByWebsocket(params: any) {
+    protected async _sendDataWhenSyncDeviceStateToIHostByWebsocket({ lanState, isVerifyReportCapability = false }: { lanState: any, isVerifyReportCapability?: boolean }) {
         if (!this._iHostDeviceData) {
             return;
         }
@@ -450,15 +456,26 @@ export default class BaseDeviceOperate {
             return;
         }
 
-        let iHostState = this._lanStateToIHostState(params);
-        logger.info('sync websocket device state------', JSON.stringify(iHostState, null, 2));
+        let iHostState = this._lanStateToIHostState(lanState);
 
         if (!this._iHostDeviceData.capabilityList.includes('rssi')) {
             iHostState = _.omit(iHostState, ['rssi']);
         }
+
+        if (isVerifyReportCapability) {
+            iHostState = _.omit(iHostState, skipTriggerCapsOnGetEWLDeviceList)
+        }
+
         if (_.isEmpty(iHostState)) {
             return;
         }
+
+        if (this._isNeedBlockWanUpdate(iHostState) && deviceStateUtil.isInLan(this._deviceId)) {
+            return;
+        }
+
+        logger.info('sync websocket device state------', JSON.stringify(iHostState, null, 2));
+        
         const syncDeviceStateToIHostParams = {
             event: {
                 header: {
@@ -500,7 +517,7 @@ export default class BaseDeviceOperate {
         }
 
         if (this._controlMode === EDeviceControlMode.LAN_AND_WAN) {
-            if (wsService.isWsConnected()) {
+            if (wsService.isWsConnected() && !this._isNeedBlockWanUpdate(iHostState)) {
                 return;
             }
         }
@@ -542,8 +559,8 @@ export default class BaseDeviceOperate {
     }
 
     /** 设备上报：websocket (Device Report: websocket) */
-    async syncDeviceStateToIHostByWebsocket(params: any) {
-        await this._sendDataWhenSyncDeviceStateToIHostByWebsocket(params);
+    async syncDeviceStateToIHostByWebsocket(data: { lanState: any, isVerifyReportCapability?: boolean }) {
+        await this._sendDataWhenSyncDeviceStateToIHostByWebsocket(data);
     }
 
     // ================================== 设备状态上报相关逻辑 over (Device status reporting logic over) =================================
@@ -623,9 +640,9 @@ export default class BaseDeviceOperate {
         }
 
         if (this._controlMode === EDeviceControlMode.LAN_AND_WAN) {
-            const isInLanProtocol = deviceStateUtil.isInLanProtocol(this._deviceId);
+            const isInLan = deviceStateUtil.isInLan(this._deviceId);
 
-            if (!isInLanProtocol) {
+            if (!isInLan) {
                 await this.syncDeviceOnlineToIHost(false);
             }
         }

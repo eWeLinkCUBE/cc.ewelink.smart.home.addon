@@ -62,7 +62,7 @@ export default class Uiid126 extends BaseDeviceOperate {
 
     protected override _iHostStateToLanStateMiddleware(iHostState: IHostStateInterface) {
         const lanState = {}
-        const isWebSocket = !deviceStateUtil.isInLanProtocol(this._deviceId)
+        const isWebSocket = !deviceStateUtil.isInLan(this._deviceId)
         return _.assign(lanState, iHostStateToLanState.uiid126And165(iHostState, this._deviceId, isWebSocket))
     }
 

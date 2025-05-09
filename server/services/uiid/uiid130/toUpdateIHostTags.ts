@@ -52,7 +52,7 @@ export default async function toUpdateIHostUiid130Tags() {
                     header: {
                         name: 'DeviceInformationUpdatedReport',
                         message_id: uuidv4(),
-                        version: '1',
+                        version: '2',
                     },
                     endpoint: {
                         serial_number: item.serial_number,

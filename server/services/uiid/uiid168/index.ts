@@ -62,7 +62,7 @@ export default class Uiid168 extends BaseDeviceOperate {
         }
     }
 
-    /** 获取网关下所有子设备泪飙 */
+    /** 获取网关下所有子设备列表 */
     async getZigbeePAllDeviceList() {
         try {
             logger.info('to get zigbee-p all deviceList', this._deviceId);
@@ -114,7 +114,7 @@ export default class Uiid168 extends BaseDeviceOperate {
                 // 保存在线状态，用于smart-home的前端页面
                 // Save online status for the front-end page of smart home
                 zigbeePOnlineMap.zigbeePSubDevicesMap.set(subDeviceInfo.deviceid, subDeviceInfo.online);
-                const operateInstance = await getUiidOperateInstance(subDeviceInfo.deviceid);
+                const operateInstance = getUiidOperateInstance(subDeviceInfo.deviceid);
                 operateInstance?.syncDeviceOnlineToIHost(subDeviceInfo.online);
             }
         } catch (error: any) {
@@ -150,11 +150,11 @@ export default class Uiid168 extends BaseDeviceOperate {
             return true;
         });
 
-        deviceIdList.forEach(async (item) => {
+        deviceIdList.forEach((item) => {
             if (!item) {
                 return;
             }
-            const operateInstance = await getUiidOperateInstance(item.deviceId);
+            const operateInstance = getUiidOperateInstance(item.deviceId);
             operateInstance?.syncDeviceOnlineToIHost(false);
 
             logger.info('sync zigbee device online or offline---------------zigbeeP offline', item?.deviceId, false);

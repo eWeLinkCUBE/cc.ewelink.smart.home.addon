@@ -19,7 +19,11 @@ export default async function syncAllWebSocketDeviceStateAndOnlineIHost() {
             const operateInstance = getUiidOperateInstance(deviceid);
 
             if (online) {
-                await operateInstance?.syncDeviceStateToIHostByWebsocket(item.itemData.params);
+                // 将一些长连接设备的状态更新 (Update the status of some long connected devices)
+                await operateInstance?.syncDeviceStateToIHostByWebsocket({
+                    lanState: item.itemData.params,
+                    isVerifyReportCapability: true
+                });
             } else {
                 await operateInstance?.syncWebsocketDeviceOffline();
             }

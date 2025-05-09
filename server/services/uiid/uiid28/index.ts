@@ -26,6 +26,7 @@ import wsService from "../../webSocket/wsService";
 import deviceStateUtil from "../../../utils/deviceStateUtil";
 import db from "../../../utils/db";
 import controlDeviceByLan from "../common/controlDeviceByLan";
+import { skipTriggerCapsOnGetEWLDeviceList } from "../../../constants/capability";
 
 /** 
  * RFBridge
@@ -502,7 +503,7 @@ export default class Uiid28 extends BaseDeviceOperate {
                         header: {
                             name: 'DeviceOnlineChangeReport',
                             message_id: uuidv4(),
-                            version: '1',
+                            version: '2',
                         },
                         endpoint: {
                             serial_number: item.serial_number,
@@ -526,7 +527,7 @@ export default class Uiid28 extends BaseDeviceOperate {
     }
 
     /** 设备上报发送消息：websocket */
-    protected override async _sendDataWhenSyncDeviceStateToIHostByWebsocket(lanState: ILanState28) {
+    protected override async _sendDataWhenSyncDeviceStateToIHostByWebsocket({ lanState, isVerifyReportCapability = false }: { lanState: ILanState28, isVerifyReportCapability?: boolean }) {
         // { cmd: 'trigger', rfTrig0: '2025-03-11T02:23:19.000Z' }
         const eWeLinkApiInfo = db.getDbValue('eWeLinkApiInfo');
         if (!eWeLinkApiInfo) {
@@ -546,6 +547,11 @@ export default class Uiid28 extends BaseDeviceOperate {
             const actions = pressCap.settings?.actions;
             if (!actions) return;
             let state = this._lanStateToIHostState(lanState, actions);
+        
+            if (isVerifyReportCapability) {
+                state = _.omit(state, skipTriggerCapsOnGetEWLDeviceList);
+            }
+
             // 不属于该设备的按键不同步（The keys that do not belong to the device are not synchronized）
             if (!state || _.isEmpty(state)) {
                 return;

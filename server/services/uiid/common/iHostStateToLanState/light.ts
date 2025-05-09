@@ -82,7 +82,7 @@ export default function iHostStateToLanStateLight(iHostState: IHostStateInterfac
 
 function getLanState(deviceId: string) {
     let lanState;
-    if (deviceStateUtil.isInLanProtocol(deviceId)) {
+    if (deviceStateUtil.isInLan(deviceId)) {
         lanState = deviceDataUtil.getLastLanState(deviceId);
         lanState && delete lanState._subDeviceId;
     }

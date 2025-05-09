@@ -44,7 +44,7 @@ export async function sendDeviceState(_subDeviceId: string, iHostState: IHostSta
             header: {
                 name: 'DeviceStatesChangeReport',
                 message_id: uuidv4(),
-                version: '1',
+                version: '2',
             },
             endpoint: {
                 serial_number: iHostDeviceData?.serial_number,

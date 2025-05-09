@@ -56,7 +56,7 @@ export default async function getWebSocketRealSummarizeToggle(req: Request) {
                 header: {
                     name: 'Response',
                     message_id,
-                    version: '1',
+                    version: '2',
                 },
                 payload: {
                     state: {
@@ -82,7 +82,7 @@ function createFailRes(message_id: string) {
             header: {
                 name: 'ErrorResponse',
                 message_id,
-                version: '1',
+                version: '2',
             },
             payload: {
                 type: 'ENDPOINT_UNREACHABLE',

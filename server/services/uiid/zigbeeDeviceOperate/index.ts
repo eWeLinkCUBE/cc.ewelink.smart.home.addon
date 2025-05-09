@@ -126,9 +126,9 @@ export default class ZigbeeDeviceOperate extends BaseDeviceOperate {
     }
 
     /** zigbee-u 长连接设备上报*/
-    protected async _sendDataWhenSyncDeviceStateToIHostByWebsocket(params: any) {
+    protected async _sendDataWhenSyncDeviceStateToIHostByWebsocket(data: { lanState: any, isVerifyReportCapability?: boolean }) {
         if (this._isZigbeeUSubDevice && this._eWeLinkDeviceData && this._eWeLinkDeviceData.itemData.online === false) return;
-        await super._sendDataWhenSyncDeviceStateToIHostByWebsocket(params);
+        await super._sendDataWhenSyncDeviceStateToIHostByWebsocket(data);
     }
 
     /** zigbee-p 局域网设备上报 */
@@ -189,5 +189,15 @@ export default class ZigbeeDeviceOperate extends BaseDeviceOperate {
             return eWeLinkDeviceData;
         });
         db.setDbValue('eWeLinkDeviceList', list);
+    }
+
+    override async syncDeviceStateToIHostByWebsocket(data: { lanState: any, isVerifyReportCapability?: boolean }) {
+        if (!this._isZigbeeUSubDevice) return;
+        await super.syncDeviceStateToIHostByWebsocket(data);
+    }
+
+    override async syncWebsocketDeviceOffline() {
+        if (!this._isZigbeeUSubDevice) return;
+        await this.syncDeviceOnlineToIHost(false);
     }
 }

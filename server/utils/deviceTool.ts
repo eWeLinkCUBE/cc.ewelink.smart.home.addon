@@ -11,6 +11,9 @@ import _ from 'lodash';
  * batteryPercentage is an integer
 */
 export function changeVoltageToBattery(voltage: number, eWeLinkDeviceData: IEWeLinkDevice | null) {
+    const maxVoltage = 3;
+    const maxBatteryPercentage = 100
+
     // 设备低电量电压值（Device low battery voltage value）
     const lowVolAlarm = _.get(eWeLinkDeviceData, 'itemData.devConfig.lowVolAlarm', 2.6)
 
@@ -19,8 +22,14 @@ export function changeVoltageToBattery(voltage: number, eWeLinkDeviceData: IEWeL
 
     // ihost电量区间 0-19 低 ，20-69 中，70-100高（ihost power range 0-19 low, 20-69 medium, 70-100 high）
     const iHostLowVolAlarm = 20
+
+    // 如果大于 3v，将其设为满电量 (If it is greater than 3v, set it to full power)
+    if (voltage > maxVoltage) {
+        return maxBatteryPercentage;
+    }
+
     if (voltage >= lowVolAlarm) {
-        batteryPercentage = iHostLowVolAlarm + (voltage - lowVolAlarm) / (3 - lowVolAlarm) * (100 - iHostLowVolAlarm)
+        batteryPercentage = iHostLowVolAlarm + (voltage - lowVolAlarm) / (maxVoltage - lowVolAlarm) * (maxBatteryPercentage - iHostLowVolAlarm)
     } else {
         batteryPercentage = iHostLowVolAlarm - (lowVolAlarm - voltage) / (lowVolAlarm - 0) * (iHostLowVolAlarm - 0)
     }
