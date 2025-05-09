@@ -99,12 +99,12 @@ export default class Uiid126 extends BaseDeviceOperate {
 
         /** --------- 电机控制 (Motor control)---------- */
         let lanStateObj = typeof lanState === 'string' && JSON.parse(lanState)
-        if (iHostState[ECapability.MOTOR_CONTROL]) {
+        if (_.get(lanStateObj, 'motorTurn', null) !== null) {
             lanStateObj = _.pick(lanStateObj, ['motorTurn']);
             lanRequest = updateLanDeviceData.setCurtainMotorTurn
         }
 
-        if (iHostState[ECapability.PERCENTAGE]) {
+        if (_.get(lanStateObj, 'location', null)) {
             lanStateObj = _.pick(lanStateObj, ['location']);
             lanRequest = updateLanDeviceData.setCurtainLocation
         }
