@@ -1,13 +1,13 @@
-import BaseDeviceOperate from "../baseDeviceOperate";
-import EUiid from "../../../ts/enum/EUiid";
-import _ from "lodash";
-import { toIntNumber } from "../../../utils/tool";
-import ECategory from "../../../ts/enum/ECategory";
-import ECapability from "../../../ts/enum/ECapability";
-import EPermission from "../../../ts/enum/EPermission";
-import { ILanState154 } from "../../../ts/interface/ILanState";
-import EDeviceControlMode from "../../../ts/enum/EDeviceControlMode";
-import { getSensorState } from "../common/lanStateToIHostState/sensor";
+import BaseDeviceOperate from '../baseDeviceOperate';
+import EUiid from '../../../ts/enum/EUiid';
+import _ from 'lodash';
+import { toIntNumber } from '../../../utils/tool';
+import ECategory from '../../../ts/enum/ECategory';
+import ECapability from '../../../ts/enum/ECapability';
+import EPermission from '../../../ts/enum/EPermission';
+import { ILanState154 } from '../../../ts/interface/ILanState';
+import EDeviceControlMode from '../../../ts/enum/EDeviceControlMode';
+import { getSensorState } from '../common/lanStateToIHostState/sensor';
 
 /** 新版WIFI门磁（New version of wifi door sensor） */
 export default class Uiid154 extends BaseDeviceOperate {
@@ -30,7 +30,7 @@ export default class Uiid154 extends BaseDeviceOperate {
                 permission: EPermission.UPDATED,
             },
         ],
-    }
+    };
 
     protected override _lanStateToIHostStateMiddleware(lanState: ILanState154) {
         const iHostState = {};
@@ -39,7 +39,7 @@ export default class Uiid154 extends BaseDeviceOperate {
         const type = _.get(lanState, 'type', null);
 
         if (switchState !== null) {
-            _.merge(iHostState, getSensorState(this._iHostDeviceData, switchState === 'on', [ECapability.CONTACT, ECapability.CONTACT]))
+            _.merge(iHostState, getSensorState(this._iHostDeviceData, switchState === 'on', [ECapability.CONTACT, ECapability.CONTACT]));
         }
 
         if (switchState !== null && type !== null) {
@@ -48,10 +48,8 @@ export default class Uiid154 extends BaseDeviceOperate {
             //type 3 close
             //type 7 设备状态保持提醒 Device status reminder
             if (switchState === 'on' && type == 2) {
+                _.merge(iHostState, getSensorState(this._iHostDeviceData, true, [ECapability.CONTACT, ECapability.CONTACT]));
                 _.merge(iHostState, {
-                    contact: {
-                        contact: true,
-                    },
                     'detect-hold': {
                         detectHold: 'off',
                     },
@@ -59,11 +57,7 @@ export default class Uiid154 extends BaseDeviceOperate {
             }
 
             if (switchState === 'off' && type == 3) {
-                _.merge(iHostState, {
-                    contact: {
-                        contact: false,
-                    },
-                });
+                _.merge(iHostState, getSensorState(this._iHostDeviceData, false, [ECapability.CONTACT, ECapability.CONTACT]));
             }
 
             if (type == 7) {

@@ -53,11 +53,6 @@ export default class Uiid7020 extends ZigbeeDeviceOperate {
         const human = _.get(lanState, 'human', null);
 
         if (human !== null) {
-            _.merge(iHostState, {
-                motion: {
-                    motion: HUMAN_MAP[human],
-                },
-            });
             _.merge(iHostState, getSensorState(this._iHostDeviceData, HUMAN_MAP[human], [ECapability.MOTION, ECapability.MOTION]))
         }
 
