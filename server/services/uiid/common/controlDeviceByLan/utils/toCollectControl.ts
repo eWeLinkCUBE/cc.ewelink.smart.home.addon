@@ -61,9 +61,10 @@ async function sendParams(resolve: any, req: Request, updateLanDeviceStates: (re
         resolve(newRes);
     });
     requestCache[deviceId].timeoutId = setTimeout(async () => {
-        const sendRes = await updateLanDeviceStates(req, requestCache[deviceId].iHostStateObj);
-        event.emit('delivered', sendRes);
+        const iHostStateObj = _.assign({}, { ...requestCache[deviceId].iHostStateObj });
         delete requestCache[deviceId];
+        const sendRes = await updateLanDeviceStates(req, iHostStateObj);
+        event.emit('delivered', sendRes);
     }, 200);
 }
 
