@@ -2,7 +2,7 @@
 
 ## What is eWeLink Smart Home
 
-eWeLink Smart Home can discover eWeLink WiFi devices in LAN. After login with eWeLink account, you can sync the device you chose to eWeLink CUBE. By eWeLink CUBE, you can control the device in LAN and link the zigbee device in eWeLink CUBE with the scene.
+eWeLink Smart Home can discover eWeLink WiFi devices in both LAN and cloud. After login with eWeLink account, you can sync the device you chose to eWeLink CUBE. By eWeLink CUBE, you can control the device in both LAN and cloud and link the zigbee device in eWeLink CUBE with the scene.
 
 ## Quick start
 
